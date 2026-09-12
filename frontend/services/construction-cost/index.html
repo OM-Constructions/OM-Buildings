@@ -1,86 +1,21 @@
-import os
-
-services_data = [
-    {
-        "slug": "mep-design",
-        "eyebrow": "MECHANICAL • ELECTRICAL • PLUMBING",
-        "title": "MEP DESIGNS",
-        "intro": "Integrated MEP planning that supports functional, efficient and coordinated building systems.",
-        "img": "mep-design.png",
-        "focus": [
-            "Mechanical systems",
-            "Electrical planning",
-            "Plumbing coordination",
-            "Services coordination",
-            "Building-system integration",
-            "Technical planning"
-        ]
-    },
-    {
-        "slug": "3d-building-design",
-        "eyebrow": "3D ARCHITECTURAL VISUALIZATION",
-        "title": "3D BUILDING DESIGN",
-        "intro": "Detailed three-dimensional building designs that help visualize architectural form, spaces and project intent before construction.",
-        "img": "3d-building-design.png",
-        "focus": [
-            "3D building modeling",
-            "Architectural visualization",
-            "Exterior design development",
-            "Spatial visualization",
-            "Design presentation",
-            "Design refinement"
-        ]
-    },
-    {
-        "slug": "realistic-rendering",
-        "eyebrow": "ARCHITECTURAL VISUALIZATION",
-        "title": "REALISTIC RENDERING",
-        "intro": "High-quality architectural renders that communicate the appearance, materials and atmosphere of a proposed space or building.",
-        "img": "realistic-rendering.png",
-        "focus": [
-            "Photorealistic visualization",
-            "Exterior rendering",
-            "Interior rendering",
-            "Material visualization",
-            "Lighting visualization",
-            "Presentation imagery"
-        ]
-    },
-    {
-        "slug": "estimation-costing",
-        "eyebrow": "COST PLANNING",
-        "title": "ESTIMATION & COSTING",
-        "intro": "Structured construction estimation and costing to support informed project planning, budgeting and decision-making.",
-        "img": "estimation-costing.png",
-        "focus": [
-            "Quantity estimation",
-            "Cost planning",
-            "Material considerations",
-            "Budget analysis",
-            "Project costing",
-            "Cost documentation"
-        ]
-    }
-]
-
-template = """<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{title} | OM Constructions</title>
+    <title>CONSTRUCTION COST | OM Constructions</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../style.css?v=4">
     
     <script type="importmap">
-        {{
-            "imports": {{
+        {
+            "imports": {
                 "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                 "gsap": "https://unpkg.com/gsap@3.12.2/index.js",
                 "gsap/ScrollTrigger": "https://unpkg.com/gsap@3.12.2/ScrollTrigger.js"
-            }}
-        }}
+            }
+        }
     </script>
 </head>
 <body>
@@ -104,9 +39,10 @@ template = """<!DOCTYPE html>
         <!-- HERO -->
         <section class="service-page-hero">
             <div class="container gsap-reveal">
-                <span class="eyebrow">{eyebrow}</span>
-                <h1>{title}</h1>
-                <p>{intro}</p>
+                <span class="eyebrow">PRICE</span>
+                <h1>CONSTRUCTION COST</h1>
+                <div class="service-price-block" style="margin-bottom: 24px; max-width: 300px;"><span class="price-label">PRICE</span><span class="price-value" style="font-size: 1.5rem; color: var(--gold-accent);">₹2,500 / sqft</span></div>
+                <p>Construction cost estimation and budgeting for your project.</p>
                 <div class="service-hero-accent"></div>
             </div>
         </section>
@@ -115,7 +51,7 @@ template = """<!DOCTYPE html>
         <section class="sp-section sp-overview">
             <div class="container gsap-reveal">
                 <span class="sp-label">01 &mdash; OVERVIEW</span>
-                <p>At OM Constructions, we believe that exceptional engineering begins with a deep understanding of purpose. Our {title} services are designed to address both the aesthetic desires and functional necessities of your project. We leverage modern methodologies to ensure everything we design is resilient, sustainable, and built to the highest industry standards.</p>
+                <p>At OM Constructions, we believe that exceptional engineering begins with a deep understanding of purpose. Our CONSTRUCTION COST services are designed to address both the aesthetic desires and functional necessities of your project. We leverage modern methodologies to ensure everything we design is resilient, sustainable, and built to the highest industry standards.</p>
             </div>
         </section>
 
@@ -125,7 +61,19 @@ template = """<!DOCTYPE html>
                 <span class="sp-label" style="color: var(--navy-primary);">02 &mdash; WHAT WE FOCUS ON</span>
                 <h2 class="sp-title">Capabilities & Deliverables</h2>
                 <div class="sp-focus-grid">
-                    {focus_items}
+                    
+                    <div class="sp-focus-item">
+                        <h3>Cost Estimation</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                    <div class="sp-focus-item">
+                        <h3>Budget Planning</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                    <div class="sp-focus-item">
+                        <h3>Project Cost Understanding</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -162,7 +110,9 @@ template = """<!DOCTYPE html>
         </section>
 
         <!-- VISUAL SECTION -->
-        {visual_section}
+        <section class="sp-visual">
+            <img src="../../assets/services/" alt="CONSTRUCTION COST Visual" class="gsap-reveal">
+        </section>
 
         <!-- 04 CTA -->
         <section class="sp-section sp-cta">
@@ -204,62 +154,26 @@ template = """<!DOCTYPE html>
         import ScrollTrigger from 'gsap/ScrollTrigger';
         
         // Use a short timeout to ensure main.js has finished removing the intro splash cover if it fails WebGL
-        setTimeout(() => {{
+        setTimeout(() => {
             const reveals = document.querySelectorAll('.gsap-reveal');
-            reveals.forEach((el) => {{
+            reveals.forEach((el) => {
                 gsap.fromTo(el, 
-                    {{ opacity: 0, y: 50, visibility: 'hidden' }}, 
-                    {{
-                        scrollTrigger: {{
+                    { opacity: 0, y: 50, visibility: 'hidden' }, 
+                    {
+                        scrollTrigger: {
                             trigger: el,
                             start: "top 85%",
                             toggleActions: "play none none none"
-                        }},
+                        },
                         opacity: 1,
                         y: 0,
                         visibility: 'visible',
                         duration: 1,
                         ease: "power2.out"
-                    }}
+                    }
                 );
-            }});
-        }}, 100);
+            });
+        }, 100);
     </script>
 </body>
 </html>
-"""
-
-os.makedirs('frontend/services', exist_ok=True)
-
-for service in services_data:
-    os.makedirs(f"frontend/services/{service['slug']}", exist_ok=True)
-    
-    # Generate focus items
-    focus_html = ""
-    for item in service['focus']:
-        focus_html += f"""
-                    <div class="sp-focus-item">
-                        <h3>{item}</h3>
-                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
-                    </div>"""
-    
-    # Generate visual section
-    visual_section = ""
-    if service["img"]:
-        visual_section = f"""
-        <section class="sp-visual">
-            <img src="../../assets/services/{service['img']}" alt="{service['title']} Visual" class="gsap-reveal">
-        </section>"""
-        
-    html = template.format(
-        eyebrow=service["eyebrow"],
-        title=service["title"],
-        intro=service["intro"],
-        focus_items=focus_html,
-        visual_section=visual_section
-    )
-    
-    with open(f"frontend/services/{service['slug']}/index.html", "w") as f:
-        f.write(html)
-
-print("The 4 new service pages generated successfully.")

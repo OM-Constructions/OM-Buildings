@@ -2,6 +2,18 @@ import os
 
 services_data = [
     {
+        "slug": "construction-cost",
+        "eyebrow": "PRICE",
+        "title": "CONSTRUCTION COST",
+        "intro": "Construction cost estimation and budgeting for your project.",
+        "img": "",
+        "focus": [
+            "Cost Estimation",
+            "Budget Planning",
+            "Project Cost Understanding"
+        ]
+    },
+    {
         "slug": "architectural-design",
         "eyebrow": "ARCHITECTURE",
         "title": "ARCHITECTURAL DESIGN",
@@ -81,13 +93,73 @@ services_data = [
         "eyebrow": "GROUND & FOUNDATION ANALYSIS",
         "title": "GEOTECHNICAL REPORT",
         "intro": "Ground and soil information that supports informed foundation planning and safer structural decisions.",
-        "img": None,
+        "img": "geotechnical-report.png",
         "focus": [
             "Ground investigation",
             "Soil-related information",
             "Foundation considerations",
             "Site-related analysis",
             "Engineering decision support"
+        ]
+    },
+    {
+        "slug": "mep-design",
+        "eyebrow": "MECHANICAL • ELECTRICAL • PLUMBING",
+        "title": "MEP DESIGNS",
+        "intro": "Integrated MEP planning that supports functional, efficient and coordinated building systems.",
+        "img": "mep-design.png",
+        "focus": [
+            "Mechanical systems",
+            "Electrical planning",
+            "Plumbing coordination",
+            "Services coordination",
+            "Building-system integration",
+            "Technical planning"
+        ]
+    },
+    {
+        "slug": "3d-building-design",
+        "eyebrow": "3D ARCHITECTURAL VISUALIZATION",
+        "title": "3D BUILDING DESIGN",
+        "intro": "Detailed three-dimensional building designs that help visualize architectural form, spaces and project intent before construction.",
+        "img": "3d-building-design.png",
+        "focus": [
+            "3D building modeling",
+            "Architectural visualization",
+            "Exterior design development",
+            "Spatial visualization",
+            "Design presentation",
+            "Design refinement"
+        ]
+    },
+    {
+        "slug": "realistic-rendering",
+        "eyebrow": "ARCHITECTURAL VISUALIZATION",
+        "title": "REALISTIC RENDERING",
+        "intro": "High-quality architectural renders that communicate the appearance, materials and atmosphere of a proposed space or building.",
+        "img": "realistic-rendering.png",
+        "focus": [
+            "Photorealistic visualization",
+            "Exterior rendering",
+            "Interior rendering",
+            "Material visualization",
+            "Lighting visualization",
+            "Presentation imagery"
+        ]
+    },
+    {
+        "slug": "estimation-costing",
+        "eyebrow": "COST PLANNING",
+        "title": "ESTIMATION & COSTING",
+        "intro": "Structured construction estimation and costing to support informed project planning, budgeting and decision-making.",
+        "img": "estimation-costing.png",
+        "focus": [
+            "Quantity estimation",
+            "Cost planning",
+            "Material considerations",
+            "Budget analysis",
+            "Project costing",
+            "Cost documentation"
         ]
     }
 ]
@@ -135,6 +207,7 @@ template = """<!DOCTYPE html>
             <div class="container gsap-reveal">
                 <span class="eyebrow">{eyebrow}</span>
                 <h1>{title}</h1>
+                {price_html}
                 <p>{intro}</p>
                 <div class="service-hero-accent"></div>
             </div>
@@ -168,37 +241,39 @@ template = """<!DOCTYPE html>
                 <div class="sp-approach-grid">
                     <div class="sp-approach-step">
                         <h4>UNDERSTAND</h4>
-                        <p>We analyze the site, clarify your core objectives, and define the scope clearly.</p>
+                        <p>Understand the project requirements.</p>
                     </div>
                     <div class="sp-approach-step">
                         <h4>PLAN</h4>
-                        <p>Developing strategic plans to optimize resources, budget, and timeline.</p>
+                        <p>Establish the appropriate design or technical approach.</p>
                     </div>
                     <div class="sp-approach-step">
                         <h4>DEVELOP</h4>
-                        <p>Crafting precise blueprints and solutions for seamless execution.</p>
+                        <p>Develop the required design, documentation or visualization.</p>
                     </div>
                     <div class="sp-approach-step">
                         <h4>COORDINATE</h4>
-                        <p>Integrating disciplines to reduce conflicts and ensure viability.</p>
+                        <p>Coordinate the relevant project requirements.</p>
                     </div>
                     <div class="sp-approach-step">
                         <h4>DELIVER</h4>
-                        <p>Rigorous quality checks and final handover meeting all standards.</p>
+                        <p>Prepare the final output for the next stage of the project.</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- VISUAL SECTION -->
-        {visual_section}
+        <section class="sp-visual">
+            <img src="../../assets/services/{img}" alt="{title} Visual" class="gsap-reveal">
+        </section>
 
         <!-- 04 CTA -->
         <section class="sp-section sp-cta">
             <div class="container gsap-reveal">
                 <span class="sp-label" style="color: var(--navy-primary);">04 &mdash; READY?</span>
                 <h2>HAVE A PROJECT IN MIND?</h2>
-                <p>Let's discuss your requirements and turn the idea into something real.</p>
+                <p>Let's discuss your requirements.</p>
                 <a href="../../index.html#cta" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary);">START A PROJECT &rarr;</a>
             </div>
         </section>
@@ -258,10 +333,20 @@ template = """<!DOCTYPE html>
 </html>
 """
 
-os.makedirs('frontend/services', exist_ok=True)
+# Determine the absolute path to the project root assuming the script is run from project root or inside tools/
+base_dir = os.path.dirname(os.path.abspath(__file__))
+# If running from tools/, go up one level to root. If running from root, use current dir.
+if os.path.basename(base_dir) == 'tools':
+    project_root = os.path.dirname(base_dir)
+else:
+    project_root = base_dir
+
+services_dir = os.path.join(project_root, 'frontend', 'services')
+os.makedirs(services_dir, exist_ok=True)
 
 for service in services_data:
-    os.makedirs(f"frontend/services/{service['slug']}", exist_ok=True)
+    service_path = os.path.join(services_dir, service['slug'])
+    os.makedirs(service_path, exist_ok=True)
     
     # Generate focus items
     focus_html = ""
@@ -272,23 +357,20 @@ for service in services_data:
                         <p>Providing exact, professional outcomes focused on practical value and precision.</p>
                     </div>"""
     
-    # Generate visual section
-    visual_section = ""
-    if service["img"]:
-        visual_section = f"""
-        <section class="sp-visual">
-            <img src="../../assets/services/{service['img']}" alt="{service['title']} Visual" class="gsap-reveal">
-        </section>"""
-        
+    price_html = ""
+    if service.get("slug") == "construction-cost":
+        price_html = '<div class="service-price-block" style="margin-bottom: 24px; max-width: 300px;"><span class="price-label">PRICE</span><span class="price-value" style="font-size: 1.5rem; color: var(--gold-accent);">₹2,500 / sqft</span></div>'
+
     html = template.format(
         eyebrow=service["eyebrow"],
         title=service["title"],
         intro=service["intro"],
+        price_html=price_html,
         focus_items=focus_html,
-        visual_section=visual_section
+        img=service["img"]
     )
     
-    with open(f"frontend/services/{service['slug']}/index.html", "w") as f:
+    with open(os.path.join(service_path, "index.html"), "w") as f:
         f.write(html)
 
-print("All 6 service pages generated successfully based on the strict requirements.")
+print(f"Successfully generated {len(services_data)} service pages.")
