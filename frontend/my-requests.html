@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Enquiries &amp; Requests | OM Constructions</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav id="navbar" class="scrolled">
+        <div class="container nav-container">
+            <a href="./index.html" class="nav-brand">OM<span>Constructions</span></a>
+            <div class="nav-links">
+                <a href="./index.html#hero">Home</a>
+                <a href="./index.html#services">Services</a>
+                <a href="./index.html#about">About</a>
+                <a href="./index.html#cta">Contact</a>
+                <a href="./my-requests.html" style="color: var(--gold-accent); font-weight: 700;">My Requests</a>
+            </div>
+            <div class="nav-cta">
+                <button id="navLogoutBtn" class="btn-sm-outline" style="border-color: var(--navy-primary);">Log Out</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PORTAL DASHBOARD SECTION -->
+    <main class="portal-page-wrapper">
+        <div class="portal-container">
+            
+            <!-- User Header -->
+            <div class="portal-header">
+                <div class="portal-welcome">
+                    <h1 id="userGreeting">Welcome back</h1>
+                    <p>Track the progress and status of your structural engineering &amp; construction enquiries.</p>
+                    <span id="userEmailBadge" class="portal-email-badge">Loading account...</span>
+                </div>
+                <div class="portal-actions">
+                    <a href="./index.html#cta" class="btn-sm-primary">+ New Enquiry</a>
+                    <button id="logoutBtn" class="btn-sm-outline">Log Out</button>
+                </div>
+            </div>
+
+            <!-- Submissions Card -->
+            <div class="portal-content-card">
+                <div class="portal-content-header">
+                    <h2>Your Submitted Requests</h2>
+                    <span id="submissionCountBadge" class="portal-count-badge">0</span>
+                </div>
+
+                <!-- Container for dynamically rendered list -->
+                <div id="submissionsContainer">
+                    <div style="padding: 40px; text-align: center; color: var(--text-muted);">
+                        Loading your submissions...
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-bottom" style="border-top: none; padding-top: 0; justify-content: center;">
+                <span>&copy; 2026 OM Constructions &amp; Structural Engineering Consultants. All rights reserved.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { getCurrentUser, getMySubmissions, logout } from "./src/auth.js";
+
+        const userGreeting = document.getElementById("userGreeting");
+        const userEmailBadge = document.getElementById("userEmailBadge");
+        const submissionCountBadge = document.getElementById("submissionCountBadge");
+        const submissionsContainer = document.getElementById("submissionsContainer");
+        const logoutBtn = document.getElementById("logoutBtn");
+        const navLogoutBtn = document.getElementById("navLogoutBtn");
+
+        async function handleLogout() {
+            try {
+                await logout();
+            } catch (err) {
+                console.error("Logout error", err);
+            }
+            window.location.href = "./index.html";
+        }
+
+        logoutBtn.addEventListener("click", handleLogout);
+        navLogoutBtn.addEventListener("click", handleLogout);
+
+        function formatDate(isoStr) {
+            try {
+                const date = new Date(isoStr);
+                return date.toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                });
+            } catch (e) {
+                return isoStr;
+            }
+        }
+
+        function getStatusBadgeHtml(status) {
+            const normalized = (status || "Received").toLowerCase();
+            let cssClass = "status-received";
+            if (normalized.includes("review")) cssClass = "status-review";
+            if (normalized.includes("complete") || normalized.includes("resolved")) cssClass = "status-completed";
+            
+            return `<span class="status-badge ${cssClass}">● ${status || "Received"}</span>`;
+        }
+
+        async function initPortal() {
+            try {
+                // 1. Authenticate user
+                const user = await getCurrentUser();
+                if (!user) {
+                    // Redirect to login if not authenticated
+                    window.location.href = "./login.html";
+                    return;
+                }
+
+                userGreeting.textContent = `Welcome, ${user.name}`;
+                userEmailBadge.textContent = user.email;
+
+                // 2. Fetch submissions
+                const submissions = await getMySubmissions();
+                submissionCountBadge.textContent = submissions.length;
+
+                if (!submissions || submissions.length === 0) {
+                    submissionsContainer.innerHTML = `
+                        <div class="portal-empty-state">
+                            <div class="portal-empty-icon">📁</div>
+                            <h3>No Enquiries Yet</h3>
+                            <p>You haven't submitted any construction or engineering enquiries with this account yet. Ready to start your project?</p>
+                            <a href="./index.html#cta" class="btn-primary" style="padding: 10px 20px;">Submit an Enquiry</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Render submissions
+                let html = `<div class="submissions-list">`;
+                submissions.forEach((item) => {
+                    html += `
+                        <article class="submission-item">
+                            <div class="submission-top">
+                                <div class="submission-meta-left">
+                                    <span class="submission-ref">#REQ-${item.id}</span>
+                                    <span class="submission-project-type">${item.project_type || "General Inquiry"}</span>
+                                    ${getStatusBadgeHtml(item.status)}
+                                </div>
+                                <span class="submission-date">${formatDate(item.created_at)}</span>
+                            </div>
+                            <div class="submission-body">
+                                <p>${item.message}</p>
+                            </div>
+                        </article>
+                    `;
+                });
+                html += `</div>`;
+                submissionsContainer.innerHTML = html;
+
+            } catch (err) {
+                console.error("Failed to load portal data", err);
+                submissionsContainer.innerHTML = `
+                    <div style="padding: 30px; text-align: center; color: #DC2626;">
+                        <p>Error loading your requests: ${err.message}</p>
+                        <button onclick="location.reload()" class="btn-sm-outline">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        initPortal();
+    </script>
+</body>
+</html>

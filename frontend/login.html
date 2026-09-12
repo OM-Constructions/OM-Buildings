@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Login | OM Constructions</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav id="navbar" class="scrolled">
+        <div class="container nav-container">
+            <a href="./index.html" class="nav-brand">OM<span>Constructions</span></a>
+            <div class="nav-links">
+                <a href="./index.html#hero">Home</a>
+                <a href="./index.html#services">Services</a>
+                <a href="./index.html#about">About</a>
+                <a href="./index.html#cta">Contact</a>
+                <a href="./signup.html" class="nav-auth-link nav-auth-signup">Sign Up</a>
+            </div>
+            <div class="nav-cta">
+                <a href="./index.html#cta" class="btn-primary">Let's Talk</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- LOGIN FORM SECTION -->
+    <main class="auth-page-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <span class="auth-eyebrow">Customer Portal</span>
+                <h1>Welcome Back</h1>
+                <p>Log in to review your enquiries and project consultation status.</p>
+            </div>
+
+            <!-- Inline Error Banner -->
+            <div id="errorMessage" class="auth-error-banner" role="alert"></div>
+
+            <form id="loginForm" class="auth-form" novalidate>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="e.g. john@example.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" id="submitBtn" class="auth-btn-submit">
+                    <span>Log In</span>
+                </button>
+            </form>
+
+            <div class="auth-footer-text">
+                Don't have an account? <a href="./signup.html">Create one now</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-bottom" style="border-top: none; padding-top: 0; justify-content: center;">
+                <span>&copy; 2026 OM Constructions & Structural Engineering Consultants. All rights reserved.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { login, getCurrentUser } from "./src/auth.js";
+
+        // If already logged in, redirect straight to my-requests
+        getCurrentUser().then(user => {
+            if (user) window.location.href = "./my-requests.html";
+        });
+
+        const form = document.getElementById("loginForm");
+        const errorBanner = document.getElementById("errorMessage");
+        const submitBtn = document.getElementById("submitBtn");
+
+        function showError(msg) {
+            errorBanner.textContent = msg;
+            errorBanner.style.display = "block";
+        }
+
+        function hideError() {
+            errorBanner.textContent = "";
+            errorBanner.style.display = "none";
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            hideError();
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            if (!email || !password) {
+                showError("Please enter both your email address and password.");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = "<span>Logging in...</span>";
+
+            try {
+                await login({ email, password });
+                // Redirect on success
+                window.location.href = "./my-requests.html";
+            } catch (err) {
+                showError(err.message || "Invalid email or password.");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = "<span>Log In</span>";
+            }
+        });
+    </script>
+</body>
+</html>
