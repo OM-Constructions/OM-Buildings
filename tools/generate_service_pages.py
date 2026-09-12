@@ -2,6 +2,18 @@ import os
 
 services_data = [
     {
+        "slug": "construction-cost",
+        "eyebrow": "PRICE",
+        "title": "CONSTRUCTION COST",
+        "intro": "Construction cost estimation and budgeting for your project.",
+        "img": "",
+        "focus": [
+            "Cost Estimation",
+            "Budget Planning",
+            "Project Cost Understanding"
+        ]
+    },
+    {
         "slug": "architectural-design",
         "eyebrow": "ARCHITECTURE",
         "title": "ARCHITECTURAL DESIGN",
@@ -195,6 +207,7 @@ template = """<!DOCTYPE html>
             <div class="container gsap-reveal">
                 <span class="eyebrow">{eyebrow}</span>
                 <h1>{title}</h1>
+                {price_html}
                 <p>{intro}</p>
                 <div class="service-hero-accent"></div>
             </div>
@@ -344,10 +357,15 @@ for service in services_data:
                         <p>Providing exact, professional outcomes focused on practical value and precision.</p>
                     </div>"""
     
+    price_html = ""
+    if service.get("slug") == "construction-cost":
+        price_html = '<div class="service-price-block" style="margin-bottom: 24px; max-width: 300px;"><span class="price-label">PRICE</span><span class="price-value" style="font-size: 1.5rem; color: var(--gold-accent);">₹2,500 / sqft</span></div>'
+
     html = template.format(
         eyebrow=service["eyebrow"],
         title=service["title"],
         intro=service["intro"],
+        price_html=price_html,
         focus_items=focus_html,
         img=service["img"]
     )
@@ -355,4 +373,4 @@ for service in services_data:
     with open(os.path.join(service_path, "index.html"), "w") as f:
         f.write(html)
 
-print("All 10 service pages generated successfully in frontend/services/")
+print(f"Successfully generated {len(services_data)} service pages.")
