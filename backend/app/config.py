@@ -26,12 +26,17 @@ class Settings(BaseSettings):
     FRONTEND_ORIGIN: Optional[str] = os.getenv("FRONTEND_ORIGIN", None)
     RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "5"))
 
-    # Email provider settings
-    EMAIL_PROVIDER: str = os.getenv("EMAIL_PROVIDER", "resend")
+    # Email configuration (SMTP)
+    EMAIL_PROVIDER: str = os.getenv("EMAIL_PROVIDER", "smtp")
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "465"))
+    SMTP_USER: str = os.getenv("SMTP_USER", os.getenv("EMAIL_FROM", "omengineeringconsultants06@gmail.com"))
+    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD", os.getenv("GMAIL_APP_PASSWORD", None))
+    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "omengineeringconsultants06@gmail.com")
+    COMPANY_NOTIFICATION_EMAIL: str = os.getenv("COMPANY_NOTIFICATION_EMAIL", os.getenv("EMAIL_TO", "omengineeringconsultants06@gmail.com"))
+    EMAIL_TO: str = COMPANY_NOTIFICATION_EMAIL
+    GMAIL_APP_PASSWORD: Optional[str] = SMTP_PASSWORD
     RESEND_API_KEY: Optional[str] = os.getenv("RESEND_API_KEY", None)
-    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "enquiries@yourdomain.com")
-    EMAIL_TO: str = os.getenv("EMAIL_TO", "leads@yourcompany.com")
-    GMAIL_APP_PASSWORD: Optional[str] = os.getenv("GMAIL_APP_PASSWORD", None)
     
     CORS_ORIGINS: List[str] = [
         "https://om-buildings.vercel.app",
