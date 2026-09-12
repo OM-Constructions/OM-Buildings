@@ -28,8 +28,31 @@
                 <a href="../../index.html#hero">HOME</a>
                 <a href="../../index.html#services">SERVICES</a>
             </div>
-            <div class="nav-cta">
+            <div class="nav-actions">
+                <span id="nav-auth-container" class="nav-auth-group">
+                    <a href="../../login.html" class="nav-auth-link nav-auth-login">Log In</a>
+                    <a href="../../signup.html" class="nav-auth-link nav-auth-signup">Sign Up</a>
+                </span>
                 <a href="../../index.html#cta" class="btn-primary">Let's Talk</a>
+                <script type="module">
+                    import { getCurrentUser, logout } from "../../src/auth.js";
+                    const container = document.getElementById("nav-auth-container");
+                    if (container) {
+                        getCurrentUser().then(user => {
+                            if (user) {
+                                container.innerHTML = `
+                                    <a href="../../my-requests.html" class="nav-auth-link nav-auth-login" style="color: var(--gold-accent); font-weight: 600;">My Requests</a>
+                                    <a href="#" id="nav-logout-link" class="nav-auth-link nav-auth-signup">Log Out</a>
+                                `;
+                                document.getElementById("nav-logout-link")?.addEventListener("click", async (e) => {
+                                    e.preventDefault();
+                                    await logout().catch(() => {});
+                                    window.location.reload();
+                                });
+                            }
+                        });
+                    }
+                </script>
             </div>
             <button class="hamburger">☰</button>
         </div>
@@ -43,7 +66,6 @@
                 <h1>GEOTECHNICAL REPORT</h1>
                 
                 <p>Ground and soil information that supports informed foundation planning and safer structural decisions.</p>
-                <a href="#enquire" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary); font-size: 0.85rem; padding: 10px 22px; margin-top: 15px; display: inline-block;">Enquire About This Service &rarr;</a>
                 <div class="service-hero-accent"></div>
             </div>
         </section>
@@ -123,13 +145,13 @@
             <img src="../../assets/services/geotechnical-report.png" alt="GEOTECHNICAL REPORT Visual" class="gsap-reveal">
         </section>
 
-        <!-- 04 ENQUIRY & CTA -->
-        <section class="sp-section sp-cta" id="enquire">
+        <!-- 04 CTA -->
+        <section class="sp-section sp-cta">
             <div class="container gsap-reveal">
-                <span class="sp-label" style="color: var(--navy-primary);">04 &mdash; ENQUIRE NOW</span>
+                <span class="sp-label" style="color: var(--navy-primary);">04 &mdash; READY?</span>
                 <h2>HAVE A PROJECT IN MIND?</h2>
-                <p>Send your requirements below for a dedicated consultation on Geotechnical Report.</p>
-                <div class="service-page-enquiry-card" data-service-name="GEOTECHNICAL REPORT"></div>
+                <p>Let's discuss your requirements.</p>
+                <a href="../../index.html#cta" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary);">START A PROJECT &rarr;</a>
             </div>
         </section>
     </main>
@@ -184,6 +206,5 @@
             });
         }, 100);
     </script>
-    <script type="module" src="../../src/serviceContactCards.js"></script>
 </body>
 </html>
