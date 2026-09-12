@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     GMAIL_APP_PASSWORD: Optional[str] = os.getenv("GMAIL_APP_PASSWORD", None)
     
     CORS_ORIGINS: List[str] = [
+        "https://om-buildings.vercel.app",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
         "http://localhost:8080",
