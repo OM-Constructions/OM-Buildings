@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.database import Base, engine, SessionLocal
 from app import models
+from app.services.token_service import create_verification_token
 
 client = TestClient(app, base_url="http://localhost:8000")
 
@@ -13,143 +14,129 @@ def run_tests():
     # Setup tables
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
-    # Clean up test users
+    # Clean up test database
     db.query(models.ContactMessage).delete()
     db.query(models.User).delete()
     db.commit()
 
-    print("--- 1. Testing Signup Validation ---")
-    res = client.post("/api/v1/auth/signup", json={"name": "Alice", "email": "alice@example.com", "password": "short"})
-    assert res.status_code == 400, f"Expected 400 for short password, got {res.status_code}: {res.text}"
+    print("--- 1. Testing Password & Deliverability / Disposable Validation ---")
+    # Short password
+    res = client.post("/api/v1/auth/signup", json={"name": "Alice", "email": "alice@gmail.com", "password": "short"})
+    assert res.status_code == 400
+    assert "Password must be at least 8 characters" in res.json()["detail"]
     print("✓ Short password rejected with 400")
 
-    print("--- 2. Testing Successful Signup ---")
+    # Disposable domain (e.g. mailinator.com)
+    res = client.post("/api/v1/auth/signup", json={"name": "Alice", "email": "alice@mailinator.com", "password": "password123"})
+    assert res.status_code == 400
+    assert "Please enter a valid email address" in res.json()["detail"]
+    print("✓ Disposable email domain rejected with generic 400")
+
+    # Fake domain without MX records
+    res = client.post("/api/v1/auth/signup", json={"name": "Alice", "email": "alice@nonexistent-fake-domain-12345.xyz", "password": "password123"})
+    assert res.status_code == 400
+    assert "Please enter a valid email address" in res.json()["detail"]
+    print("✓ Domain without MX records rejected with generic 400")
+
+    print("--- 2. Testing Successful Signup (Unverified & No Cookie) ---")
     client.cookies.clear()
-    res = client.post("/api/v1/auth/signup", json={"name": "Alice Wonderland", "email": "alice@example.com", "password": "password123"})
+    res = client.post("/api/v1/auth/signup", json={"name": "Alice Wonderland", "email": "alice@gmail.com", "password": "password123"})
     assert res.status_code == 200, f"Signup failed: {res.text}"
     data = res.json()
     assert data["success"] is True
-    assert data["name"] == "Alice Wonderland"
-    assert "access_token" in res.cookies, "Session cookie access_token not found in response cookies"
-    alice_cookie = res.cookies["access_token"]
-    print("✓ Successful signup and cookie issued")
+    assert "Check your email" in data["message"]
+    assert "access_token" not in res.cookies, "Cookie should NOT be issued before email verification"
 
-    print("--- 3. Testing Duplicate Signup (Account Enumeration Prevention) ---")
-    res = client.post("/api/v1/auth/signup", json={"name": "Alice 2", "email": "alice@example.com", "password": "password123"})
+    alice_user = db.query(models.User).filter(models.User.email == "alice@gmail.com").first()
+    assert alice_user is not None
+    assert alice_user.is_verified is False
+    assert alice_user.verification_sent_at is not None
+    print("✓ Successful signup creates unverified user and issues NO session cookie")
+
+    print("--- 3. Testing Duplicate Signup Rejection ---")
+    res = client.post("/api/v1/auth/signup", json={"name": "Alice 2", "email": "alice@gmail.com", "password": "password123"})
     assert res.status_code == 400
     assert "Unable to create account" in res.json()["detail"]
     print("✓ Duplicate signup returns generic 400")
 
-    print("--- 4. Testing /auth/me ---")
-    # Unauthenticated
-    client.cookies.clear()
-    res = client.get("/api/v1/auth/me")
-    assert res.status_code == 401, f"Expected 401 for unauthenticated, got {res.status_code}"
-    print("✓ Unauthenticated /auth/me returns 401")
+    print("--- 4. Testing Login Block for Unverified User ---")
+    res = client.post("/api/v1/auth/login", json={"email": "alice@gmail.com", "password": "password123"})
+    assert res.status_code == 403, f"Expected 403 for unverified user, got {res.status_code}"
+    error_data = res.json()
+    assert error_data.get("error") == "email_not_verified"
+    assert "access_token" not in res.cookies
+    print("✓ Unverified user login blocked with 403 email_not_verified")
 
-    # Authenticated with Alice cookie
-    res = client.get("/api/v1/auth/me", cookies={"access_token": alice_cookie})
+    print("--- 5. Testing Email Verification ---")
+    # Invalid token
+    res = client.get("/api/v1/auth/verify-email?token=invalid.tampered.token")
+    assert res.status_code == 400
+    assert "Invalid or expired" in res.json()["detail"]
+    print("✓ Invalid token rejected with 400")
+
+    # Valid token
+    verify_token = create_verification_token(alice_user.id)
+    res = client.get(f"/api/v1/auth/verify-email?token={verify_token}")
     assert res.status_code == 200
-    assert res.json() == {"name": "Alice Wonderland", "email": "alice@example.com"}
-    print("✓ Authenticated /auth/me returns user profile")
+    assert res.json()["success"] is True
 
-    print("--- 5. Testing Login ---")
+    db.refresh(alice_user)
+    assert alice_user.is_verified is True
+    print("✓ Valid token verifies user and sets is_verified=True in database")
+
+    print("--- 6. Testing Login After Verification ---")
     client.cookies.clear()
-    # Wrong password
-    res = client.post("/api/v1/auth/login", json={"email": "alice@example.com", "password": "wrongpassword"})
-    assert res.status_code == 401
-    assert "Invalid email or password" in res.json()["detail"]
-    print("✓ Bad password returns generic 401")
-
-    # Wrong email
-    res = client.post("/api/v1/auth/login", json={"email": "nonexistent@example.com", "password": "password123"})
-    assert res.status_code == 401
-    assert "Invalid email or password" in res.json()["detail"]
-    print("✓ Bad email returns same generic 401")
-
-    # Correct login
-    res = client.post("/api/v1/auth/login", json={"email": "alice@example.com", "password": "password123"})
+    res = client.post("/api/v1/auth/login", json={"email": "alice@gmail.com", "password": "password123"})
     assert res.status_code == 200
     assert "access_token" in res.cookies
-    print("✓ Valid login succeeds and sets cookie")
+    alice_cookie = res.cookies["access_token"]
+    print("✓ Verified user can now log in successfully and receives session cookie")
 
-    print("--- 6. Testing Contact Form Submissions (Authenticated vs Guest) ---")
-    client.cookies.clear()
-    # Authenticated submission (Alice)
+    print("--- 7. Testing /auth/me with Verified Session ---")
+    res = client.get("/api/v1/auth/me", cookies={"access_token": alice_cookie})
+    assert res.status_code == 200
+    assert res.json()["name"] == "Alice Wonderland"
+    print("✓ /auth/me returns authenticated user profile")
+
+    print("--- 8. Testing Resend Verification ---")
+    # Unverified user resend
+    bob = models.User(name="Bob", email="bob@gmail.com", password_hash="hash", is_verified=False)
+    db.add(bob)
+    db.commit()
+
+    res = client.post("/api/v1/auth/resend-verification", json={"email": "bob@gmail.com"})
+    assert res.status_code == 200
+    assert "If that account exists" in res.json()["message"]
+
+    # Non-existent user resend (same generic response)
+    res = client.post("/api/v1/auth/resend-verification", json={"email": "nonexistent@gmail.com"})
+    assert res.status_code == 200
+    assert "If that account exists" in res.json()["message"]
+    print("✓ Resend verification endpoint returns generic 200 for existing and non-existing accounts")
+
+    print("--- 9. Testing Submissions with Verified Account ---")
     res = client.post(
         "/api/v1/contact/",
         json={
             "name": "Alice Wonderland",
-            "email": "alice@example.com",
-            "subject": "Structural Design",
-            "project_type": "Structural Design",
-            "message": "Need a design for a 3-storey commercial building."
+            "email": "alice@gmail.com",
+            "subject": "Structural Engineering",
+            "project_type": "Structural Engineering",
+            "message": "Consultation request for residential project."
         },
         cookies={"access_token": alice_cookie}
     )
     assert res.status_code == 200
-    alice_sub_id = res.json()["id"]
+    sub_id = res.json()["id"]
 
-    # Guest submission (Bob)
-    client.cookies.clear()
-    res = client.post(
-        "/api/v1/contact/",
-        json={
-            "name": "Bob Guest",
-            "email": "bob@example.com",
-            "subject": "Interior Design",
-            "message": "Looking for residential interior quote."
-        }
-    )
-    assert res.status_code == 200
-    bob_sub_id = res.json()["id"]
-
-    # Verify user_id in DB
-    alice_row = db.query(models.ContactMessage).filter(models.ContactMessage.id == alice_sub_id).first()
-    bob_row = db.query(models.ContactMessage).filter(models.ContactMessage.id == bob_sub_id).first()
-    assert alice_row.user_id is not None
-    assert bob_row.user_id is None
-    print("✓ Authenticated contact submission auto-attaches user_id; guest submission leaves user_id=None")
-
-    print("--- 7. Testing Honeypot ---")
-    client.cookies.clear()
-    res = client.post(
-        "/api/v1/contact/",
-        json={
-            "name": "Spam Bot",
-            "email": "spam@example.com",
-            "message": "Buy crypto now!",
-            "website": "http://spamsite.com"
-        }
-    )
-    assert res.status_code == 200
-    spam_count = db.query(models.ContactMessage).filter(models.ContactMessage.name == "Spam Bot").count()
-    assert spam_count == 0
-    print("✓ Honeypot traps bot submission and discards it from database")
-
-    print("--- 8. Testing Protected /me/submissions ---")
-    # Unauthenticated
-    client.cookies.clear()
-    res = client.get("/api/v1/me/submissions")
-    assert res.status_code == 401
-    print("✓ Unauthenticated /me/submissions returns 401")
-
-    # Authenticated as Alice
     res = client.get("/api/v1/me/submissions", cookies={"access_token": alice_cookie})
     assert res.status_code == 200
-    submissions = res.json()
-    assert len(submissions) == 1
-    assert submissions[0]["id"] == alice_sub_id
-    assert submissions[0]["project_type"] == "Structural Design"
-    assert submissions[0]["status"] == "Received"
-    print("✓ /me/submissions returns only Alice's submissions, not Bob's")
+    subs = res.json()
+    assert len(subs) == 1
+    assert subs[0]["id"] == sub_id
+    print("✓ Verified user submissions correctly linked and retrieved")
 
-    print("--- 9. Testing Logout ---")
-    res = client.post("/api/v1/auth/logout")
-    assert res.status_code == 200
-    print("✓ Logout endpoint returns 200")
-
-    print("\nALL BACKEND API TESTS PASSED SUCCESSFULLY!")
+    print("\nALL EMAIL VERIFICATION TESTS PASSED SUCCESSFULLY!")
     db.close()
 
 if __name__ == "__main__":

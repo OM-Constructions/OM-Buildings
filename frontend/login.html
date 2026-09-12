@@ -71,7 +71,7 @@
     </footer>
 
     <script type="module">
-        import { login, getCurrentUser } from "./src/auth.js";
+        import { login, getCurrentUser, resendVerification } from "./src/auth.js";
 
         // If already logged in, redirect straight to my-requests
         getCurrentUser().then(user => {
@@ -112,11 +112,46 @@
                 // Redirect on success
                 window.location.href = "./my-requests.html";
             } catch (err) {
-                showError(err.message || "Invalid email or password.");
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = "<span>Log In</span>";
+
+                if (err.status === 403 || err.code === "email_not_verified" || (err.message && err.message.includes("email_not_verified"))) {
+                    errorBanner.innerHTML = `
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <span><strong>Email Not Verified:</strong> Please check your inbox and verify your email address before logging in.</span>
+                            <button type="button" id="resendVerificationBtn" class="btn-sm-outline" style="background: #FFFFFF; font-size: 0.82rem; padding: 6px 12px; align-self: flex-start; cursor: pointer;">
+                                Resend verification email
+                            </button>
+                            <span id="resendStatusText" style="font-size: 0.82rem; color: #047857; display: none;"></span>
+                        </div>
+                    `;
+                    errorBanner.style.display = "block";
+
+                    const resendBtn = document.getElementById("resendVerificationBtn");
+                    const resendStatusText = document.getElementById("resendStatusText");
+
+                    resendBtn?.addEventListener("click", async () => {
+                        resendBtn.disabled = true;
+                        resendBtn.textContent = "Sending link...";
+                        try {
+                            const res = await resendVerification(email);
+                            resendStatusText.textContent = res.message || "If that account exists, a new verification link was sent.";
+                            resendStatusText.style.display = "block";
+                            resendBtn.style.display = "none";
+                        } catch (resendErr) {
+                            resendStatusText.textContent = resendErr.message || "Failed to resend link.";
+                            resendStatusText.style.color = "#991B1B";
+                            resendStatusText.style.display = "block";
+                            resendBtn.disabled = false;
+                            resendBtn.textContent = "Resend verification email";
+                        }
+                    });
+                } else {
+                    showError(err.message || "Invalid email or password.");
+                }
             }
         });
     </script>
 </body>
 </html>
+

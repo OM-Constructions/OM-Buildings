@@ -5,7 +5,7 @@ export const API_BASE_URL =
 /**
  * Register a new customer account
  * @param {{ name: string, email: string, password: string }}
- * @returns {Promise<{ success: boolean, name: string }>}
+ * @returns {Promise<{ success: boolean, message: string }>}
  */
 export async function signup({ name, email, password }) {
   const res = await fetch(`${API_BASE_URL}/api/v1/auth/signup`, {
@@ -35,7 +35,44 @@ export async function login({ email, password }) {
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.detail || "Invalid email or password");
+    const err = new Error(data.detail || "Invalid email or password");
+    err.status = res.status;
+    err.code = data.error || (data.detail === "email_not_verified" ? "email_not_verified" : null);
+    throw err;
+  }
+  return data;
+}
+
+/**
+ * Verify account using link token
+ * @param {string} token
+ * @returns {Promise<{ success: boolean, message: string }>}
+ */
+export async function verifyEmail(token) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/verify-email?token=${encodeURIComponent(token)}`, {
+    method: "GET",
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.detail || "Verification failed");
+  }
+  return data;
+}
+
+/**
+ * Request a new verification email
+ * @param {string} email
+ * @returns {Promise<{ success: boolean, message: string }>}
+ */
+export async function resendVerification(email) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/resend-verification`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.detail || "Unable to resend verification email");
   }
   return data;
 }

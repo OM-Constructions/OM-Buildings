@@ -1,5 +1,5 @@
 import os
-from typing import List
+from typing import List, Optional
 from pydantic_settings import BaseSettings
 
 BACKEND_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -11,6 +11,10 @@ class Settings(BaseSettings):
     JWT_SECRET: str = os.getenv("JWT_SECRET", "om-buildings-super-secret-jwt-key-change-in-production")
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_DAYS: int = 7
+    VERIFICATION_TOKEN_EXPIRE_HOURS: int = 24
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:8000")
+    RESEND_API_KEY: Optional[str] = os.getenv("RESEND_API_KEY", None)
+    
     CORS_ORIGINS: List[str] = [
         "http://localhost:8000",
         "http://127.0.0.1:8000",
@@ -20,7 +24,6 @@ class Settings(BaseSettings):
         "http://localhost:5500",
         "http://127.0.0.1:5500",
     ]
-
 
     class Config:
         env_file = ".env"

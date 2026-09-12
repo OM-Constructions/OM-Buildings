@@ -45,6 +45,13 @@ class AuthSuccessResponse(BaseModel):
     success: bool = True
     name: str
 
+class GenericMessageResponse(BaseModel):
+    success: bool = True
+    message: str
+
+class ResendVerificationRequest(BaseModel):
+    email: EmailStr
+
 class SubmissionItem(BaseModel):
     id: int
     name: str

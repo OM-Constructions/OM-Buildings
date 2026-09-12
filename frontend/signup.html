@@ -136,14 +136,30 @@
             submitBtn.innerHTML = "<span>Creating Account...</span>";
 
             try {
-                await signup({ name, email, password });
-                // Redirect on success
-                window.location.href = "./my-requests.html";
+                const res = await signup({ name, email, password });
+                const authCard = document.querySelector(".auth-card");
+                authCard.innerHTML = `
+                    <div style="text-align: center; padding: 10px 0;">
+                        <div style="font-size: 3.2rem; color: #10B981; margin-bottom: 14px;">✉️</div>
+                        <span class="auth-eyebrow">Verification Email Sent</span>
+                        <h1 style="font-family: var(--font-heading); font-size: 1.75rem; color: var(--navy-primary); margin: 0 0 12px;">Check Your Inbox</h1>
+                        <p style="color: var(--text-dark); font-size: 1.02rem; line-height: 1.6; margin-bottom: 10px;">
+                            We've sent a verification link to <strong style="color: var(--navy-primary);">${email}</strong>.
+                        </p>
+                        <p style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.5; margin-bottom: 26px;">
+                            Please click the link in your email within 24 hours to activate your account before logging in.
+                        </p>
+                        <a href="./login.html" class="btn-primary" style="display: inline-block; width: 100%; box-sizing: border-box; text-align: center;">
+                            Go to Login
+                        </a>
+                    </div>
+                `;
             } catch (err) {
                 showError(err.message || "Unable to create account. Please try again.");
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = "<span>Create Account</span>";
             }
+
         });
     </script>
 </body>

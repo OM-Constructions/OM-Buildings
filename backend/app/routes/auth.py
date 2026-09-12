@@ -1,6 +1,8 @@
 import uuid
+from datetime import datetime
 from typing import Optional, Any
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from slowapi import Limiter
 from slowapi.util import get_remote_address
@@ -8,8 +10,14 @@ from slowapi.util import get_remote_address
 from app.database import get_db
 from app import models, schemas
 from app.config import settings
-from app.services.auth_service import hash_password, verify_password
-from app.services.token_service import create_access_token, decode_access_token
+from app.services.auth_service import hash_password, verify_password, validate_signup_email
+from app.services.token_service import (
+    create_access_token,
+    decode_access_token,
+    create_verification_token,
+    decode_verification_token,
+)
+from app.services.email_service import send_verification_email
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -84,47 +92,56 @@ def set_auth_cookie(response: Response, user_id: Any) -> None:
     )
 
 
-
-@router.post("/signup", response_model=schemas.AuthSuccessResponse)
+@router.post("/signup", response_model=schemas.GenericMessageResponse)
 @limiter.limit("5/minute")
 def signup(
     request: Request,
-    response: Response,
     body: schemas.UserSignup,
     db: Session = Depends(get_db)
 ):
-    """Register a new customer account, hash password, set session cookie."""
-    # Check password length
+    """Register a customer account with MX and disposable domain validation.
+    Leaves user unverified and sends verification email with link."""
+    # 1. Format, MX DNS deliverability, and disposable domain checks
+    clean_email = validate_signup_email(body.email)
+
+    # 2. Check password length
     if len(body.password) < 8:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Password must be at least 8 characters long"
         )
 
-    # Check if email is already taken
-    existing_user = db.query(models.User).filter(models.User.email == body.email.lower().strip()).first()
+    # 3. Check if email is already registered (account enumeration protection)
+    existing_user = db.query(models.User).filter(models.User.email == clean_email).first()
     if existing_user:
-        # Generic 400 to prevent account enumeration
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Unable to create account"
         )
 
-    # Create user
+    # 4. Create user with is_verified = False
     password_hash = hash_password(body.password)
     new_user = models.User(
         name=body.name.strip(),
-        email=body.email.lower().strip(),
-        password_hash=password_hash
+        email=clean_email,
+        password_hash=password_hash,
+        is_verified=False,
+        verification_sent_at=datetime.utcnow()
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    # Set session cookie
-    set_auth_cookie(response, new_user.id)
+    # 5. Generate verification token & send email
+    token = create_verification_token(new_user.id)
+    verification_link = f"{settings.FRONTEND_URL}/verify-email.html?token={token}"
+    send_verification_email(new_user.email, new_user.name, verification_link)
 
-    return {"success": True, "name": new_user.name}
+    # Notice: DO NOT set session cookie yet — user cannot log in until email is verified
+    return {
+        "success": True,
+        "message": "Check your email to verify your account"
+    }
 
 
 @router.post("/login", response_model=schemas.AuthSuccessResponse)
@@ -135,19 +152,98 @@ def login(
     body: schemas.UserLogin,
     db: Session = Depends(get_db)
 ):
-    """Authenticate customer with email and password, set session cookie."""
+    """Authenticate customer with email and password.
+    Requires account to be verified before issuing session cookie."""
     user = db.query(models.User).filter(models.User.email == body.email.lower().strip()).first()
     if not user or not verify_password(body.password, str(user.password_hash)):
-        # Single generic error message regardless of whether email or password was wrong
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password"
+        )
+
+    # Check if email has been verified
+    if not user.is_verified:
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={
+                "detail": "email_not_verified",
+                "error": "email_not_verified",
+                "message": "Please verify your email address before logging in."
+            }
         )
 
     # Set session cookie
     set_auth_cookie(response, user.id)
 
     return {"success": True, "name": user.name}
+
+
+@router.get("/verify-email", response_model=schemas.GenericMessageResponse)
+def verify_email(
+    token: str,
+    db: Session = Depends(get_db)
+):
+    """Verify customer email using short-lived token from email link."""
+    user_id_str = decode_verification_token(token)
+    if not user_id_str:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired verification link"
+        )
+
+    try:
+        user_id = uuid.UUID(user_id_str)
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification link"
+        )
+
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid verification link"
+        )
+
+    if user.is_verified:
+        return {
+            "success": True,
+            "message": "Email is already verified. You can log in."
+        }
+
+    user.is_verified = True
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "Email verified successfully. You can now log in."
+    }
+
+
+@router.post("/resend-verification", response_model=schemas.GenericMessageResponse)
+@limiter.limit("5/minute")
+def resend_verification(
+    request: Request,
+    body: schemas.ResendVerificationRequest,
+    db: Session = Depends(get_db)
+):
+    """Resend email verification link.
+    Always returns generic success message to prevent account enumeration."""
+    clean_email = body.email.lower().strip()
+    user = db.query(models.User).filter(models.User.email == clean_email).first()
+
+    if user and not user.is_verified:
+        token = create_verification_token(user.id)
+        verification_link = f"{settings.FRONTEND_URL}/verify-email.html?token={token}"
+        send_verification_email(user.email, user.name, verification_link)
+        user.verification_sent_at = datetime.utcnow()
+        db.commit()
+
+    return {
+        "success": True,
+        "message": "If that account exists, we've sent a new link"
+    }
 
 
 @router.post("/logout")
