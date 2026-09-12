@@ -6,7 +6,7 @@ services_data = [
         "eyebrow": "PRICE",
         "title": "CONSTRUCTION COST",
         "intro": "Construction cost estimation and budgeting for your project.",
-        "img": "",
+        "img": "construction-cost.png",
         "focus": [
             "Cost Estimation",
             "Budget Planning",
