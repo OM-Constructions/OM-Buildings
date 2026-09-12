@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email Address | OM Constructions</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav id="navbar" class="scrolled">
+        <div class="container nav-container">
+            <a href="./index.html" class="nav-brand">OM<span>Constructions</span></a>
+            <div class="nav-links">
+                <a href="./index.html#hero">Home</a>
+                <a href="./index.html#services">Services</a>
+                <a href="./index.html#about">About</a>
+                <a href="./index.html#cta">Contact</a>
+                <a href="./login.html" class="nav-auth-link">Log In</a>
+            </div>
+            <div class="nav-cta">
+                <a href="./index.html#cta" class="btn-primary">Let's Talk</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- VERIFICATION SECTION -->
+    <main class="auth-page-wrapper">
+        <div class="auth-card" id="verificationCard">
+            
+            <!-- 1. LOADING STATE -->
+            <div id="stateLoading" style="text-align: center; padding: 20px 0;">
+                <div style="font-size: 2.5rem; margin-bottom: 16px;">⏳</div>
+                <h1 style="font-family: var(--font-heading); font-size: 1.6rem; color: var(--navy-primary); margin: 0 0 8px;">Verifying Your Email...</h1>
+                <p style="color: var(--text-muted); margin: 0;">Please wait while we confirm your account details.</p>
+            </div>
+
+            <!-- 2. SUCCESS STATE -->
+            <div id="stateSuccess" style="display: none; text-align: center; padding: 10px 0;">
+                <div style="font-size: 3rem; color: #10B981; margin-bottom: 12px;">✓</div>
+                <span class="auth-eyebrow">Account Activated</span>
+                <h1 style="font-family: var(--font-heading); font-size: 1.75rem; color: var(--navy-primary); margin: 0 0 12px;">Email Verified Successfully!</h1>
+                <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;">
+                    Thank you for verifying your email address. Your customer portal is now active, and you can securely access your project enquiries.
+                </p>
+                <a href="./login.html" class="btn-primary" style="display: inline-block; width: 100%; box-sizing: border-box; text-align: center;">
+                    Log In to Your Account
+                </a>
+            </div>
+
+            <!-- 3. ERROR / EXPIRED STATE -->
+            <div id="stateError" style="display: none; text-align: center; padding: 10px 0;">
+                <div style="font-size: 3rem; color: #EF4444; margin-bottom: 12px;">⚠️</div>
+                <span class="auth-eyebrow" style="color: #EF4444;">Verification Issue</span>
+                <h1 style="font-family: var(--font-heading); font-size: 1.65rem; color: var(--navy-primary); margin: 0 0 10px;">Link Invalid or Expired</h1>
+                <p id="errorMessageText" style="color: var(--text-muted); line-height: 1.5; margin-bottom: 24px;">
+                    This email verification link is either invalid or has expired after 24 hours. Request a fresh verification link below to activate your account.
+                </p>
+
+                <!-- Resend Form -->
+                <form id="resendForm" style="display: flex; flex-direction: column; gap: 14px; text-align: left;">
+                    <div class="form-group">
+                        <label for="resendEmail">Your Email Address</label>
+                        <input type="email" id="resendEmail" required placeholder="e.g. name@example.com">
+                    </div>
+                    <button type="submit" id="resendBtn" class="auth-btn-submit">
+                        Send New Verification Link
+                    </button>
+                    <div id="resendFeedback" style="display: none; padding: 10px; border-radius: 6px; font-size: 0.88rem; text-align: center;"></div>
+                </form>
+
+                <div class="auth-footer-text" style="margin-top: 20px;">
+                    Already verified? <a href="./login.html">Log In</a>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-bottom" style="border-top: none; padding-top: 0; justify-content: center;">
+                <span>&copy; 2026 OM Constructions &amp; Structural Engineering Consultants. All rights reserved.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { verifyEmail, resendVerification } from "./src/auth.js";
+
+        const stateLoading = document.getElementById("stateLoading");
+        const stateSuccess = document.getElementById("stateSuccess");
+        const stateError = document.getElementById("stateError");
+        const errorMessageText = document.getElementById("errorMessageText");
+
+        const resendForm = document.getElementById("resendForm");
+        const resendEmail = document.getElementById("resendEmail");
+        const resendBtn = document.getElementById("resendBtn");
+        const resendFeedback = document.getElementById("resendFeedback");
+
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token");
+
+        async function init() {
+            if (!token) {
+                stateLoading.style.display = "none";
+                errorMessageText.textContent = "No verification token found in URL. Please click the exact link from your email or request a new one below.";
+                stateError.style.display = "block";
+                return;
+            }
+
+            try {
+                await verifyEmail(token);
+                stateLoading.style.display = "none";
+                stateSuccess.style.display = "block";
+            } catch (err) {
+                stateLoading.style.display = "none";
+                errorMessageText.textContent = err.message || "This verification link is invalid or has expired.";
+                stateError.style.display = "block";
+            }
+        }
+
+        resendForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const email = resendEmail.value.trim();
+            if (!email) return;
+
+            resendBtn.disabled = true;
+            resendBtn.innerHTML = "<span>Sending Link...</span>";
+            resendFeedback.style.display = "none";
+
+            try {
+                const res = await resendVerification(email);
+                resendFeedback.textContent = res.message || "If that account exists, a new verification link was sent.";
+                resendFeedback.style.background = "#DEF7EC";
+                resendFeedback.style.color = "#03543F";
+                resendFeedback.style.border = "1px solid #84E1BC";
+                resendFeedback.style.display = "block";
+            } catch (err) {
+                resendFeedback.textContent = err.message || "Unable to resend verification link.";
+                resendFeedback.style.background = "#FDE8E8";
+                resendFeedback.style.color = "#9B1C1C";
+                resendFeedback.style.border = "1px solid #F8B4B4";
+                resendFeedback.style.display = "block";
+            } finally {
+                resendBtn.disabled = false;
+                resendBtn.innerHTML = "<span>Send New Verification Link</span>";
+            }
+        });
+
+        init();
+    </script>
+</body>
+</html>
