@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "OM Buildings API"
     DATABASE_URL: str = os.getenv("DATABASE_URL", f"sqlite:///{DEFAULT_DB_PATH}")
     JWT_SECRET: str = os.getenv("JWT_SECRET", "om-buildings-super-secret-jwt-key-change-in-production")
-    JWT_ALGORITHM: str = "HS256"
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_DAYS: int = 7
     VERIFICATION_TOKEN_EXPIRE_HOURS: int = 24
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:8000")
