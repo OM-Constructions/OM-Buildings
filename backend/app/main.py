@@ -34,6 +34,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(me.router, prefix="/api/v1/me", tags=["me"])
 app.include_router(contact.router, prefix="/api/v1/contact", tags=["contact"])
+app.include_router(contact.router, prefix="/api/v1/enquiries", tags=["enquiries"])
 
 @app.get("/api/v1/health")
 def health_check():
