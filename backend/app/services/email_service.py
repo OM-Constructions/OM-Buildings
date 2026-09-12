@@ -13,14 +13,38 @@ def send_via_resend(to, subject, html, reply_to=None):
 
     import resend
     resend.api_key = settings.RESEND_API_KEY
-    result = resend.Emails.send({
-        "from": settings.EMAIL_FROM,       # must be on a Resend-verified domain
-        "to": to if isinstance(to, list) else [to],
-        "reply_to": reply_to or settings.EMAIL_TO,
-        "subject": subject,
-        "html": html,
-    })
-    return result.get("id")
+
+    # Resend requires a verified domain OR onboarding@resend.dev (cannot send from @gmail.com)
+    from_addr = settings.EMAIL_FROM
+    if not from_addr or "@gmail.com" in from_addr or "@yahoo.com" in from_addr or "@hotmail.com" in from_addr:
+        from_addr = "OM Constructions <onboarding@resend.dev>"
+
+    recipient = to if isinstance(to, list) else [to]
+    reply_target = reply_to or settings.EMAIL_TO
+    if "@gmail.com" in str(reply_target):
+        # reply_to can be any email address
+        pass
+
+    try:
+        result = resend.Emails.send({
+            "from": from_addr,
+            "to": recipient,
+            "reply_to": reply_target,
+            "subject": subject,
+            "html": html,
+        })
+        email_id = result.get("id")
+        print(f"[RESEND SUCCESS] Email delivered to {recipient} | Resend ID: {email_id}")
+        return email_id
+    except Exception as err:
+        err_msg = str(err)
+        if "You can only send testing emails to your own email address" in err_msg:
+            print(f"\n[RESEND SANDBOX NOTICE] Resend is in free testing mode. It only delivers to your registered account email.")
+            print(f"Target was: {recipient}. To send to any external client, verify your custom domain at https://resend.com/domains")
+            print(f"Enquiry is safely stored in Supabase database.\n")
+            return "resend_sandbox_restricted"
+        print(f"[RESEND ERROR] Failed to send email to {recipient}: {err}")
+        raise err
 
 def send_via_gmail_smtp(to, subject, html, reply_to=None):
     if not settings.GMAIL_APP_PASSWORD:
