@@ -194,8 +194,31 @@ template = """<!DOCTYPE html>
                 <a href="../../index.html#hero">HOME</a>
                 <a href="../../index.html#services">SERVICES</a>
             </div>
-            <div class="nav-cta">
+            <div class="nav-actions">
+                <span id="nav-auth-container" class="nav-auth-group">
+                    <a href="../../login.html" class="nav-auth-link nav-auth-login">Log In</a>
+                    <a href="../../signup.html" class="nav-auth-link nav-auth-signup">Sign Up</a>
+                </span>
                 <a href="../../index.html#cta" class="btn-primary">Let's Talk</a>
+                <script type="module">
+                    import {{ getCurrentUser, logout }} from "../../src/auth.js";
+                    const container = document.getElementById("nav-auth-container");
+                    if (container) {{
+                        getCurrentUser().then(user => {{
+                            if (user) {{
+                                container.innerHTML = `
+                                    <a href="../../my-requests.html" class="nav-auth-link nav-auth-login" style="color: var(--gold-accent); font-weight: 600;">My Requests</a>
+                                    <a href="#" id="nav-logout-link" class="nav-auth-link nav-auth-signup">Log Out</a>
+                                `;
+                                document.getElementById("nav-logout-link")?.addEventListener("click", async (e) => {{
+                                    e.preventDefault();
+                                    await logout().catch(() => {{}});
+                                    window.location.reload();
+                                }});
+                            }}
+                        }});
+                    }}
+                </script>
             </div>
             <button class="hamburger">☰</button>
         </div>
