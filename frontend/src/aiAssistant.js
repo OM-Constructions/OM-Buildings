@@ -7,6 +7,10 @@
 export function initAIAssistant() {
     if (document.getElementById('om-ai-widget')) return;
 
+    const isServicePage = window.location.pathname.includes('/services/');
+    const basePath = isServicePage ? '../../' : '';
+    const atlasAvatarPath = `${basePath}assets/atlas-avatar.png`;
+
     // 1. Create Widget DOM Container
     const container = document.createElement('div');
     container.id = 'om-ai-widget';
@@ -16,23 +20,17 @@ export function initAIAssistant() {
         <div class="om-ai-teaser" id="om-ai-teaser">
             <div class="om-ai-teaser-content">
                 <span class="om-ai-teaser-icon">✨</span>
-                <span class="om-ai-teaser-text">Have a project? Ask <strong>OM AI Advisor</strong></span>
+                <span class="om-ai-teaser-text">Have a project? Ask <strong>Atlas</strong></span>
             </div>
             <button class="om-ai-teaser-close" id="om-ai-teaser-close" aria-label="Close teaser">&times;</button>
         </div>
 
         <!-- Floating Action Button -->
-        <button class="om-ai-launcher" id="om-ai-launcher" aria-label="Open OM AI Assistant">
-            <div class="om-ai-launcher-glow"></div>
+        <button class="om-ai-launcher" id="om-ai-launcher" aria-label="Open Atlas Assistant">
             <div class="om-ai-launcher-icon">
-                <!-- AI Sparkle / Hexagon Building Icon -->
-                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                    <circle cx="12" cy="12" r="2" fill="#C99722" stroke="none" />
-                </svg>
+                <img src="${atlasAvatarPath}" alt="Atlas Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
             </div>
-            <span class="om-ai-status-indicator" title="AI Consultant Active"></span>
-            <span class="om-ai-badge">AI</span>
+            <span class="om-ai-status-indicator" title="Atlas Active"></span>
         </button>
 
         <!-- AI Assistant Chat Window -->
@@ -41,14 +39,11 @@ export function initAIAssistant() {
             <div class="om-ai-header">
                 <div class="om-ai-header-info">
                     <div class="om-ai-avatar">
-                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#C99722" stroke-width="2">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                        </svg>
-                        <span class="om-ai-avatar-pulse"></span>
+                        <img src="${atlasAvatarPath}" alt="Atlas" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                     </div>
                     <div>
-                        <div class="om-ai-title">OM Engineering AI</div>
-                        <div class="om-ai-subtitle"><span class="om-ai-green-dot"></span> Virtual Consultant &bull; Always Online</div>
+                        <div class="om-ai-title">Atlas</div>
+                        <div class="om-ai-subtitle"><span class="om-ai-green-dot"></span> Virtual Engineering Consultant &bull; Always Online</div>
                     </div>
                 </div>
                 <div class="om-ai-controls">
@@ -103,7 +98,7 @@ export function initAIAssistant() {
     document.body.appendChild(container);
 
     // 2. Initialize Logic & Event Listeners
-    setupAIAssistantEvents();
+    setupAIAssistantEvents(atlasAvatarPath);
 }
 
 /**
@@ -341,7 +336,7 @@ Would you like to explore any of these areas, get an indicative estimate, or spe
 /**
  * Event handling and UI interactions
  */
-function setupAIAssistantEvents() {
+function setupAIAssistantEvents(atlasAvatarPath) {
     const launcher = document.getElementById('om-ai-launcher');
     const windowEl = document.getElementById('om-ai-window');
     const teaser = document.getElementById('om-ai-teaser');
@@ -360,8 +355,8 @@ function setupAIAssistantEvents() {
     function renderWelcome() {
         messagesEl.innerHTML = '';
         addBotMessage({
-            title: "Welcome to OM Engineering AI 🏗️",
-            content: `Hello! I am your **Virtual Engineering Consultant** for **OM Constructions & Structural Engineering Consultants**.
+            title: "",
+            content: `Hello! I am Atlas, your Virtual Engineering Consultant for OM Constructions & Structural Engineering Consultants.
 
 I can guide you through our **10 core built-environment services**, calculate an **indicative project cost & timeline estimate**, or help you book a **free site consultation**.
 
@@ -537,9 +532,7 @@ Choose a topic below or type any question!`,
 
         msg.innerHTML = `
             <div class="om-ai-msg-avatar">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#C99722" stroke-width="2">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                </svg>
+                <img src="${atlasAvatarPath}" alt="Atlas" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
             </div>
             <div class="om-ai-msg-body">
                 ${responseObj.title ? `<div class="om-ai-msg-heading">${escapeHTML(responseObj.title)}</div>` : ''}
