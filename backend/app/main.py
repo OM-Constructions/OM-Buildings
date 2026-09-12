@@ -38,3 +38,10 @@ app.include_router(contact.router, prefix="/api/v1/contact", tags=["contact"])
 @app.get("/api/v1/health")
 def health_check():
     return {"status": "ok", "message": "OM Buildings API is running"}
+
+import os
+from fastapi.staticfiles import StaticFiles
+
+FRONTEND_DIR = os.path.realpath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))
+if os.path.exists(FRONTEND_DIR):
+    app.mount("/", StaticFiles(directory=FRONTEND_DIR, html=True), name="frontend")

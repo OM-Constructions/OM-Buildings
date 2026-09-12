@@ -37,9 +37,13 @@ def submit_contact(
     db_message = models.ContactMessage(
         name=message.name,
         email=message.email,
+        phone=message.phone,
         subject=message.subject or "General Inquiry",
         project_type=project_type,
         message=message.message,
+        estimated_budget=message.estimated_budget,
+        location=message.location,
+        timeline=message.timeline,
         status="Received",
         user_id=user_id
     )
