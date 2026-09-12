@@ -6,37 +6,15 @@ import { playLogoAnimation } from './animation.js';
 import { LogoInteraction } from './interaction.js';
 import { initHeroVisual } from './heroVisual.js';
 import { initServicesHover } from './servicesHover.js';
+import { initAIAssistant } from './aiAssistant.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
 let scene, camera, renderer, logoSystem, interaction;
 
 async function init() {
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xffffff);
-    
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    
-    camera = new THREE.OrthographicCamera(w / -2, w / 2, h / 2, h / -2, 1, 1000);
-    camera.position.z = 100;
-    
-    const canvas = document.getElementById('webgl-canvas');
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
-    renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    
-    logoSystem = new LogoSystem(scene);
-    await logoSystem.loadAssets();
-    logoSystem.updateScale(w, h);
-    
-    interaction = new LogoInteraction(camera, logoSystem, renderer);
-    
-    window.addEventListener('resize', onWindowResize);
-    
-    renderer.setAnimationLoop(render);
-    
-    playLogoAnimation(logoSystem, interaction);
+    // Initialize OM Engineering AI Consultant Box early
+    initAIAssistant();
 
     // Initialize Hero right-side visual
     initHeroVisual();
@@ -49,6 +27,45 @@ async function init() {
 
     // Initialize Services Hover Interrupt Management
     initServicesHover();
+
+    try {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff);
+        
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        
+        camera = new THREE.OrthographicCamera(w / -2, w / 2, h / 2, h / -2, 1, 1000);
+        camera.position.z = 100;
+        
+        const canvas = document.getElementById('webgl-canvas');
+        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+        renderer.setSize(w, h);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        
+        logoSystem = new LogoSystem(scene);
+        await logoSystem.loadAssets();
+        logoSystem.updateScale(w, h);
+        
+        interaction = new LogoInteraction(camera, logoSystem, renderer);
+        
+        window.addEventListener('resize', onWindowResize);
+        
+        renderer.setAnimationLoop(render);
+        
+        playLogoAnimation(logoSystem, interaction);
+    } catch (err) {
+        console.warn('WebGL initialization skipped or failed, revealing homepage content:', err);
+        const introSplash = document.getElementById('intro-splash');
+        if (introSplash) introSplash.style.display = 'none';
+        gsap.to(['#navbar', '#homepage-content', 'footer', '#om-ai-widget'], {
+            opacity: 1,
+            visibility: "visible",
+            duration: 0.5
+        });
+        document.body.style.overflowY = 'auto';
+        document.body.style.overflowX = 'hidden';
+    }
 }
 
 function initScrollAnimations() {

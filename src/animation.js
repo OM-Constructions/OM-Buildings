@@ -24,7 +24,7 @@ export function playLogoAnimation(logoSystem, interaction) {
                 interaction.enable();
             }
             // Transition into the actual homepage
-            gsap.to(['#navbar', '#homepage-content', 'footer'], {
+            gsap.to(['#navbar', '#homepage-content', 'footer', '#om-ai-widget'], {
                 opacity: 1,
                 visibility: "visible",
                 duration: 1.5,
