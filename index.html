@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Constructions & Structural Engineering consultants</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=2">
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "gsap": "https://unpkg.com/gsap@3.12.2/index.js",
+                "gsap/ScrollTrigger": "https://unpkg.com/gsap@3.12.2/ScrollTrigger.js"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav id="navbar">
+        <div class="container nav-container">
+            <a href="#" class="nav-brand">OM<span>Constructions</span></a>
+            <div class="nav-links">
+                <a href="#hero">Home</a>
+                <a href="#services">Services</a>
+                <a href="#capabilities">Capabilities</a>
+                <a href="#industries">Industries</a>
+                <a href="#about">About</a>
+                <a href="#cta">Contact</a>
+            </div>
+            <div class="nav-cta">
+                <a href="#cta" class="btn-primary">Let's Talk</a>
+            </div>
+            <button class="hamburger">☰</button>
+        </div>
+    </nav>
+
+    <!-- INTRO SPLASH -->
+    <section id="intro-splash">
+        <canvas id="webgl-canvas"></canvas>
+        <div class="text-overlay">
+            <div class="text-wrapper brand-text" id="company-text">
+                <div class="company-name">Constructions</div>
+                <div class="tagline">
+                    <span>&amp; Structural Engineering consultants</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOMEPAGE CONTENT -->
+    <main id="homepage-content">
+        
+        <!-- HERO -->
+        <section id="hero">
+            <div class="container hero-container">
+                <div class="hero-content">
+                    <span class="eyebrow">ENGINEERING TODAY &bull; BUILDING TOMORROW</span>
+                    <h1>BUILDING <span class="intelligent">WHAT</span> MATTERS.</h1>
+                    <p>We deliver high-quality construction and engineering solutions from concept to completion &mdash; creating structures built for performance, durability, and lasting value.</p>
+                    <div class="hero-actions">
+                        <a href="#services" class="btn-primary">Explore Our Services</a>
+                        <a href="#cta" class="btn-outline">Start a Project</a>
+                    </div>
+                </div>
+                <div class="hero-visual" id="hero-visual-container">
+                    <video src="assets/hero/building.mp4" class="hero-video" id="hero-video" autoplay muted loop playsinline preload="metadata"></video>
+                    
+                    <div class="hero-annotations" id="hero-annotations">
+                        <div class="annotation ann-1">
+                            <span class="ann-text">ARCHITECTURAL DESIGN</span>
+                            <div class="ann-line"></div>
+                            <div class="ann-dot"></div>
+                        </div>
+                        <div class="annotation ann-2">
+                            <span class="ann-text">STRUCTURAL ENGINEERING</span>
+                            <div class="ann-line"></div>
+                            <div class="ann-dot"></div>
+                        </div>
+                        <div class="annotation ann-3">
+                            <span class="ann-text">PROJECT PLANNING</span>
+                            <div class="ann-line"></div>
+                            <div class="ann-dot"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CAPABILITIES STRIP -->
+        <div id="capabilities-strip" class="ticker">
+            <div class="ticker-track">
+                <div class="ticker-group">
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">FASTER DELIVERY</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">ON-TIME COMPLETION</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">QUALITY FIRST</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">COST EFFICIENT</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">RELIABLE EXECUTION</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">ENGINE PRECISION</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">END-TO-END SOLUTIONS</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">CUSTOMER FOCUSED</span>
+                </div>
+                <div class="ticker-group" aria-hidden="true">
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">FASTER DELIVERY</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">ON-TIME COMPLETION</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">QUALITY FIRST</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">COST EFFICIENT</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">RELIABLE EXECUTION</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">ENGINE PRECISION</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">END-TO-END SOLUTIONS</span>
+                    <span class="ticker-separator">◆</span>
+                    <span class="ticker-item">CUSTOMER FOCUSED</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- SERVICES -->
+        <section id="services" class="section-gray">
+            <div class="container">
+                <span class="eyebrow">OUR CONSTRUCTION & ENGINEERING SERVICES</span>
+                <h2 class="section-title">Engineering Excellence. Built on Trust.</h2>
+                <p class="section-subtitle">We deliver comprehensive construction and structural solutions, prioritizing safety, quality, and precision from concept to completion.</p>
+                
+                <div class="services-grid">
+                    <div class="service-card" data-index="1">
+                        <span class="service-number">01</span>
+                        <h3 class="service-title">ARCHITECTURAL DESIGN</h3>
+                        <p class="service-desc">Creative &bull; Functional &bull; Sustainable</p>
+                        <div class="service-hover-image">
+                            <img src="assets/services/architectural-design.png" alt="Architectural Design">
+                        </div>
+                    </div>
+                    <div class="service-card" data-index="2">
+                        <span class="service-number">02</span>
+                        <h3 class="service-title">ARCHITECTURAL 2D PLANS</h3>
+                        <p class="service-desc">Technical &bull; Vaastu Compliant &bull; Detailed</p>
+                        <div class="service-hover-image">
+                            <img src="assets/services/architectural-plans.png" alt="Architectural 2D Plans">
+                        </div>
+                    </div>
+                    <div class="service-card" data-index="3">
+                        <span class="service-number">03</span>
+                        <h3 class="service-title">STRUCTURAL DESIGN</h3>
+                        <p class="service-desc">Safe &bull; Strong &bull; Reliable</p>
+                        <div class="service-hover-image">
+                            <img src="assets/services/structural-design.png" alt="Structural Design">
+                        </div>
+                    </div>
+                    <div class="service-card" data-index="4">
+                        <span class="service-number">04</span>
+                        <h3 class="service-title">PROJECT PLANNING</h3>
+                        <p class="service-desc">Timely &bull; Efficient &bull; Cost Effective</p>
+                        <div class="service-hover-image">
+                            <img src="assets/services/project-planning.png" alt="Project Planning">
+                        </div>
+                    </div>
+                    <div class="service-card" data-index="5">
+                        <span class="service-number">05</span>
+                        <h3 class="service-title">INTERIOR DESIGN</h3>
+                        <p class="service-desc">Smart &bull; Stylish &bull; Comfortable</p>
+                        <div class="service-hover-image">
+                            <img src="assets/services/interior-design.png" alt="Interior Design">
+                        </div>
+                    </div>
+                    <div class="service-card" data-index="6">
+                        <span class="service-number">06</span>
+                        <h3 class="service-title">GEOTECHNICAL REPORT</h3>
+                        <p class="service-desc">Accurate Analysis &bull; Safe Foundations</p>
+                        <div class="service-hover-image"></div>
+                    </div>
+                    <div class="service-card" data-index="7">
+                        <span class="service-number">07</span>
+                        <h3 class="service-title">MEP DESIGNS</h3>
+                        <p class="service-desc">Mechanical &bull; Electrical &bull; Plumbing</p>
+                    </div>
+                    <div class="service-card" data-index="8">
+                        <span class="service-number">08</span>
+                        <h3 class="service-title">3D BUILDING DESIGN</h3>
+                        <p class="service-desc">Realistic &bull; Detailed &bull; Precise</p>
+                    </div>
+                    <div class="service-card" data-index="9">
+                        <span class="service-number">09</span>
+                        <h3 class="service-title">REALISTIC RENDERING</h3>
+                        <p class="service-desc">High Quality &bull; Photorealistic &bull; Immersive</p>
+                    </div>
+                    <div class="service-card" data-index="10">
+                        <span class="service-number">10</span>
+                        <h3 class="service-title">ESTIMATION & COSTING</h3>
+                        <p class="service-desc">Accurate &bull; Transparent &bull; Optimized</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TECH CAPABILITIES -->
+        <section id="capabilities" class="section-dark">
+            <div class="container">
+                <div class="capabilities-header">
+                    <span class="eyebrow">OUR TECHNOLOGY CAPABILITIES</span>
+                    <h2 class="section-title">Engineered for scale.</h2>
+                    <p class="section-subtitle">Scalable, robust and modern technology stacks to power your ideas.</p>
+                </div>
+                
+                <div class="tech-editorial">
+                    <div class="tech-column">
+                        <div class="tech-group">
+                            <h3>GEN AI & LLM</h3>
+                            <ul class="tech-list">
+                                <li>LangChain</li>
+                                <li>RAG</li>
+                                <li>AI Agents</li>
+                            </ul>
+                        </div>
+                        <div class="tech-group">
+                            <h3>MACHINE LEARNING</h3>
+                            <ul class="tech-list">
+                                <li>Scikit-learn</li>
+                                <li>TensorFlow</li>
+                                <li>PyTorch</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tech-column">
+                        <div class="tech-group">
+                            <h3>CLOUD & DEVOPS</h3>
+                            <ul class="tech-list">
+                                <li>AWS</li>
+                                <li>Azure</li>
+                                <li>GCP</li>
+                                <li>Docker</li>
+                                <li>Kubernetes</li>
+                            </ul>
+                        </div>
+                        <div class="tech-group">
+                            <h3>WEB & MOBILE</h3>
+                            <ul class="tech-list">
+                                <li>React</li>
+                                <li>Next.js</li>
+                                <li>Flutter</li>
+                                <li>Node.js</li>
+                                <li>Django</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="tech-column">
+                        <div class="tech-group">
+                            <h3>DATABASES</h3>
+                            <ul class="tech-list">
+                                <li>MySQL</li>
+                                <li>PostgreSQL</li>
+                                <li>MongoDB</li>
+                                <li>Vector databases</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- INDUSTRIES -->
+        <section id="industries">
+            <div class="container">
+                <span class="eyebrow">INDUSTRIES WE SERVE</span>
+                <h2 class="section-title">Built for every domain.</h2>
+                
+                <div class="industries-grid">
+                    <div class="industry-item"><h3>CONSTRUCTION & REAL ESTATE</h3></div>
+                    <div class="industry-item"><h3>MANUFACTURING & INDUSTRY</h3></div>
+                    <div class="industry-item"><h3>TRANSPORT & SMART MOBILITY</h3></div>
+                    <div class="industry-item"><h3>HEALTHCARE & PHARMA</h3></div>
+                    <div class="industry-item"><h3>FINANCE & BANKING</h3></div>
+                    <div class="industry-item"><h3>RETAIL & E-COMMERCE</h3></div>
+                    <div class="industry-item"><h3>EDUCATION & E-LEARNING</h3></div>
+                    <div class="industry-item"><h3>GOVERNMENT & SMART CITY</h3></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SELECTED WORK -->
+        <section id="work" class="section-gray">
+            <div class="container">
+                <span class="eyebrow">SELECTED WORK</span>
+                <h2 class="section-title">Technology that moves ideas forward.</h2>
+                
+                <div class="work-grid">
+                    <div class="work-card">
+                        <span class="work-label">AI & DATA PLATFORM</span>
+                    </div>
+                    <div class="work-card">
+                        <span class="work-label">INTELLIGENT AUTOMATION</span>
+                    </div>
+                    <div class="work-card">
+                        <span class="work-label">SOFTWARE PLATFORM</span>
+                    </div>
+                    <div class="work-card">
+                        <span class="work-label">CYBERSECURITY SYSTEM</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- OM CONSTRUCTIONS -->
+        <section id="engineering" class="section-dark">
+            <div class="container">
+                <div class="engineering-layout">
+                    <div class="engineering-left">
+                        <span class="eyebrow">OM CONSTRUCTIONS & ENGINEERING CONSULTANTS</span>
+                        <h2 class="section-title">Engineering & Built Environments</h2>
+                        <p class="section-subtitle">Engineering excellence built on trust. We provide precise, scalable engineering and architectural services.</p>
+                        <a href="#cta" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary);">Work With Us</a>
+                    </div>
+                    <div class="engineering-right">
+                        <div class="constructions-grid">
+                            <div class="construction-item"><div class="icon"></div><span>ARCHITECTURAL DESIGN</span></div>
+                            <div class="construction-item"><div class="icon"></div><span>ARCHITECTURAL 2D PLANS</span></div>
+                            <div class="construction-item"><div class="icon"></div><span>STRUCTURAL DESIGN</span></div>
+                            <div class="construction-item"><div class="icon"></div><span>PROJECT PLANNING & MANAGEMENT</span></div>
+                            <div class="construction-item"><div class="icon"></div><span>INTERIOR DESIGN</span></div>
+                            <div class="construction-item"><div class="icon"></div><span>GEOTECHNICAL SOIL INVESTIGATION</span></div>
+                            <div class="construction-item"><div class="icon"></div><span>MEP DESIGN</span></div>
+                            <div class="construction-item"><div class="icon"></div><span>3D BUILDING DESIGN</span></div>
+                            <div class="construction-item"><div class="icon"></div><span>REALISTIC RENDERING</span></div>
+                            <div class="construction-item"><div class="icon"></div><span>QUANTITY ESTIMATION & COSTING</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- WHY INNOVENTURES -->
+        <section id="why">
+            <div class="container">
+                <span class="eyebrow">WHY OM CONSTRUCTIONS</span>
+                <h2 class="section-title">Built on excellence.</h2>
+                
+                <div class="values-grid">
+                    <div class="value-item">
+                        <h3 class="value-title">PRECISION</h3>
+                        <p class="value-desc">IN DETAIL</p>
+                    </div>
+                    <div class="value-item">
+                        <h3 class="value-title">INTELLIGENCE</h3>
+                        <p class="value-desc">DRIVEN BY DATA</p>
+                    </div>
+                    <div class="value-item">
+                        <h3 class="value-title">INNOVATION</h3>
+                        <p class="value-desc">POWERED BY AI</p>
+                    </div>
+                    <div class="value-item">
+                        <h3 class="value-title">QUALITY</h3>
+                        <p class="value-desc">ASSURED ALWAYS</p>
+                    </div>
+                    <div class="value-item">
+                        <h3 class="value-title">COMMITMENT</h3>
+                        <p class="value-desc">TO EXCELLENCE</p>
+                    </div>
+                    <div class="value-item">
+                        <h3 class="value-title">IMPACT</h3>
+                        <p class="value-desc">THAT MATTERS</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ABOUT -->
+        <section id="about" class="section-gray">
+            <div class="container">
+                <span class="eyebrow">ABOUT OM CONSTRUCTIONS</span>
+                <h2 class="section-title">Where intelligence meets execution.</h2>
+                <div class="about-content">
+                    <p>OM Constructions & Structural Engineering consultants combines artificial intelligence, data, software engineering, automation and cybersecurity to build practical technology solutions for businesses and emerging ideas.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA -->
+        <section id="cta" class="section-dark">
+            <div class="container">
+                <div class="cta-content">
+                    <span class="eyebrow">HAVE SOMETHING WORTH BUILDING?</span>
+                    <h2 class="section-title">Let's turn the idea into something real.</h2>
+                    <a href="#" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary);">LET'S BUILD &rarr;</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>OM CONSTRUCTIONS</h3>
+                    <p>& STRUCTURAL ENGINEERING CONSULTANTS</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="#hero">Home</a></li>
+                        <li><a href="#services">Services</a></li>
+                        <li><a href="#capabilities">Capabilities</a></li>
+                        <li><a href="#industries">Industries</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#cta">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Technology</h4>
+                    <ul>
+                        <li><a href="#">AI / ML</a></li>
+                        <li><a href="#">Data</a></li>
+                        <li><a href="#">Software</a></li>
+                        <li><a href="#">Cybersecurity</a></li>
+                        <li><a href="#">Cloud</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Engineering</h4>
+                    <ul>
+                        <li><a href="#">Architecture</a></li>
+                        <li><a href="#">Structural</a></li>
+                        <li><a href="#">Planning</a></li>
+                        <li><a href="#">3D Design</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>&copy; 2026 OM Constructions. All rights reserved.</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ENTRY POINT -->
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>
