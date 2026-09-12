@@ -172,6 +172,10 @@ def login(
             }
         )
 
+    # Record last login timestamp
+    user.last_login_at = datetime.utcnow()
+    db.commit()
+
     # Set session cookie
     set_auth_cookie(response, user.id)
 

@@ -35,7 +35,11 @@ source backend/venv/bin/activate
 # Install dependencies
 pip install -r backend/requirements.txt
 
-# Run migrations
+# (Optional) Connect to Supabase PostgreSQL:
+# Copy backend/.env.example to backend/.env and set DATABASE_URL to your Supabase connection string:
+# DATABASE_URL=postgresql://postgres.[ref]:[PASSWORD]@aws-0-[region].pooler.supabase.com:6543/postgres?sslmode=require
+
+# Run migrations (creates tables in SQLite or Supabase)
 cd backend
 alembic upgrade head
 
