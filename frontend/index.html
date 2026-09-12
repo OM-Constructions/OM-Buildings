@@ -31,6 +31,29 @@
                 <a href="#industries">Industries</a>
                 <a href="#about">About</a>
                 <a href="#cta">Contact</a>
+                <span id="nav-auth-container" class="nav-auth-group">
+                    <a href="./login.html" class="nav-auth-link">Log In</a>
+                    <a href="./signup.html" class="nav-auth-link nav-auth-signup">Sign Up</a>
+                </span>
+                <script type="module">
+                    import { getCurrentUser, logout } from "./src/auth.js";
+                    const container = document.getElementById("nav-auth-container");
+                    if (container) {
+                        getCurrentUser().then(user => {
+                            if (user) {
+                                container.innerHTML = `
+                                    <a href="./my-requests.html" class="nav-auth-link" style="color: var(--gold-accent); font-weight: 600;">My Requests</a>
+                                    <a href="#" id="nav-logout-link" class="nav-auth-link" style="color: var(--text-muted); font-size: 0.85rem;">Log Out</a>
+                                `;
+                                document.getElementById("nav-logout-link")?.addEventListener("click", async (e) => {
+                                    e.preventDefault();
+                                    await logout().catch(() => {});
+                                    window.location.reload();
+                                });
+                            }
+                        });
+                    }
+                </script>
             </div>
             <div class="nav-cta">
                 <a href="#cta" class="btn-primary">Let's Talk</a>

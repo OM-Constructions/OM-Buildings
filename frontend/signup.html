@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Customer Account | OM Constructions</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav id="navbar" class="scrolled">
+        <div class="container nav-container">
+            <a href="./index.html" class="nav-brand">OM<span>Constructions</span></a>
+            <div class="nav-links">
+                <a href="./index.html#hero">Home</a>
+                <a href="./index.html#services">Services</a>
+                <a href="./index.html#about">About</a>
+                <a href="./index.html#cta">Contact</a>
+                <a href="./login.html" class="nav-auth-link">Log In</a>
+            </div>
+            <div class="nav-cta">
+                <a href="./index.html#cta" class="btn-primary">Let's Talk</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- SIGNUP FORM SECTION -->
+    <main class="auth-page-wrapper">
+        <div class="auth-card">
+            <div class="auth-header">
+                <span class="auth-eyebrow">Customer Portal</span>
+                <h1>Create Your Account</h1>
+                <p>Track your project enquiries and engineering consultations in one place.</p>
+            </div>
+
+            <!-- Inline Error Banner -->
+            <div id="errorMessage" class="auth-error-banner" role="alert"></div>
+
+            <form id="signupForm" class="auth-form" novalidate>
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <input type="text" id="name" name="name" placeholder="e.g. John Doe" required autocomplete="name">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="e.g. john@example.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="Create a password" required autocomplete="new-password">
+                    <span class="form-hint">Must be at least 8 characters long</span>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Repeat your password" required autocomplete="new-password">
+                </div>
+
+                <button type="submit" id="submitBtn" class="auth-btn-submit">
+                    <span>Create Account</span>
+                </button>
+            </form>
+
+            <div class="auth-footer-text">
+                Already have an account? <a href="./login.html">Log In</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-bottom" style="border-top: none; padding-top: 0; justify-content: center;">
+                <span>&copy; 2026 OM Constructions & Structural Engineering Consultants. All rights reserved.</span>
+            </div>
+        </div>
+    </footer>
+
+    <script type="module">
+        import { signup, getCurrentUser } from "./src/auth.js";
+
+        // If already logged in, redirect straight to my-requests
+        getCurrentUser().then(user => {
+            if (user) window.location.href = "./my-requests.html";
+        });
+
+        const form = document.getElementById("signupForm");
+        const errorBanner = document.getElementById("errorMessage");
+        const submitBtn = document.getElementById("submitBtn");
+
+        function showError(msg) {
+            errorBanner.textContent = msg;
+            errorBanner.style.display = "block";
+        }
+
+        function hideError() {
+            errorBanner.textContent = "";
+            errorBanner.style.display = "none";
+        }
+
+        form.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            hideError();
+
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const confirmPassword = document.getElementById("confirmPassword").value;
+
+            if (!name) {
+                showError("Please enter your full name.");
+                return;
+            }
+
+            if (!email) {
+                showError("Please enter a valid email address.");
+                return;
+            }
+
+            if (password.length < 8) {
+                showError("Password must be at least 8 characters long.");
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showError("Passwords do not match. Please re-enter.");
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = "<span>Creating Account...</span>";
+
+            try {
+                await signup({ name, email, password });
+                // Redirect on success
+                window.location.href = "./my-requests.html";
+            } catch (err) {
+                showError(err.message || "Unable to create account. Please try again.");
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = "<span>Create Account</span>";
+            }
+        });
+    </script>
+</body>
+</html>

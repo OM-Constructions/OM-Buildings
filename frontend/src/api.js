@@ -4,15 +4,18 @@ export async function submitEnquiry({ name, email, phone, projectType, message, 
   const res = await fetch(`${API_BASE_URL}/api/v1/contact/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
+    credentials: "include",
     body: JSON.stringify({
       name,
       email,
       phone: phone || null,
       project_type: projectType || null,
       message,
+      website: honeypot || "",
       honeypot: honeypot || "",
     }),
   });
   if (!res.ok) throw new Error("Failed to submit");
   return res.json();
 }
+
