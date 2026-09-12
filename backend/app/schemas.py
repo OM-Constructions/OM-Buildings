@@ -1,33 +1,39 @@
 import uuid
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Any
 from pydantic import BaseModel, EmailStr, Field
 
-class ContactMessageCreate(BaseModel):
+class EnquiryCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
+    email: EmailStr
+    phone: Optional[str] = None
+    service_slug: Optional[str] = None
+    project_type: Optional[str] = None  # Backward compatibility
+    subject: Optional[str] = None       # Backward compatibility
+    message: str = Field(..., min_length=1)
+    # Honeypot fields
+    website: Optional[str] = None
+    honeypot: Optional[str] = None
+
+class EnquirySuccessResponse(BaseModel):
+    success: bool = True
+    id: str
+    message: Optional[str] = "Enquiry received successfully"
+
+# Backward compatibility schema
+ContactMessageCreate = EnquiryCreate
+
+class ContactMessageResponse(BaseModel):
+    id: Any
+    name: str
     email: EmailStr
     phone: Optional[str] = None
     subject: Optional[str] = "General Inquiry"
     project_type: Optional[str] = None
-    message: str = Field(..., min_length=1)
-    estimated_budget: Optional[str] = None
-    location: Optional[str] = None
-    timeline: Optional[str] = None
-    # Honeypot field - bots will fill this out, real users won't
-    website: Optional[str] = None
-
-class ContactMessageResponse(BaseModel):
-    id: int
-    name: str
-    email: EmailStr
-    phone: Optional[str] = None
-    subject: str
-    project_type: Optional[str] = None
+    service_slug: Optional[str] = None
     message: str
-    estimated_budget: Optional[str] = None
-    location: Optional[str] = None
-    timeline: Optional[str] = None
-    status: str = "Received"
+    status: str = "new"
+    client_ack_status: Optional[str] = "pending"
     created_at: datetime
 
     class Config:
@@ -61,16 +67,14 @@ class ResendVerificationRequest(BaseModel):
     email: EmailStr
 
 class SubmissionItem(BaseModel):
-    id: int
+    id: Any
     name: str
     phone: Optional[str] = None
-    subject: Optional[str] = None
+    service_slug: Optional[str] = None
     project_type: Optional[str] = None
     message: str
-    estimated_budget: Optional[str] = None
-    location: Optional[str] = None
-    timeline: Optional[str] = None
     status: str
+    client_ack_status: Optional[str] = None
     created_at: datetime
 
     class Config:

@@ -1,92 +1,111 @@
-import urllib.request
-import json
-from typing import Any
-from app.config import settings
+from .service_catalog import SERVICES, resolve_service
+from ..config import settings
+from .email_templates import (
+    render_email,
+    build_company_notification_html,
+    build_client_acknowledgement_html,
+)
 
-def send_contact_email(message_data):
-    """Notification for contact / service enquiry message."""
-    print(f"[EMAIL SERVICE] Contact notification sent for: {message_data.email}")
-    return True
+def send_via_resend(to, subject, html, reply_to=None):
+    if not settings.RESEND_API_KEY:
+        print(f"[EMAIL MOCK - RESEND] To: {to} | Subject: {subject} (RESEND_API_KEY not configured, logging locally)")
+        return "mock_resend_id_local"
 
-def send_verification_email(to_email: Any, name: Any, verification_link: str) -> bool:
-    """Sends account verification email with branded HTML template and 24-hour expiry note.
-    Uses Resend API if RESEND_API_KEY is set, or logs to console for local development."""
+    import resend
+    resend.api_key = settings.RESEND_API_KEY
+    result = resend.Emails.send({
+        "from": settings.EMAIL_FROM,       # must be on a Resend-verified domain
+        "to": to if isinstance(to, list) else [to],
+        "reply_to": reply_to or settings.EMAIL_TO,
+        "subject": subject,
+        "html": html,
+    })
+    return result.get("id")
+
+def send_via_gmail_smtp(to, subject, html, reply_to=None):
+    if not settings.GMAIL_APP_PASSWORD:
+        print(f"[EMAIL MOCK - GMAIL] To: {to} | Subject: {subject} (GMAIL_APP_PASSWORD not configured, logging locally)")
+        return None
+
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    msg = MIMEMultipart("alternative")
+    msg["From"] = settings.EMAIL_FROM          # your real Gmail address
+    msg["To"] = to if isinstance(to, str) else ", ".join(to)
+    msg["Subject"] = subject
+    msg["Reply-To"] = reply_to or settings.EMAIL_TO
+    msg.attach(MIMEText(html, "html"))
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+        server.login(settings.EMAIL_FROM, settings.GMAIL_APP_PASSWORD)
+        server.sendmail(settings.EMAIL_FROM, to, msg.as_string())
+    return None  # gmail doesn't give back a provider message id
+
+def send_email(to, subject, html, reply_to=None):
+    if settings.EMAIL_PROVIDER == "gmail_smtp":
+        return send_via_gmail_smtp(to, subject, html, reply_to)
+    return send_via_resend(to, subject, html, reply_to)
+
+def send_company_notification(enquiry):
+    """Sends company notification to settings.EMAIL_TO with reply_to = client email."""
+    _, service_meta = resolve_service(getattr(enquiry, "service_slug", None))
+    subject, html = build_company_notification_html(enquiry, service_meta)
+    return send_email(
+        to=settings.EMAIL_TO,
+        subject=subject,
+        html=html,
+        reply_to=enquiry.email
+    )
+
+def send_client_acknowledgement(enquiry):
+    """Sends client acknowledgement to enquiry.email with reply_to = settings.EMAIL_TO."""
+    _, service_meta = resolve_service(getattr(enquiry, "service_slug", None))
+    subject, html = build_client_acknowledgement_html(enquiry, service_meta)
+    return send_email(
+        to=enquiry.email,
+        subject=subject,
+        html=html,
+        reply_to=settings.EMAIL_TO
+    )
+
+def send_verification_email(to_email, name, verification_link):
+    """Sends account verification email with branded HTML template."""
     subject = "Verify your email — OM Constructions"
-
-    html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <style>
-    body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #F8FAFC; color: #111827; margin: 0; padding: 30px; }}
-    .container {{ max-width: 560px; margin: 0 auto; background: #FFFFFF; border-radius: 8px; border: 1px solid #E2E8F0; padding: 36px; }}
-    .header {{ text-align: center; border-bottom: 2px solid #C99722; padding-bottom: 16px; margin-bottom: 24px; }}
-    .brand {{ font-size: 20px; font-weight: 800; color: #07152F; letter-spacing: 1px; }}
-    .brand span {{ color: #C99722; }}
-    .content p {{ font-size: 15px; line-height: 1.6; color: #374151; }}
-    .btn-container {{ text-align: center; margin: 32px 0; }}
-    .btn {{ background-color: #07152F; color: #FFFFFF !important; padding: 14px 28px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 15px; display: inline-block; }}
-    .footer {{ font-size: 12px; color: #6B7280; border-top: 1px solid #E5E7EB; padding-top: 16px; margin-top: 32px; text-align: center; }}
-    .link-fallback {{ word-break: break-all; font-size: 12px; color: #6B7280; margin-top: 16px; }}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="brand">OM <span>CONSTRUCTIONS</span></div>
+    body_html = f"""
+    <p style="font-size:15px; color:#334155; line-height:1.6;">
+      Hello <strong>{name}</strong>,
+    </p>
+    <p style="font-size:15px; color:#334155; line-height:1.6;">
+      Thank you for registering an account with OM Constructions. Please confirm your email address to activate your customer portal and access your project enquiries:
+    </p>
+    <div style="text-align:center; margin: 28px 0;">
+      <a href="{verification_link}" style="background-color:#0d1b2a; color:#ffffff !important; padding:12px 28px; text-decoration:none; border-radius:6px; font-weight:600; font-size:15px; display:inline-block;">Verify Email Address</a>
     </div>
-    <div class="content">
-      <p>Hello <strong>{name}</strong>,</p>
-      <p>Thank you for creating an account with OM Constructions. Please confirm your email address to activate your customer portal and access your project enquiries.</p>
-      <div class="btn-container">
-        <a href="{verification_link}" class="btn">Verify Email Address</a>
-      </div>
-      <p style="font-size: 13px; color: #4B5563;">This verification link will expire in 24 hours. If you did not create an account, you can safely ignore this email.</p>
-      <p class="link-fallback">Button not working? Copy and paste this link into your browser:<br><a href="{verification_link}">{verification_link}</a></p>
-    </div>
-    <div class="footer">
-      &copy; 2026 OM Constructions & Structural Engineering Consultants. All rights reserved.
-    </div>
-  </div>
-</body>
-</html>"""
+    <p style="font-size:13px; color:#64748b;">This verification link will expire in 24 hours. If you did not create an account, you can safely ignore this message.</p>
+    <p style="font-size:12px; color:#94a3b8; word-break:break-all;">Direct link: <a href="{verification_link}">{verification_link}</a></p>
+    """
+    html = render_email(
+        preheader="Confirm your OM Constructions account",
+        heading="Verify Your Email",
+        body_html=body_html
+    )
 
-    text_content = f"""Hello {name},
-
-Thank you for creating an account with OM Constructions. Please confirm your email address to activate your customer portal:
-
-{verification_link}
-
-This link will expire in 24 hours. If you did not create an account, you can safely ignore this email.
-"""
-
-    if settings.RESEND_API_KEY:
-        try:
-            req = urllib.request.Request(
-                "https://api.resend.com/emails",
-                data=json.dumps({
-                    "from": "OM Constructions <onboarding@resend.dev>",
-                    "to": [to_email],
-                    "subject": subject,
-                    "html": html_content,
-                    "text": text_content,
-                }).encode("utf-8"),
-                headers={
-                    "Authorization": f"Bearer {settings.RESEND_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                method="POST"
-            )
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                print(f"[EMAIL SERVICE] Verification email sent to {to_email} via Resend (status {resp.status})")
-                return True
-        except Exception as err:
-            print(f"[EMAIL SERVICE] Resend dispatch failed: {err}. Falling back to console log.")
-
-    # Local development fallback
     print(f"\n==================== VERIFICATION EMAIL ====================")
     print(f"TO: {name} <{to_email}>")
     print(f"SUBJECT: {subject}")
     print(f"VERIFICATION LINK: {verification_link}")
     print(f"===========================================================\n")
+
+    try:
+        if settings.RESEND_API_KEY or (settings.EMAIL_PROVIDER == "gmail_smtp" and settings.GMAIL_APP_PASSWORD):
+            send_email(to=to_email, subject=subject, html=html)
+    except Exception as err:
+        print(f"[EMAIL SERVICE] Verification email dispatch error: {err}")
+
     return True
+
+# Backward compatibility alias
+def send_contact_email(enquiry):
+    return send_company_notification(enquiry)
