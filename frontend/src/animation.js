@@ -16,6 +16,8 @@ export function playLogoAnimation(logoSystem, interaction) {
     gsap.set(".ai-accent", { filter: "brightness(0.8)" });
     
     // Create master timeline
+    const isMobile = window.innerWidth <= 768;
+    
     const tl = gsap.timeline({
         delay: 0.2,
         onComplete: () => {
@@ -27,14 +29,24 @@ export function playLogoAnimation(logoSystem, interaction) {
             gsap.to(['#navbar', '#homepage-content', 'footer', '#om-ai-widget'], {
                 opacity: 1,
                 visibility: "visible",
-                duration: 1.5,
+                duration: isMobile ? 0.5 : 1.5,
                 ease: "power2.out"
             });
             // Unlock scrolling
             document.body.style.overflowY = 'auto';
             document.body.style.overflowX = 'hidden';
+            
+            // Clean up splash container
+            setTimeout(() => {
+                const splash = document.getElementById('intro-splash');
+                if (splash) splash.style.display = 'none';
+            }, 1000);
         }
     });
+    
+    if (isMobile) {
+        tl.timeScale(3.5); // Speed up the animation significantly on mobile (approx 1s total)
+    }
     
     // PHASE 1: Q Reveal (0.00s - 2.10s)
     tl.to(logoSystem.materials.ring.uniforms.uProgress, {
