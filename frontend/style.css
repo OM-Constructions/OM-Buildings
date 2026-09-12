@@ -1023,6 +1023,150 @@ ABOUT
     margin: 0;
 }
 
+/* FOUNDER PROFILE */
+.founder-profile {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    margin-top: 80px;
+    align-items: stretch;
+}
+
+.founder-image-col {
+    display: flex;
+}
+
+.founder-image-placeholder {
+    width: 100%;
+    max-width: 420px; /* Reduced width for a tighter portrait feel */
+    height: 460px; /* Reduced height to crop out the bottom desk/hand */
+    background-color: #F0F2F5;
+    border: 1px solid #E3E6EA;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden; /* Ensure zoom doesn't leak out */
+    margin: 0 auto; /* Center it in the column */
+}
+
+.founder-img-cropped {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center 15%; /* Focus heavily on the top/face area, crop bottom */
+    transform: scale(1.15); /* Zoom in by 15% to crop out more of the background/desk */
+    border-radius: 7px;
+    display: block;
+}
+
+/* Very subtle gold accent corner for placeholder */
+.founder-image-placeholder::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: -1px;
+    width: 40px;
+    height: 40px;
+    border-bottom: 2px solid var(--gold-accent);
+    border-left: 2px solid var(--gold-accent);
+    border-bottom-left-radius: 8px;
+}
+
+.founder-info-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.founder-accent-line {
+    width: 40px;
+    height: 2px;
+    background-color: var(--gold-accent);
+    margin-bottom: 24px;
+}
+
+.founder-name {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    color: var(--navy-primary);
+    margin: 8px 0 4px 0;
+}
+
+.founder-title {
+    font-size: 1.1rem;
+    color: var(--navy-primary);
+    font-weight: 600;
+    margin: 0 0 24px 0;
+}
+
+.founder-title span {
+    color: var(--gold-accent);
+}
+
+.founder-roles {
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--navy-primary);
+    padding: 12px 16px;
+    background-color: #FFFFFF;
+    border-left: 3px solid var(--navy-primary);
+    margin-bottom: 24px;
+    display: inline-block;
+}
+
+.founder-desc {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+}
+
+.founder-desc p {
+    font-size: 1.1rem;
+}
+
+.founder-contact {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.founder-contact-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.founder-contact-item svg {
+    color: var(--gold-accent);
+}
+
+.founder-email {
+    color: var(--navy-primary);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.founder-email:hover {
+    color: var(--gold-accent);
+}
+
+@media (max-width: 992px) {
+    .founder-profile {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+    .founder-image-placeholder {
+        min-height: 400px;
+    }
+}
+
 /* 
 ==================================================
 CTA
@@ -1144,10 +1288,10 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     position: absolute;
     bottom: 74px;
     right: 0;
-    background: rgba(7, 21, 47, 0.96);
-    color: #FFFFFF;
-    border: 1px solid rgba(201, 151, 34, 0.4);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 15px rgba(201, 151, 34, 0.2);
+    background: #FFFFFF;
+    color: #07152F;
+    border: 1px solid #E3E6EA;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     border-radius: 14px;
     padding: 10px 14px;
     font-size: 0.85rem;
@@ -1156,15 +1300,13 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     gap: 10px;
     white-space: nowrap;
     cursor: pointer;
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    animation: omAiBounceIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: omAiFadeInUp 0.5s ease-out both;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .om-ai-teaser:hover {
     transform: translateY(-2px);
-    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.5), 0 0 20px rgba(201, 151, 34, 0.3);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
 .om-ai-teaser-content {
@@ -1174,13 +1316,14 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
 }
 
 .om-ai-teaser-content strong {
-    color: var(--gold-accent);
+    color: var(--navy-primary);
+    font-weight: 600;
 }
 
 .om-ai-teaser-close {
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.6);
+    color: #667085;
     font-size: 1.1rem;
     line-height: 1;
     cursor: pointer;
@@ -1189,7 +1332,7 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
 }
 
 .om-ai-teaser-close:hover {
-    color: #FFFFFF;
+    color: #07152F;
 }
 
 /* Floating Launcher Button */
@@ -1197,35 +1340,33 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     width: 62px;
     height: 62px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--navy-primary) 0%, #10264d 100%);
-    border: 2px solid var(--gold-accent);
-    color: var(--gold-accent);
+    background: #FFFFFF;
+    border: 1px solid var(--gold-accent);
+    color: var(--navy-primary);
     cursor: pointer;
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45), 0 0 20px rgba(201, 151, 34, 0.25);
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .om-ai-launcher:hover {
-    transform: scale(1.08) rotate(4deg);
-    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.55), 0 0 30px rgba(201, 151, 34, 0.45);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
 .om-ai-launcher-active {
-    background: var(--navy-secondary);
-    border-color: #ffd700;
+    border-color: var(--navy-primary);
 }
 
-.om-ai-launcher-glow {
-    position: absolute;
-    inset: -6px;
+.om-ai-launcher-icon {
+    width: 100%;
+    height: 100%;
     border-radius: 50%;
-    border: 1.5px solid rgba(201, 151, 34, 0.5);
-    animation: omAiPulseRing 2.4s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
-    pointer-events: none;
+    overflow: hidden;
+    padding: 2px;
 }
 
 .om-ai-status-indicator {
@@ -1234,22 +1375,9 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     right: 2px;
     width: 12px;
     height: 12px;
-    background-color: #10B981;
-    border: 2px solid var(--navy-primary);
+    background-color: #19B87A;
+    border: 2px solid #FFFFFF;
     border-radius: 50%;
-}
-
-.om-ai-badge {
-    position: absolute;
-    bottom: -4px;
-    background: var(--gold-accent);
-    color: var(--navy-primary);
-    font-size: 0.62rem;
-    font-weight: 800;
-    font-family: var(--font-heading);
-    padding: 1px 6px;
-    border-radius: 8px;
-    letter-spacing: 0.5px;
 }
 
 /* Chat Window Modal */
@@ -1261,33 +1389,31 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     max-width: calc(100vw - 36px);
     height: 590px;
     max-height: calc(100vh - 125px);
-    background: rgba(7, 21, 47, 0.95);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(201, 151, 34, 0.3);
+    background: #FFFFFF;
+    border: 1px solid #E3E6EA;
     border-radius: 20px;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 35px rgba(201, 151, 34, 0.15);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     overflow: hidden;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(20px) scale(0.96);
+    transform: translateY(15px);
     transform-origin: bottom right;
-    transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out, visibility 0.3s;
     z-index: 99995;
 }
 
 .om-ai-window.om-ai-open {
     opacity: 1;
     visibility: visible;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
 }
 
 /* Chat Header */
 .om-ai-header {
-    background: rgba(23, 52, 95, 0.4);
-    border-bottom: 1px solid rgba(201, 151, 34, 0.2);
+    background: #FFFFFF;
+    border-bottom: 1px solid #E3E6EA;
     padding: 16px 18px;
     display: flex;
     align-items: center;
@@ -1301,36 +1427,28 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
 }
 
 .om-ai-avatar {
-    width: 38px;
-    height: 38px;
-    background: rgba(201, 151, 34, 0.12);
-    border: 1.5px solid var(--gold-accent);
-    border-radius: 10px;
+    width: 42px;
+    height: 42px;
+    background: #FFFFFF;
+    border: 1px solid var(--gold-accent);
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-}
-
-.om-ai-avatar-pulse {
-    position: absolute;
-    inset: -2px;
-    border-radius: 12px;
-    border: 1px solid var(--gold-accent);
-    opacity: 0.4;
-    animation: omAiPulseRing 3s infinite ease-out;
+    padding: 2px;
 }
 
 .om-ai-title {
-    color: #FFFFFF;
+    color: #07152F;
     font-family: var(--font-heading);
     font-weight: 700;
     font-size: 1rem;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.3px;
 }
 
 .om-ai-subtitle {
-    color: rgba(255, 255, 255, 0.65);
+    color: #667085;
     font-size: 0.75rem;
     display: flex;
     align-items: center;
@@ -1341,7 +1459,7 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
 .om-ai-green-dot {
     width: 7px;
     height: 7px;
-    background-color: #10B981;
+    background-color: #19B87A;
     border-radius: 50%;
     display: inline-block;
 }
@@ -1355,7 +1473,7 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
 .om-ai-btn-icon {
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.65);
+    color: #667085;
     width: 32px;
     height: 32px;
     border-radius: 8px;
@@ -1363,19 +1481,19 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .om-ai-btn-icon:hover {
-    background-color: rgba(255, 255, 255, 0.1);
-    color: #FFFFFF;
+    background-color: #F7F8FA;
+    color: #07152F;
 }
 
 /* Quick Chips Carousel */
 .om-ai-chips-wrapper {
     padding: 10px 14px 6px;
-    background: rgba(7, 21, 47, 0.5);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: #FFFFFF;
+    border-bottom: 1px solid #E3E6EA;
     overflow: hidden;
 }
 
@@ -1385,36 +1503,34 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     overflow-x: auto;
     padding-bottom: 4px;
     scrollbar-width: thin;
-    scrollbar-color: rgba(201, 151, 34, 0.3) transparent;
+    scrollbar-color: #E3E6EA transparent;
 }
 
 .om-ai-chips::-webkit-scrollbar {
     height: 3px;
 }
 .om-ai-chips::-webkit-scrollbar-thumb {
-    background: rgba(201, 151, 34, 0.3);
+    background: #E3E6EA;
     border-radius: 2px;
 }
 
 .om-ai-chip {
     flex-shrink: 0;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(201, 151, 34, 0.25);
-    color: #E2E8F0;
+    background: #FFFFFF;
+    border: 1px solid #E3E6EA;
+    color: #07152F;
     font-size: 0.74rem;
     font-weight: 500;
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
 }
 
 .om-ai-chip:hover {
-    background: rgba(201, 151, 34, 0.15);
+    background: #FFFDF7;
     border-color: var(--gold-accent);
-    color: #FFFFFF;
-    transform: translateY(-1px);
 }
 
 /* Message Thread */
@@ -1425,15 +1541,16 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     display: flex;
     flex-direction: column;
     gap: 14px;
+    background: #FFFFFF;
     scrollbar-width: thin;
-    scrollbar-color: rgba(201, 151, 34, 0.3) transparent;
+    scrollbar-color: #E3E6EA transparent;
 }
 
 .om-ai-messages::-webkit-scrollbar {
     width: 5px;
 }
 .om-ai-messages::-webkit-scrollbar-thumb {
-    background: rgba(201, 151, 34, 0.25);
+    background: #E3E6EA;
     border-radius: 4px;
 }
 
@@ -1441,7 +1558,7 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     display: flex;
     gap: 10px;
     max-width: 92%;
-    animation: omAiFadeIn 0.25s ease-out;
+    animation: omAiFadeIn 0.3s ease-out;
 }
 
 .om-ai-msg-user {
@@ -1454,16 +1571,16 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
 }
 
 .om-ai-msg-avatar {
-    width: 26px;
-    height: 26px;
-    border-radius: 6px;
-    background: rgba(201, 151, 34, 0.12);
-    border: 1px solid rgba(201, 151, 34, 0.4);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #E3E6EA;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
     margin-top: 2px;
+    padding: 1px;
 }
 
 .om-ai-msg-body {
@@ -1474,61 +1591,59 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     font-family: var(--font-heading);
     font-size: 0.86rem;
     font-weight: 700;
-    color: var(--gold-accent);
+    color: #07152F;
     margin-bottom: 6px;
     letter-spacing: 0.3px;
 }
 
 .om-ai-msg-bubble {
-    padding: 10px 14px;
+    padding: 12px 16px;
     border-radius: 14px;
-    font-size: 0.84rem;
-    line-height: 1.5;
+    font-size: 0.86rem;
+    line-height: 1.6;
     word-break: break-word;
+    color: #07152F;
 }
 
 .om-ai-msg-user .om-ai-msg-bubble {
-    background: linear-gradient(135deg, var(--navy-secondary) 0%, #1e457e 100%);
-    border: 1px solid rgba(201, 151, 34, 0.35);
-    color: #FFFFFF;
+    background: #F7F8FA;
+    border: 1px solid #E3E6EA;
     border-bottom-right-radius: 2px;
 }
 
 .om-ai-msg-bot .om-ai-msg-bubble {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    color: #E2E8F0;
+    background: #F7F8FA;
+    border: 1px solid #E6E8EC;
     border-bottom-left-radius: 2px;
 }
 
 .om-ai-msg-bot strong {
-    color: #FFFFFF;
+    color: #07152F;
+    font-weight: 600;
 }
 
 .om-ai-msg-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 8px;
+    gap: 8px;
+    margin-top: 10px;
 }
 
 .om-ai-action-btn {
-    background: rgba(201, 151, 34, 0.1);
-    border: 1px solid rgba(201, 151, 34, 0.35);
-    color: #F8FAFC;
+    background: #FFFFFF;
+    border: 1px solid #E3E6EA;
+    color: #07152F;
     font-size: 0.74rem;
-    font-weight: 600;
-    padding: 6px 11px;
+    font-weight: 500;
+    padding: 6px 12px;
     border-radius: 12px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
 }
 
 .om-ai-action-btn:hover {
-    background: var(--gold-accent);
+    background: #FFFDF7;
     border-color: var(--gold-accent);
-    color: var(--navy-primary);
-    transform: translateY(-1px);
 }
 
 /* Typing Dots */
@@ -1542,7 +1657,7 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
 .om-ai-dots span {
     width: 6px;
     height: 6px;
-    background-color: var(--gold-accent);
+    background-color: var(--navy-primary);
     border-radius: 50%;
     animation: omAiDotBounce 1.2s infinite ease-in-out;
 }
@@ -1551,41 +1666,39 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
 
 /* Input Form */
 .om-ai-input-area {
-    padding: 10px 14px;
-    background: rgba(7, 21, 47, 0.7);
-    border-top: 1px solid rgba(201, 151, 34, 0.2);
+    padding: 12px 16px;
+    background: #FFFFFF;
+    border-top: 1px solid #E3E6EA;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
 }
 
 .om-ai-input {
     flex: 1;
-    background: rgba(255, 255, 255, 0.07);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    border-radius: 12px;
+    background: #FFFFFF;
+    border: 1px solid #D9DDE3;
+    border-radius: 16px;
     padding: 10px 14px;
-    color: #FFFFFF;
+    color: #07152F;
     font-family: var(--font-body);
-    font-size: 0.84rem;
+    font-size: 0.86rem;
     outline: none;
-    transition: border-color 0.2s ease, background-color 0.2s ease;
+    transition: border-color 0.2s ease;
 }
 
 .om-ai-input:focus {
-    border-color: var(--gold-accent);
-    background-color: rgba(255, 255, 255, 0.1);
+    border-color: var(--navy-primary);
 }
 
 .om-ai-input::placeholder {
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 0.8rem;
+    color: #98A2B3;
 }
 
 .om-ai-send-btn {
-    width: 38px;
-    height: 38px;
-    border-radius: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     background: var(--gold-accent);
     border: none;
     color: var(--navy-primary);
@@ -1594,46 +1707,40 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: transform 0.15s ease, background-color 0.15s ease;
+    transition: background-color 0.2s ease;
 }
 
 .om-ai-send-btn:hover {
-    background: #ffd700;
-    transform: scale(1.05);
+    background: #D9A426;
 }
 
 .om-ai-footer-brand {
-    font-size: 0.68rem;
-    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.65rem;
+    color: #667085;
     text-align: center;
-    padding: 4px 10px 8px;
-    background: rgba(7, 21, 47, 0.9);
+    padding: 6px 10px 12px;
+    background: #FFFFFF;
 }
 
 .om-ai-footer-brand strong {
-    color: rgba(201, 151, 34, 0.85);
+    color: var(--gold-accent);
+    font-weight: 600;
 }
 
 /* Animations */
-@keyframes omAiPulseRing {
-    0% { transform: scale(0.95); opacity: 0.8; }
-    50% { transform: scale(1.15); opacity: 0; }
-    100% { transform: scale(1.15); opacity: 0; }
-}
-
-@keyframes omAiBounceIn {
-    0% { opacity: 0; transform: translateY(12px) scale(0.9); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
+@keyframes omAiFadeInUp {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes omAiFadeIn {
-    from { opacity: 0; transform: translateY(6px); }
+    from { opacity: 0; transform: translateY(5px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes omAiDotBounce {
-    0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
-    40% { transform: scale(1.2); opacity: 1; }
+    0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+    40% { transform: translateY(-3px); opacity: 1; }
 }
 
 .om-ai-stream-fade {

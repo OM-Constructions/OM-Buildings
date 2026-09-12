@@ -88,6 +88,41 @@ function initScrollAnimations() {
             }
         );
     });
+
+    // Founder Profile Specific Animations
+    const founderProfile = document.querySelector('.founder-profile');
+    if (founderProfile) {
+        gsap.fromTo('.founder-image-col', 
+            { opacity: 0, x: -30 },
+            {
+                scrollTrigger: {
+                    trigger: '.founder-profile',
+                    start: "top 75%",
+                    toggleActions: "play none none none"
+                },
+                opacity: 1,
+                x: 0,
+                duration: 0.8,
+                ease: "power2.out"
+            }
+        );
+        
+        gsap.fromTo('.founder-info-col > *', 
+            { opacity: 0, y: 20 },
+            {
+                scrollTrigger: {
+                    trigger: '.founder-profile',
+                    start: "top 75%",
+                    toggleActions: "play none none none"
+                },
+                opacity: 1,
+                y: 0,
+                duration: 0.6,
+                stagger: 0.1,
+                ease: "power2.out"
+            }
+        );
+    }
 }
 
 function initNavbarScroll() {
