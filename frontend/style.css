@@ -1877,3 +1877,226 @@ SERVICE PAGES STYLING
     .service-page-hero h1 { font-size: 2.5rem; }
     .service-hero-accent { display: none; }
 }
+
+/* 
+==================================================
+PER-SERVICE ENQUIRY CARDS
+================================================== 
+*/
+.service-card.has-enquiry-open {
+    height: auto !important;
+    min-height: 380px;
+    overflow: visible !important;
+    z-index: 30;
+    box-shadow: 0 16px 36px rgba(7, 21, 47, 0.12);
+}
+
+.enquiry-card-wrapper {
+    position: relative;
+    z-index: 10;
+    margin-top: auto;
+    font-size: 0.85rem;
+    font-weight: 400;
+    text-transform: none;
+    line-height: 1.4;
+    font-family: var(--font-body);
+    width: 100%;
+}
+
+[data-service-name] .enquiry-card-wrapper {
+    margin-top: 20px;
+    display: block;
+    max-width: 440px;
+    letter-spacing: normal;
+}
+
+.enquiry-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 14px;
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--navy-primary);
+    background: rgba(201, 151, 34, 0.12);
+    border: 1px solid rgba(201, 151, 34, 0.35);
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.25s ease;
+    width: fit-content;
+    text-decoration: none;
+}
+
+.enquiry-toggle:hover {
+    background: var(--gold-accent);
+    color: var(--navy-primary);
+    border-color: var(--gold-accent);
+    transform: translateY(-1px);
+}
+
+.enquiry-card-form {
+    margin-top: 12px;
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px solid rgba(7, 21, 47, 0.12);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 0.85rem;
+    font-weight: 400;
+    text-transform: none;
+    color: var(--text-dark);
+    text-align: left;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    animation: enquiryFadeIn 0.25s ease-out;
+}
+
+.enquiry-card-form .enquiry-field {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.enquiry-card-form .enquiry-input,
+.enquiry-card-form .enquiry-textarea {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: 0.82rem;
+    font-family: var(--font-body);
+    border: 1px solid rgba(7, 21, 47, 0.18);
+    border-radius: 4px;
+    background: #ffffff;
+    color: var(--text-dark);
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.enquiry-card-form .enquiry-input:focus,
+.enquiry-card-form .enquiry-textarea:focus {
+    border-color: var(--gold-accent);
+    box-shadow: 0 0 0 2px rgba(201, 151, 34, 0.2);
+}
+
+.enquiry-card-form .enquiry-textarea {
+    resize: vertical;
+    min-height: 52px;
+}
+
+.enquiry-actions {
+    margin-top: 4px;
+}
+
+.enquiry-submit-btn {
+    background: var(--navy-primary);
+    color: #ffffff;
+    border: 1px solid var(--navy-primary);
+    padding: 8px 16px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: all 0.2s ease;
+    width: 100%;
+    text-align: center;
+}
+
+.enquiry-submit-btn:hover {
+    background: var(--gold-accent);
+    border-color: var(--gold-accent);
+    color: var(--navy-primary);
+}
+
+.enquiry-submit-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.enquiry-error {
+    color: #dc2626;
+    font-size: 0.78rem;
+    margin-top: 4px;
+}
+
+.enquiry-success {
+    margin-top: 12px;
+    padding: 12px 16px;
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    color: #065f46;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    animation: enquiryFadeIn 0.3s ease-out;
+}
+
+.enquiry-honeypot {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+@keyframes enquiryFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Dark Section / Service Page Hero Styling */
+.service-page-hero .enquiry-toggle,
+.section-dark .enquiry-toggle {
+    color: #ffffff;
+    background: rgba(201, 151, 34, 0.2);
+    border-color: rgba(201, 151, 34, 0.6);
+}
+
+.service-page-hero .enquiry-toggle:hover,
+.section-dark .enquiry-toggle:hover {
+    background: var(--gold-accent);
+    color: var(--navy-primary);
+    border-color: var(--gold-accent);
+}
+
+.service-page-hero .enquiry-card-form,
+.section-dark .enquiry-card-form {
+    background: rgba(7, 21, 47, 0.95);
+    border: 1px solid rgba(201, 151, 34, 0.35);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    color: #ffffff;
+}
+
+.service-page-hero .enquiry-card-form .enquiry-input,
+.service-page-hero .enquiry-card-form .enquiry-textarea,
+.section-dark .enquiry-card-form .enquiry-input,
+.section-dark .enquiry-card-form .enquiry-textarea {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+.service-page-hero .enquiry-card-form .enquiry-input::placeholder,
+.service-page-hero .enquiry-card-form .enquiry-textarea::placeholder,
+.section-dark .enquiry-card-form .enquiry-input::placeholder,
+.section-dark .enquiry-card-form .enquiry-textarea::placeholder {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.service-page-hero .enquiry-submit-btn,
+.section-dark .enquiry-submit-btn {
+    background: var(--gold-accent);
+    color: var(--navy-primary);
+    border: 1px solid var(--gold-accent);
+    font-weight: 700;
+}
+
+.service-page-hero .enquiry-submit-btn:hover,
+.section-dark .enquiry-submit-btn:hover {
+    background: #ffd700;
+    border-color: #ffd700;
+}
+
