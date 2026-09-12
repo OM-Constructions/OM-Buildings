@@ -1,21 +1,86 @@
-<!DOCTYPE html>
+import os
+
+services_data = [
+    {
+        "slug": "mep-design",
+        "eyebrow": "MECHANICAL • ELECTRICAL • PLUMBING",
+        "title": "MEP DESIGNS",
+        "intro": "Integrated MEP planning that supports functional, efficient and coordinated building systems.",
+        "img": "mep-design.png",
+        "focus": [
+            "Mechanical systems",
+            "Electrical planning",
+            "Plumbing coordination",
+            "Services coordination",
+            "Building-system integration",
+            "Technical planning"
+        ]
+    },
+    {
+        "slug": "3d-building-design",
+        "eyebrow": "3D ARCHITECTURAL VISUALIZATION",
+        "title": "3D BUILDING DESIGN",
+        "intro": "Detailed three-dimensional building designs that help visualize architectural form, spaces and project intent before construction.",
+        "img": "3d-building-design.png",
+        "focus": [
+            "3D building modeling",
+            "Architectural visualization",
+            "Exterior design development",
+            "Spatial visualization",
+            "Design presentation",
+            "Design refinement"
+        ]
+    },
+    {
+        "slug": "realistic-rendering",
+        "eyebrow": "ARCHITECTURAL VISUALIZATION",
+        "title": "REALISTIC RENDERING",
+        "intro": "High-quality architectural renders that communicate the appearance, materials and atmosphere of a proposed space or building.",
+        "img": "realistic-rendering.png",
+        "focus": [
+            "Photorealistic visualization",
+            "Exterior rendering",
+            "Interior rendering",
+            "Material visualization",
+            "Lighting visualization",
+            "Presentation imagery"
+        ]
+    },
+    {
+        "slug": "estimation-costing",
+        "eyebrow": "COST PLANNING",
+        "title": "ESTIMATION & COSTING",
+        "intro": "Structured construction estimation and costing to support informed project planning, budgeting and decision-making.",
+        "img": "estimation-costing.png",
+        "focus": [
+            "Quantity estimation",
+            "Cost planning",
+            "Material considerations",
+            "Budget analysis",
+            "Project costing",
+            "Cost documentation"
+        ]
+    }
+]
+
+template = """<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GEOTECHNICAL REPORT | OM Constructions</title>
+    <title>{title} | OM Constructions</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../style.css?v=4">
     
     <script type="importmap">
-        {
-            "imports": {
+        {{
+            "imports": {{
                 "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
                 "gsap": "https://unpkg.com/gsap@3.12.2/index.js",
                 "gsap/ScrollTrigger": "https://unpkg.com/gsap@3.12.2/ScrollTrigger.js"
-            }
-        }
+            }}
+        }}
     </script>
 </head>
 <body>
@@ -39,10 +104,9 @@
         <!-- HERO -->
         <section class="service-page-hero">
             <div class="container gsap-reveal">
-                <span class="eyebrow">GROUND & FOUNDATION ANALYSIS</span>
-                <h1>GEOTECHNICAL REPORT</h1>
-                <p>Ground and soil information that supports informed foundation planning and safer structural decisions.</p>
-                <a href="#enquire" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary); font-size: 0.85rem; padding: 10px 22px; margin-top: 15px; display: inline-block;">Enquire About This Service &rarr;</a>
+                <span class="eyebrow">{eyebrow}</span>
+                <h1>{title}</h1>
+                <p>{intro}</p>
                 <div class="service-hero-accent"></div>
             </div>
         </section>
@@ -51,7 +115,7 @@
         <section class="sp-section sp-overview">
             <div class="container gsap-reveal">
                 <span class="sp-label">01 &mdash; OVERVIEW</span>
-                <p>At OM Constructions, we believe that exceptional engineering begins with a deep understanding of purpose. Our GEOTECHNICAL REPORT services are designed to address both the aesthetic desires and functional necessities of your project. We leverage modern methodologies to ensure everything we design is resilient, sustainable, and built to the highest industry standards.</p>
+                <p>At OM Constructions, we believe that exceptional engineering begins with a deep understanding of purpose. Our {title} services are designed to address both the aesthetic desires and functional necessities of your project. We leverage modern methodologies to ensure everything we design is resilient, sustainable, and built to the highest industry standards.</p>
             </div>
         </section>
 
@@ -61,27 +125,7 @@
                 <span class="sp-label" style="color: var(--navy-primary);">02 &mdash; WHAT WE FOCUS ON</span>
                 <h2 class="sp-title">Capabilities & Deliverables</h2>
                 <div class="sp-focus-grid">
-                    
-                    <div class="sp-focus-item">
-                        <h3>Ground investigation</h3>
-                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
-                    </div>
-                    <div class="sp-focus-item">
-                        <h3>Soil-related information</h3>
-                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
-                    </div>
-                    <div class="sp-focus-item">
-                        <h3>Foundation considerations</h3>
-                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
-                    </div>
-                    <div class="sp-focus-item">
-                        <h3>Site-related analysis</h3>
-                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
-                    </div>
-                    <div class="sp-focus-item">
-                        <h3>Engineering decision support</h3>
-                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
-                    </div>
+                    {focus_items}
                 </div>
             </div>
         </section>
@@ -95,45 +139,38 @@
                 <div class="sp-approach-grid">
                     <div class="sp-approach-step">
                         <h4>UNDERSTAND</h4>
-                        <p>We analyze the site, clarify your core objectives, and define the scope clearly.</p>
+                        <p>Understand the project requirements.</p>
                     </div>
                     <div class="sp-approach-step">
                         <h4>PLAN</h4>
-                        <p>Developing strategic plans to optimize resources, budget, and timeline.</p>
+                        <p>Establish the appropriate design or technical approach.</p>
                     </div>
                     <div class="sp-approach-step">
                         <h4>DEVELOP</h4>
-                        <p>Crafting precise blueprints and solutions for seamless execution.</p>
+                        <p>Develop the required design, documentation or visualization.</p>
                     </div>
                     <div class="sp-approach-step">
                         <h4>COORDINATE</h4>
-                        <p>Integrating disciplines to reduce conflicts and ensure viability.</p>
+                        <p>Coordinate the relevant project requirements.</p>
                     </div>
                     <div class="sp-approach-step">
                         <h4>DELIVER</h4>
-                        <p>Rigorous quality checks and final handover meeting all standards.</p>
+                        <p>Prepare the final output for the next stage of the project.</p>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- VISUAL SECTION -->
-        <section class="sp-visual">
-            <img src="../../assets/services/geotechnical-report.png" alt="GEOTECHNICAL REPORT Visual" class="gsap-reveal">
-        </section>
+        {visual_section}
 
-        <!-- 04 ENQUIRY & CTA -->
-        <section class="sp-section sp-cta" id="enquire">
+        <!-- 04 CTA -->
+        <section class="sp-section sp-cta">
             <div class="container gsap-reveal">
-                <span class="sp-label" style="color: var(--navy-primary);">04 &mdash; ENQUIRE NOW</span>
+                <span class="sp-label" style="color: var(--navy-primary);">04 &mdash; READY?</span>
                 <h2>HAVE A PROJECT IN MIND?</h2>
-<<<<<<< HEAD
-                <p>Send your requirements below for a dedicated consultation on Geotechnical Report.</p>
-                <div class="service-page-enquiry-card" data-service-name="GEOTECHNICAL REPORT"></div>
-=======
                 <p>Let's discuss your requirements.</p>
                 <a href="../../index.html#cta" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary);">START A PROJECT &rarr;</a>
->>>>>>> 9b7f896cd0ea53f29628562791d15d69821fc3cf
             </div>
         </section>
     </main>
@@ -167,27 +204,62 @@
         import ScrollTrigger from 'gsap/ScrollTrigger';
         
         // Use a short timeout to ensure main.js has finished removing the intro splash cover if it fails WebGL
-        setTimeout(() => {
+        setTimeout(() => {{
             const reveals = document.querySelectorAll('.gsap-reveal');
-            reveals.forEach((el) => {
+            reveals.forEach((el) => {{
                 gsap.fromTo(el, 
-                    { opacity: 0, y: 50, visibility: 'hidden' }, 
-                    {
-                        scrollTrigger: {
+                    {{ opacity: 0, y: 50, visibility: 'hidden' }}, 
+                    {{
+                        scrollTrigger: {{
                             trigger: el,
                             start: "top 85%",
                             toggleActions: "play none none none"
-                        },
+                        }},
                         opacity: 1,
                         y: 0,
                         visibility: 'visible',
                         duration: 1,
                         ease: "power2.out"
-                    }
+                    }}
                 );
-            });
-        }, 100);
+            }});
+        }}, 100);
     </script>
-    <script type="module" src="../../src/serviceContactCards.js"></script>
 </body>
 </html>
+"""
+
+os.makedirs('frontend/services', exist_ok=True)
+
+for service in services_data:
+    os.makedirs(f"frontend/services/{service['slug']}", exist_ok=True)
+    
+    # Generate focus items
+    focus_html = ""
+    for item in service['focus']:
+        focus_html += f"""
+                    <div class="sp-focus-item">
+                        <h3>{item}</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>"""
+    
+    # Generate visual section
+    visual_section = ""
+    if service["img"]:
+        visual_section = f"""
+        <section class="sp-visual">
+            <img src="../../assets/services/{service['img']}" alt="{service['title']} Visual" class="gsap-reveal">
+        </section>"""
+        
+    html = template.format(
+        eyebrow=service["eyebrow"],
+        title=service["title"],
+        intro=service["intro"],
+        focus_items=focus_html,
+        visual_section=visual_section
+    )
+    
+    with open(f"frontend/services/{service['slug']}/index.html", "w") as f:
+        f.write(html)
+
+print("The 4 new service pages generated successfully.")
