@@ -22,8 +22,9 @@ async function init() {
     // Initialize ScrollTrigger Animations for homepage
     initScrollAnimations();
     
-    // Initialize Navbar scroll effect
+    // Initialize Navbar scroll effect and Mobile Nav
     initNavbarScroll();
+    initMobileNav();
 
     // Initialize Services Hover Interrupt Management
     initServicesHover();
@@ -133,6 +134,53 @@ function initNavbarScroll() {
         } else {
             navbar.classList.remove('scrolled');
         }
+    });
+}
+
+function initMobileNav() {
+    const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    const navMenu = document.getElementById('nav-menu');
+    const backdrop = document.getElementById('mobile-nav-backdrop');
+    
+    if (!mobileMenuBtn || !navMenu) return;
+
+    function openMenu() {
+        navMenu.classList.add('active');
+        if (backdrop) {
+            backdrop.style.display = 'block';
+            // Force reflow
+            void backdrop.offsetWidth;
+            backdrop.classList.add('active');
+        }
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeMenu() {
+        navMenu.classList.remove('active');
+        if (backdrop) {
+            backdrop.classList.remove('active');
+            setTimeout(() => {
+                backdrop.style.display = 'none';
+            }, 300);
+        }
+        document.body.style.overflow = '';
+    }
+
+    mobileMenuBtn.addEventListener('click', openMenu);
+    
+    if (mobileMenuClose) {
+        mobileMenuClose.addEventListener('click', closeMenu);
+    }
+    
+    if (backdrop) {
+        backdrop.addEventListener('click', closeMenu);
+    }
+
+    // Close menu when a link is clicked
+    const links = navMenu.querySelectorAll('a');
+    links.forEach(link => {
+        link.addEventListener('click', closeMenu);
     });
 }
 

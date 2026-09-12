@@ -24,20 +24,28 @@
     <nav id="navbar">
         <div class="container nav-container">
             <a href="#" class="nav-brand">OM<span>Constructions</span></a>
-            <div class="nav-links">
-                <a href="#hero">Home</a>
-                <a href="#services">Services</a>
-                <a href="#capabilities">Capabilities</a>
-                <a href="#industries">Industries</a>
-                <a href="#about">About</a>
-                <a href="#cta">Contact</a>
-            </div>
-            <div class="nav-actions">
-                <span id="nav-auth-container" class="nav-auth-group">
-                    <a href="./login.html" class="nav-auth-link nav-auth-login">Log In</a>
-                    <a href="./signup.html" class="nav-auth-link nav-auth-signup">Sign Up</a>
-                </span>
-                <a href="#cta" class="btn-primary">Let's Talk</a>
+            <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle menu">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+            </button>
+            <div class="nav-menu" id="nav-menu">
+                <div class="mobile-menu-header">
+                    <a href="#" class="nav-brand">OM<span>Constructions</span></a>
+                    <button class="mobile-menu-close" id="mobile-menu-close" aria-label="Close menu">&times;</button>
+                </div>
+                <div class="nav-links">
+                    <a href="#hero" class="nav-link-item">Home</a>
+                    <a href="#services" class="nav-link-item">Services</a>
+                    <a href="#capabilities" class="nav-link-item">Capabilities</a>
+                    <a href="#industries" class="nav-link-item">Industries</a>
+                    <a href="#about" class="nav-link-item">About</a>
+                    <a href="#cta" class="nav-link-item">Contact</a>
+                </div>
+                <div class="nav-actions">
+                    <span id="nav-auth-container" class="nav-auth-group">
+                        <a href="./login.html" class="nav-auth-link nav-auth-login">Log In</a>
+                        <a href="./signup.html" class="nav-auth-link nav-auth-signup">Sign Up</a>
+                    </span>
+                    <a href="#cta" class="btn-primary">Let's Talk</a>
                 <script type="module">
                     import { getCurrentUser, logout } from "./src/auth.js";
                     const container = document.getElementById("nav-auth-container");
@@ -339,15 +347,19 @@
                 
                 <div class="work-grid">
                     <div class="work-card">
+                        <div class="work-card-fallback"></div>
                         <span class="work-label">RESIDENTIAL TOWER</span>
                     </div>
                     <div class="work-card">
+                        <div class="work-card-fallback"></div>
                         <span class="work-label">COMMERCIAL COMPLEX</span>
                     </div>
                     <div class="work-card">
+                        <div class="work-card-fallback"></div>
                         <span class="work-label">INDUSTRIAL WAREHOUSE</span>
                     </div>
                     <div class="work-card">
+                        <div class="work-card-fallback"></div>
                         <span class="work-label">INFRASTRUCTURE PROJECT</span>
                     </div>
                 </div>
