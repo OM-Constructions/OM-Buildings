@@ -624,8 +624,10 @@ SERVICES SECTION
     transition: all 0.7s cubic-bezier(0.22, 1, 0.36, 1);
     position: relative;
     overflow: hidden;
-    cursor: default;
+    cursor: pointer;
     display: flex;
+    text-decoration: none;
+    color: inherit;
     flex-direction: column;
     height: 220px;
 }
@@ -1666,3 +1668,187 @@ OM AI ASSISTANT WIDGET (Bottom Right Floating)
     }
 }
 
+
+/* 
+==================================================
+SERVICE PAGES STYLING
+================================================== 
+*/
+.service-page-hero {
+    background-color: var(--navy-primary);
+    color: #fff;
+    padding: 180px 0 100px;
+    position: relative;
+    overflow: hidden;
+}
+.service-page-hero .eyebrow {
+    color: var(--gold-accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+    display: block;
+}
+.service-page-hero h1 {
+    font-family: var(--font-heading);
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 30px;
+    max-width: 800px;
+}
+.service-page-hero p {
+    font-size: 1.25rem;
+    color: rgba(255, 255, 255, 0.8);
+    max-width: 600px;
+    line-height: 1.6;
+}
+.service-hero-accent {
+    position: absolute;
+    right: 5%;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 300px;
+    height: 300px;
+    border: 2px solid rgba(201, 151, 34, 0.2);
+    border-radius: 50%;
+    z-index: 0;
+}
+.service-hero-accent::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    background: var(--gold-accent);
+    border-radius: 50%;
+}
+.service-overview {
+    padding: 100px 0;
+    background: var(--bg-main);
+}
+.service-overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+}
+.service-overview h2 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    color: var(--navy-primary);
+    margin-bottom: 30px;
+}
+.service-overview p {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-muted);
+}
+.service-approach {
+    padding: 100px 0;
+    background: var(--bg-secondary);
+}
+.approach-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+    margin-top: 50px;
+}
+.approach-step {
+    background: #fff;
+    padding: 40px 30px;
+    border-radius: 8px;
+    border-top: 4px solid var(--gold-accent);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+}
+.approach-step .step-num {
+    font-size: 3rem;
+    font-family: var(--font-heading);
+    font-weight: 800;
+    color: rgba(7, 21, 47, 0.05);
+    margin-bottom: 20px;
+    display: block;
+}
+.approach-step h3 {
+    color: var(--navy-primary);
+    margin-bottom: 15px;
+}
+.service-deliverables {
+    padding: 100px 0;
+}
+.deliverables-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 40px;
+    margin-top: 50px;
+}
+.deliverable-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+.deliverable-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(201, 151, 34, 0.1);
+    color: var(--gold-accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-weight: bold;
+    flex-shrink: 0;
+}
+.service-why-us {
+    padding: 100px 0;
+    background: var(--navy-primary);
+    color: #fff;
+}
+.why-us-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+    margin-top: 50px;
+}
+.why-us-item h3 {
+    color: var(--gold-accent);
+    margin-bottom: 15px;
+}
+.why-us-item p {
+    color: rgba(255,255,255,0.7);
+    line-height: 1.6;
+}
+.service-project-visual {
+    padding: 0;
+}
+.service-project-visual img {
+    width: 100%;
+    height: auto;
+    max-height: 600px;
+    object-fit: cover;
+    display: block;
+}
+.service-cta {
+    padding: 120px 0;
+    background: var(--bg-main);
+    text-align: center;
+}
+.service-cta h2 {
+    font-family: var(--font-heading);
+    font-size: 3rem;
+    color: var(--navy-primary);
+    margin-bottom: 40px;
+}
+
+@media (max-width: 900px) {
+    .service-page-hero h1 { font-size: 2.5rem; }
+    .service-overview-grid { grid-template-columns: 1fr; }
+    .approach-grid { grid-template-columns: repeat(2, 1fr); }
+    .deliverables-grid { grid-template-columns: 1fr; }
+    .why-us-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+    .approach-grid { grid-template-columns: 1fr; }
+    .service-hero-accent { display: none; }
+}
