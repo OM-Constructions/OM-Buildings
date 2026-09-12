@@ -25,6 +25,17 @@
 
     <!-- SIGNUP FORM SECTION -->
     <main class="auth-page-wrapper">
+        <div class="blueprint-animation-container" aria-hidden="true">
+            <svg class="blueprint-svg" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+                <path class="blueprint-line bp-1" d="M0,200 L1440,200" />
+                <path class="blueprint-line bp-2" d="M300,0 L300,900" />
+                <path class="blueprint-line bp-3" d="M1100,0 L1100,900" />
+                <path class="blueprint-line bp-4" d="M150,600 L1290,600 M150,600 L150,800 L450,800 L450,600" />
+                <path class="blueprint-line bp-5" d="M800,100 L1200,100 L1200,500 L800,500 Z" />
+                <path class="blueprint-line bp-arc bp-1" d="M1200,500 A 300 300 0 0 1 900,800" />
+                <path class="blueprint-line bp-arc bp-2" d="M300,200 A 150 150 0 0 0 150,350" />
+            </svg>
+        </div>
         <div class="auth-card">
             <div class="auth-header">
                 <span class="auth-eyebrow">Customer Portal</span>
@@ -77,6 +88,7 @@
         </div>
     </footer>
 
+    <script src="./src/blueprint-sync.js"></script>
     <script type="module">
         import { signup, getCurrentUser } from "./src/auth.js";
 
