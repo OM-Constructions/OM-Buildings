@@ -1,4 +1,6 @@
-export const API_BASE_URL = "http://localhost:8000"; // change per environment
+export const API_BASE_URL = 
+  (typeof window !== "undefined" && window.API_BASE_URL) ||
+  (typeof window !== "undefined" && window.location.port === "8000" ? "http://localhost:8080" : "http://localhost:8000");
 
 export async function submitEnquiry({ name, email, phone, projectType, message, honeypot }) {
   const res = await fetch(`${API_BASE_URL}/api/v1/contact/`, {
