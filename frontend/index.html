@@ -568,20 +568,53 @@
                             <p class="global-enquiry-subtitle">Fill out the details below and we'll connect with you
                                 within 24 hours.</p>
                         </div>
-                        <div class="global-enquiry-auth-gate" id="global-enquiry-auth-gate" style="display: none; text-align: center; padding: 28px 16px;">
-                            <div style="font-size: 2.5rem; margin-bottom: 14px;">🔒</div>
-                            <h4 style="font-size: 1.4rem; color: #ffffff; font-weight: 700; margin-bottom: 10px;">Customer Login Required</h4>
-                            <p style="color: rgba(255, 255, 255, 0.82); font-size: 1rem; max-width: 540px; margin: 0 auto 26px; line-height: 1.6;">
-                                To submit your project drawings, safeguard your specifications, and track consultation progress in your dedicated portal, please sign in with your customer account.
+                        <div class="global-enquiry-auth-gate" id="global-enquiry-auth-gate" style="display: none;">
+                            <div class="auth-gate-shield-wrapper">
+                                <svg class="auth-gate-shield-icon" viewBox="0 0 24 24">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    <path d="M9 12l2 2 4-4"/>
+                                </svg>
+                            </div>
+                            <span class="auth-gate-eyebrow">SECURE CLIENT PORTAL &bull; VERIFIED CONSULTATION</span>
+                            <h4 class="auth-gate-headline">Client Account Required for Project Consultation</h4>
+                            <p class="auth-gate-subtext">
+                                To safeguard your architectural specifications, coordinate directly with our registered principal engineers, and track structural review milestones in your private dashboard, please access your verified client account.
                             </p>
-                            <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
-                                <a href="./login.html?redirect=%2F%23cta" class="global-enquiry-submit-btn" style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center;">
-                                    Log In to Continue &rarr;
+                            <div class="auth-gate-pillars">
+                                <div class="auth-gate-pillar-item">
+                                    <div class="auth-gate-pillar-title">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        Proprietary Safeguard
+                                    </div>
+                                    <div class="auth-gate-pillar-desc">Confidential handling of architectural plans, soil data, and structural loads.</div>
+                                </div>
+                                <div class="auth-gate-pillar-item">
+                                    <div class="auth-gate-pillar-title">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        Principal Review
+                                    </div>
+                                    <div class="auth-gate-pillar-desc">Direct technical assessment by licensed structural and MEP engineers.</div>
+                                </div>
+                                <div class="auth-gate-pillar-item">
+                                    <div class="auth-gate-pillar-title">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        Revision & BOQ Tracking
+                                    </div>
+                                    <div class="auth-gate-pillar-desc">Centralized access to project history, estimates, and verified documents.</div>
+                                </div>
+                            </div>
+                            <div class="auth-gate-actions">
+                                <a href="./login.html?redirect=%2F%23cta" class="btn-portal-primary">
+                                    Client Sign In &rarr;
                                 </a>
-                                <a href="./signup.html?redirect=%2F%23cta" class="global-enquiry-submit-btn" style="text-decoration: none; background: transparent; border: 1px solid var(--gold-accent); color: var(--gold-accent); display: inline-flex; align-items: center; justify-content: center;">
-                                    Create Customer Account
+                                <a href="./signup.html?redirect=%2F%23cta" class="btn-portal-secondary">
+                                    Register Client Account
                                 </a>
                             </div>
+                            <p class="auth-gate-footer-note">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                New clients receive immediate access to our digital enquiry tracking portal upon registration.
+                            </p>
                         </div>
                         <form class="global-enquiry-form" id="global-enquiry-form" action="javascript:void(0);" method="POST">
                             <div class="global-enquiry-row">
