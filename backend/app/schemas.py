@@ -63,8 +63,17 @@ class GenericMessageResponse(BaseModel):
     success: bool = True
     message: str
 
-class ResendVerificationRequest(BaseModel):
+class VerifyOtpRequest(BaseModel):
     email: EmailStr
+    otp: str = Field(..., min_length=6, max_length=6)
+
+class ResendOtpRequest(BaseModel):
+    email: EmailStr
+
+class SignupResponse(BaseModel):
+    success: bool = True
+    message: str = "Enter the code sent to your email"
+    email: str
 
 class SubmissionItem(BaseModel):
     id: Any

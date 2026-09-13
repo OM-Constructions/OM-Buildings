@@ -50,35 +50,54 @@ export async function login({ email, password }) {
 }
 
 /**
- * Verify account using link token
- * @param {string} token
- * @returns {Promise<{ success: boolean, message: string }>}
+ * Verify 6-digit OTP code and set session cookie
+ * @param {{ email: string, otp: string }}
+ * @returns {Promise<{ success: boolean, name: string }>}
  */
-export async function verifyEmail(token) {
-  const res = await fetch(`${API_BASE_URL}/api/v1/auth/verify-email?token=${encodeURIComponent(token)}`, {
-    method: "GET",
+export async function verifyOtp(arg1, arg2) {
+  let email, otp;
+  if (typeof arg1 === "object" && arg1 !== null) {
+    email = arg1.email;
+    otp = arg1.otp;
+  } else {
+    email = arg1;
+    otp = arg2;
+  }
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/verify-otp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ email: email ? email.trim() : "", otp: otp ? otp.trim() : "" }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.detail || "Verification failed");
+    const err = new Error(data.detail || "Invalid or expired code");
+    err.status = res.status;
+    throw err;
   }
+  try {
+    localStorage.setItem("om_logged_in", "true");
+    if (data.name) localStorage.setItem("om_user_name", data.name);
+  } catch (e) {}
   return data;
 }
 
 /**
- * Request a new verification email
+ * Resend 6-digit OTP code
  * @param {string} email
  * @returns {Promise<{ success: boolean, message: string }>}
  */
-export async function resendVerification(email) {
-  const res = await fetch(`${API_BASE_URL}/api/v1/auth/resend-verification`, {
+export async function resendOtp(email) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/resend-otp`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email }),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.detail || "Unable to resend verification email");
+    const err = new Error(data.detail || "Unable to resend code");
+    err.status = res.status;
+    throw err;
   }
   return data;
 }

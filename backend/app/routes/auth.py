@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Any
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse
@@ -10,14 +10,19 @@ from slowapi.util import get_remote_address
 from app.database import get_db
 from app import models, schemas
 from app.config import settings
-from app.services.auth_service import hash_password, verify_password, validate_signup_email
+from app.services.auth_service import (
+    hash_password,
+    verify_password,
+    validate_signup_email,
+    generate_otp,
+    hash_otp,
+    verify_otp_hash,
+)
 from app.services.token_service import (
     create_access_token,
     decode_access_token,
-    create_verification_token,
-    decode_verification_token,
 )
-from app.services.email_service import send_verification_email
+from app.services.email_service import send_otp_email
 
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
@@ -78,6 +83,13 @@ def get_optional_current_user(request: Request, db: Session = Depends(get_db)) -
         return None
 
 
+def is_expired(expires_at: Optional[datetime]) -> bool:
+    if not expires_at:
+        return True
+    now = datetime.now(expires_at.tzinfo) if expires_at.tzinfo else datetime.utcnow()
+    return expires_at < now
+
+
 def set_auth_cookie(response: Response, user_id: Any) -> None:
     """Helper to issue a signed JWT access token in an httpOnly cookie."""
     token = create_access_token(user_id)
@@ -92,7 +104,7 @@ def set_auth_cookie(response: Response, user_id: Any) -> None:
     )
 
 
-@router.post("/signup", response_model=schemas.GenericMessageResponse)
+@router.post("/signup", response_model=schemas.SignupResponse)
 @limiter.limit("5/minute")
 def signup(
     request: Request,
@@ -100,7 +112,7 @@ def signup(
     db: Session = Depends(get_db)
 ):
     """Register a customer account with MX and disposable domain validation.
-    Leaves user unverified and sends verification email with link."""
+    Generates a 6-digit OTP expiring in 5 minutes and sends via email."""
     # 1. Format, MX DNS deliverability, and disposable domain checks
     clean_email = validate_signup_email(body.email)
 
@@ -119,28 +131,113 @@ def signup(
             detail="Unable to create account"
         )
 
-    # 4. Create user with is_verified = False
+    # 4. Create new user with is_verified = False and hashed 5-minute OTP
+    otp = generate_otp()
     password_hash = hash_password(body.password)
+    now = datetime.now(timezone.utc)
     new_user = models.User(
         name=body.name.strip(),
         email=clean_email,
         password_hash=password_hash,
         is_verified=False,
-        verification_sent_at=datetime.utcnow()
+        otp_hash=hash_otp(otp),
+        otp_expires_at=now + timedelta(minutes=5),
+        otp_attempts=0
     )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
-    # 5. Generate verification token & send email
-    token = create_verification_token(new_user.id)
-    verification_link = f"{settings.FRONTEND_URL}/verify-email.html?token={token}"
-    send_verification_email(new_user.email, new_user.name, verification_link)
+    # 5. Send OTP via email
+    send_otp_email(new_user.email, new_user.name, otp)
 
-    # Notice: DO NOT set session cookie yet — user cannot log in until email is verified
     return {
         "success": True,
-        "message": "Check your email to verify your account"
+        "message": "Enter the code sent to your email",
+        "email": clean_email
+    }
+
+
+@router.post("/verify-otp", response_model=schemas.AuthSuccessResponse)
+@limiter.limit("10/minute")
+def verify_otp(
+    request: Request,
+    response: Response,
+    body: schemas.VerifyOtpRequest,
+    db: Session = Depends(get_db)
+):
+    """Verify 6-digit OTP and establish session cookie on success."""
+    clean_email = body.email.lower().strip()
+    user = db.query(models.User).filter(models.User.email == clean_email).first()
+
+    # 1. User lookup, verified check, null hash check
+    if not user or user.is_verified or not user.otp_hash:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired code"
+        )
+
+    # 2. Check expiration
+    if is_expired(user.otp_expires_at):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Code expired, request a new one"
+        )
+
+    # 3. Check attempts threshold (max 5)
+    if user.otp_attempts >= 5:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many attempts, request a new code"
+        )
+
+    # 4. Compare hash
+    if not verify_otp_hash(body.otp.strip(), str(user.otp_hash)):
+        user.otp_attempts += 1
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired code"
+        )
+
+    # 5. On match: activate account and log in
+    user.is_verified = True
+    user.otp_hash = None
+    user.otp_expires_at = None
+    user.otp_attempts = 0
+    user.last_login_at = datetime.utcnow()
+    db.commit()
+
+    # Set session cookie (log them in)
+    set_auth_cookie(response, user.id)
+
+    return {"success": True, "name": user.name}
+
+
+@router.post("/resend-otp", response_model=schemas.GenericMessageResponse)
+@limiter.limit("1/minute")
+def resend_otp(
+    request: Request,
+    body: schemas.ResendOtpRequest,
+    db: Session = Depends(get_db)
+):
+    """Resend 6-digit OTP. Rate-limited to 1 request per 60 seconds per IP.
+    Always returns generic message to prevent account enumeration."""
+    clean_email = body.email.lower().strip()
+    user = db.query(models.User).filter(models.User.email == clean_email).first()
+
+    if user and not user.is_verified:
+        otp = generate_otp()
+        user.otp_hash = hash_otp(otp)
+        now = datetime.now(timezone.utc)
+        user.otp_expires_at = now + timedelta(minutes=5)
+        user.otp_attempts = 0
+        db.commit()
+        send_otp_email(user.email, user.name, otp)
+
+    return {
+        "success": True,
+        "message": "If that account exists, a new code has been sent"
     }
 
 
@@ -180,74 +277,6 @@ def login(
     set_auth_cookie(response, user.id)
 
     return {"success": True, "name": user.name}
-
-
-@router.get("/verify-email", response_model=schemas.GenericMessageResponse)
-def verify_email(
-    token: str,
-    db: Session = Depends(get_db)
-):
-    """Verify customer email using short-lived token from email link."""
-    user_id_str = decode_verification_token(token)
-    if not user_id_str:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired verification link"
-        )
-
-    try:
-        user_id = uuid.UUID(user_id_str)
-    except (ValueError, TypeError):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid verification link"
-        )
-
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid verification link"
-        )
-
-    if user.is_verified:
-        return {
-            "success": True,
-            "message": "Email is already verified. You can log in."
-        }
-
-    user.is_verified = True
-    db.commit()
-
-    return {
-        "success": True,
-        "message": "Email verified successfully. You can now log in."
-    }
-
-
-@router.post("/resend-verification", response_model=schemas.GenericMessageResponse)
-@limiter.limit("5/minute")
-def resend_verification(
-    request: Request,
-    body: schemas.ResendVerificationRequest,
-    db: Session = Depends(get_db)
-):
-    """Resend email verification link.
-    Always returns generic success message to prevent account enumeration."""
-    clean_email = body.email.lower().strip()
-    user = db.query(models.User).filter(models.User.email == clean_email).first()
-
-    if user and not user.is_verified:
-        token = create_verification_token(user.id)
-        verification_link = f"{settings.FRONTEND_URL}/verify-email.html?token={token}"
-        send_verification_email(user.email, user.name, verification_link)
-        user.verification_sent_at = datetime.utcnow()
-        db.commit()
-
-    return {
-        "success": True,
-        "message": "If that account exists, we've sent a new link"
-    }
 
 
 @router.post("/logout")
