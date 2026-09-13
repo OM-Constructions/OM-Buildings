@@ -14,8 +14,8 @@ export function playLogoAnimation(logoSystem, interaction, renderer) {
     gsap.set(logoSystem.materials.m.uniforms.uHighlight, { value: 0.0 });
     gsap.set(logoSystem.meshes.m.scale, { x: 0.96, y: 0.96 });
 
-    gsap.set(".company-name", { opacity: 0, y: 10 });
-    gsap.set(".tagline", { opacity: 0, y: 6 });
+    gsap.set(".company-name", { autoAlpha: 0, y: 10 });
+    gsap.set(".tagline", { autoAlpha: 0, y: 6 });
 
     // Create master timeline
     const isMobile = window.innerWidth <= 768;
@@ -93,14 +93,14 @@ export function playLogoAnimation(logoSystem, interaction, renderer) {
         .add("textReveal", 3.1)
 
         .to(".company-name", {
-            opacity: 1,
+            autoAlpha: 1,
             y: 0,
             duration: 0.7,
             ease: "power2.out"
         }, "textReveal")
 
         .to(".tagline", {
-            opacity: 1,
+            autoAlpha: 1,
             y: 0,
             duration: 0.6,
             ease: "power2.out"

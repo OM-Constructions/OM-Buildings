@@ -116,8 +116,8 @@ INTRO SPLASH SECTION (Preserved Logo Intro)
     line-height: 1.1;
     text-transform: uppercase;
     margin: 0 0 12px 0;
-    opacity: 1; 
-    visibility: visible;
+    opacity: 0; 
+    visibility: hidden;
 }
 
 .tagline {
@@ -127,8 +127,8 @@ INTRO SPLASH SECTION (Preserved Logo Intro)
     color: var(--navy-secondary);
     letter-spacing: 0.015em;
     margin: 0;
-    opacity: 1;
-    visibility: visible;
+    opacity: 0;
+    visibility: hidden;
 }
 
 .gold-accent {

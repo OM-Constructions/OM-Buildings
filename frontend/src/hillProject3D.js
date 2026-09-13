@@ -35,6 +35,7 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
     // Add Environment / Studio Lighting for 360 visibility
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmremGenerator.dispose(); // Dispose after generating to save memory
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -54,32 +55,40 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
     scene.add(ambientLight);
 
-    // B. HemisphereLight for natural sky bounce
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xe8ecef, 1.5);
+    // B. HemisphereLight for natural sky/ground bounce
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xdddddd, 2.5);
     hemiLight.position.set(0, 50, 0);
     scene.add(hemiLight);
 
-    // C. Main DirectionalLight (Key) for soft, readable shadows
-    const keyLight = new THREE.DirectionalLight(0xfff5e6, 1.5);
-    keyLight.position.set(20, 40, 20);
-    keyLight.castShadow = true;
-    keyLight.shadow.mapSize.width = 2048;
-    keyLight.shadow.mapSize.height = 2048;
-    keyLight.shadow.camera.near = 0.1;
-    keyLight.shadow.camera.far = 100;
-    keyLight.shadow.camera.left = -20;
-    keyLight.shadow.camera.right = 20;
-    keyLight.shadow.camera.top = 20;
-    keyLight.shadow.camera.bottom = -20;
-    keyLight.shadow.bias = -0.002;
-    keyLight.shadow.normalBias = 0.05;
-    scene.add(keyLight);
+    // C. Main Front Key Light (Warm, casts shadow)
+    const frontKey = new THREE.DirectionalLight(0xfff5e6, 3.5);
+    frontKey.position.set(20, 40, 20);
+    frontKey.castShadow = true;
+    frontKey.shadow.mapSize.width = 2048;
+    frontKey.shadow.mapSize.height = 2048;
+    frontKey.shadow.camera.near = 0.1;
+    frontKey.shadow.camera.far = 100;
+    frontKey.shadow.camera.left = -20;
+    frontKey.shadow.camera.right = 20;
+    frontKey.shadow.camera.top = 20;
+    frontKey.shadow.camera.bottom = -20;
+    frontKey.shadow.bias = -0.002;
+    frontKey.shadow.normalBias = 0.05;
+    scene.add(frontKey);
 
-    // D. 360-Degree Fill Ring to eliminate any remaining dark angles
-    const fill1 = new THREE.DirectionalLight(0xffffff, 1.2); fill1.position.set(30, 15, 30); scene.add(fill1);
-    const fill2 = new THREE.DirectionalLight(0xffffff, 1.2); fill2.position.set(-30, 15, 30); scene.add(fill2);
-    const fill3 = new THREE.DirectionalLight(0xffffff, 1.2); fill3.position.set(-30, 15, -30); scene.add(fill3);
-    const fill4 = new THREE.DirectionalLight(0xffffff, 1.2); fill4.position.set(30, 15, -30); scene.add(fill4);
+    // D. Back Key Light to prevent the rear from being dark (Neutral)
+    const backKey = new THREE.DirectionalLight(0xffffff, 3.5);
+    backKey.position.set(-20, 40, -20);
+    scene.add(backKey);
+
+    // E. Symmetrical Cool Fills for shadows
+    const frontFill = new THREE.DirectionalLight(0xe6f5ff, 2.0);
+    frontFill.position.set(-20, 20, 20);
+    scene.add(frontFill);
+
+    const backFill = new THREE.DirectionalLight(0xe6f5ff, 2.0);
+    backFill.position.set(20, 20, -20);
+    scene.add(backFill);
 
     // Load Model
     const loader = new GLTFLoader();
@@ -103,6 +112,26 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
                             // Remove baked AO/Light maps that could force black shadows
                             mat.aoMap = null;
                             mat.lightMap = null;
+
+                            // Prevent highly metallic/glossy surfaces from appearing pitch black
+                            // by ensuring they catch diffuse light.
+                            if (mat.metalness !== undefined && mat.metalness > 0.3) {
+                                mat.metalness = 0.3; 
+                            }
+                            if (mat.roughness !== undefined && mat.roughness < 0.5) {
+                                mat.roughness = 0.5;
+                            }
+
+                            // If the base color is extremely dark, it acts like a black hole.
+                            // Give it a minimum baseline lightness (L=0.15) so ambient/fill lighting
+                            // can actually reveal its details in shadows.
+                            if (mat.color) {
+                                const hsl = {};
+                                mat.color.getHSL(hsl);
+                                if (hsl.l < 0.15) {
+                                    mat.color.setHSL(hsl.h, hsl.s, 0.15);
+                                }
+                            }
 
                             // Architectural models often have missing/inverted backfaces causing black rendering.
                             mat.side = THREE.DoubleSide;
