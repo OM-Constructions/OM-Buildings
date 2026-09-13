@@ -1,26 +1,20 @@
 import { submitEnquiry } from './api.js';
-import { getCurrentUser } from './auth.js';
+import { getCurrentUser, isStoredUserLoggedIn } from './auth.js';
 
 // This map must stay in sync with backend/app/services/service_catalog.py
 const SERVICE_SLUGS = {
-  "Architectural Design": "architectural-design",
-  "Architectural 2D Plans": "architectural-2d-plans",
-  "Structural Design": "structural-design",
-  "Project Planning": "project-planning",
-  "Interior Design": "interior-design",
-  "Geotechnical Report": "geotechnical-report",
-  "MEP Designs": "mep-designs",
-  "3D Building Design": "3d-building-design",
-  "Realistic Rendering": "realistic-rendering",
-  "Estimation & Costing": "estimation-costing",
-  "Construction Cost": "estimation-costing",
-  "Construction Cost Estimation": "estimation-costing",
-  "Total Station Survey": "total-station-survey",
-  "Interior Design + Execution": "interior-design-execution",
-  "Interior Design & Execution": "interior-design-execution",
-  "Complete Design Package": "complete-design-package",
-  "Premium Complete Design Package": "premium-complete-design-package",
-  "Turnkey Home Construction": "turnkey-home-construction"
+    "Architectural Design": "architectural-design",
+    "Architectural 2D Plans": "architectural-2d-plans",
+    "Structural Design": "structural-design",
+    "Project Planning": "project-planning",
+    "Interior Design": "interior-design",
+    "Geotechnical Report": "geotechnical-report",
+    "MEP Designs": "mep-designs",
+    "3D Building Design": "3d-building-design",
+    "Realistic Rendering": "realistic-rendering",
+    "Estimation & Costing": "estimation-costing",
+    "Construction Cost": "estimation-costing",
+    "Construction Cost Estimation": "estimation-costing"
 };
 
 /**
@@ -54,7 +48,7 @@ export async function initServiceContactCards() {
 }
 
 /**
- * Initializes the enquiry form on Service Detail Pages (/services/<slug>/index.html)
+ * Initializes the enquiry form on Service Detail Pages (/services/*/index.html)
  */
 export function initServiceDetailPageEnquiry() {
     // Deduplicate any duplicate enquiry boxes if present
@@ -91,6 +85,8 @@ export function initServiceDetailPageEnquiry() {
     }
 
     const serviceSlug = box.getAttribute('data-service-slug') || 'project-planning';
+    const serviceName = box.getAttribute('data-service-name') || 'Project Consultation';
+
     const form = box.querySelector('#form-service-detail-enquiry');
     if (!form) return;
 
@@ -101,33 +97,21 @@ export function initServiceDetailPageEnquiry() {
     const isServicePage = typeof window !== 'undefined' && window.location.pathname.includes('/services/');
     const loginPath = isServicePage ? '../../login.html' : './login.html';
 
-    // Strictly default to false: any unauthenticated visitor MUST be redirected to login
-    let isUserLoggedIn = false;
+    // Track authentication state synchronously
+    let isUserLoggedIn = isStoredUserLoggedIn();
 
     // Restore draft if present
     let savedDraft = null;
     try {
         const rawDraft = sessionStorage.getItem('om_service_detail_enquiry_' + serviceSlug);
         if (rawDraft) savedDraft = JSON.parse(rawDraft);
-    } catch (e) {}
+    } catch (e) { }
 
     if (savedDraft) {
-        if (form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
-        if (form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
+        if (!isUserLoggedIn && form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
+        if (!isUserLoggedIn && form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
         if (form.elements.phone && savedDraft.phone) form.elements.phone.value = savedDraft.phone;
         if (form.elements.message && savedDraft.message) form.elements.message.value = savedDraft.message;
-    }
-
-    function handleUnauthenticatedRedirect() {
-        const name = form.elements.name ? form.elements.name.value.trim() : '';
-        const email = form.elements.email ? form.elements.email.value.trim() : '';
-        const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
-        const message = form.elements.message ? form.elements.message.value.trim() : '';
-        try {
-            sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
-        } catch (err) {}
-        const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
-        window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
     }
 
     // Synchronous click interceptor for unauthenticated visitors
@@ -136,7 +120,15 @@ export function initServiceDetailPageEnquiry() {
             if (!isUserLoggedIn) {
                 e.preventDefault();
                 e.stopPropagation();
-                handleUnauthenticatedRedirect();
+                const name = form.elements.name ? form.elements.name.value.trim() : '';
+                const email = form.elements.email ? form.elements.email.value.trim() : '';
+                const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
+                const message = form.elements.message ? form.elements.message.value.trim() : '';
+                try {
+                    sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
+                } catch (err) { }
+                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
+                window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
                 return false;
             }
         });
@@ -147,16 +139,21 @@ export function initServiceDetailPageEnquiry() {
         e.preventDefault();
         e.stopPropagation();
 
-        if (!isUserLoggedIn) {
-            handleUnauthenticatedRedirect();
-            return false;
-        }
-
         const name = form.elements.name ? form.elements.name.value.trim() : '';
         const email = form.elements.email ? form.elements.email.value.trim() : '';
         const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
         const message = form.elements.message ? form.elements.message.value.trim() : '';
         const honeypot = form.elements.website ? form.elements.website.value : '';
+
+        // If not logged in, preserve entered values and redirect to login
+        if (!isUserLoggedIn) {
+            try {
+                sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
+            } catch (err) { }
+            const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
+            window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
+            return false;
+        }
 
         // Authenticated client path: submit enquiry to backend which sends company notification email
         const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Enquiry &rarr;';
@@ -177,14 +174,18 @@ export function initServiceDetailPageEnquiry() {
 
             try {
                 sessionStorage.removeItem('om_service_detail_enquiry_' + serviceSlug);
-            } catch (err) {}
+            } catch (err) { }
 
             form.style.display = 'none';
             if (successEl) successEl.style.display = 'block';
         } catch (err) {
             console.error('Service page enquiry error:', err);
             if (err.status === 401 || (err.message && (err.message.includes('401') || err.message.includes('Not authenticated')))) {
-                handleUnauthenticatedRedirect();
+                try {
+                    localStorage.removeItem('om_logged_in');
+                } catch (e) { }
+                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
+                window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
                 return;
             }
             if (errorEl) {
@@ -236,9 +237,6 @@ export function initGlobalEnquiryForm() {
     const card = document.getElementById('global-enquiry-box');
     if (!card) return;
 
-    if (card.dataset.enquiryBound === 'true') return;
-    card.dataset.enquiryBound = 'true';
-
     const authGate = card.querySelector('#global-enquiry-auth-gate');
     if (authGate) authGate.style.display = 'none';
 
@@ -253,41 +251,24 @@ export function initGlobalEnquiryForm() {
     const errorEl = form.querySelector('.global-enquiry-error');
     const submitBtn = form.querySelector('.global-enquiry-submit-btn');
 
-    // Strictly default to false: any unauthenticated visitor MUST be redirected to login
-    let isUserLoggedIn = false;
+    // Track authentication state synchronously
+    let isUserLoggedIn = isStoredUserLoggedIn();
 
     // Restore draft if present
     let savedDraft = null;
     try {
         const rawDraft = sessionStorage.getItem('om_global_enquiry_draft');
         if (rawDraft) savedDraft = JSON.parse(rawDraft);
-    } catch (e) {}
+    } catch (e) { }
 
     if (savedDraft) {
-        if (form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
-        if (form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
+        if (!isUserLoggedIn && form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
+        if (!isUserLoggedIn && form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
         if (form.elements.phone && savedDraft.phone) form.elements.phone.value = savedDraft.phone;
         if (form.elements.service_slug && savedDraft.service_slug) form.elements.service_slug.value = savedDraft.service_slug;
         if (form.elements.location && savedDraft.location) form.elements.location.value = savedDraft.location;
         if (form.elements.area && savedDraft.area) form.elements.area.value = savedDraft.area;
         if (form.elements.message && savedDraft.message) form.elements.message.value = savedDraft.message;
-    }
-
-    function handleUnauthenticatedRedirect() {
-        const name = form.elements.name ? form.elements.name.value.trim() : '';
-        const email = form.elements.email ? form.elements.email.value.trim() : '';
-        const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
-        const serviceSlug = form.elements.service_slug ? form.elements.service_slug.value : 'project-planning';
-        const locationVal = form.elements.location ? form.elements.location.value.trim() : '';
-        const areaVal = form.elements.area ? form.elements.area.value.trim() : '';
-        const rawMessage = form.elements.message ? form.elements.message.value.trim() : '';
-        try {
-            sessionStorage.setItem('om_global_enquiry_draft', JSON.stringify({
-                name, email, phone, service_slug: serviceSlug, location: locationVal, area: areaVal, message: rawMessage
-            }));
-        } catch (err) {}
-        const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#cta');
-        window.location.href = `./login.html?redirect=${returnUrl}&reason=enquiry_submit`;
     }
 
     // Synchronous click interceptor for unauthenticated visitors
@@ -296,7 +277,20 @@ export function initGlobalEnquiryForm() {
             if (!isUserLoggedIn) {
                 e.preventDefault();
                 e.stopPropagation();
-                handleUnauthenticatedRedirect();
+                const name = form.elements.name ? form.elements.name.value.trim() : '';
+                const email = form.elements.email ? form.elements.email.value.trim() : '';
+                const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
+                const serviceSlug = form.elements.service_slug ? form.elements.service_slug.value : 'project-planning';
+                const locationVal = form.elements.location ? form.elements.location.value.trim() : '';
+                const areaVal = form.elements.area ? form.elements.area.value.trim() : '';
+                const rawMessage = form.elements.message ? form.elements.message.value.trim() : '';
+                try {
+                    sessionStorage.setItem('om_global_enquiry_draft', JSON.stringify({
+                        name, email, phone, service_slug: serviceSlug, location: locationVal, area: areaVal, message: rawMessage
+                    }));
+                } catch (err) { }
+                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#cta');
+                window.location.href = `./login.html?redirect=${returnUrl}&reason=enquiry_submit`;
                 return false;
             }
         });
@@ -307,12 +301,6 @@ export function initGlobalEnquiryForm() {
         e.preventDefault();
         e.stopPropagation();
 
-        // If not logged in, preserve entered values and redirect to login
-        if (!isUserLoggedIn) {
-            handleUnauthenticatedRedirect();
-            return false;
-        }
-
         const name = form.elements.name ? form.elements.name.value.trim() : '';
         const email = form.elements.email ? form.elements.email.value.trim() : '';
         const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
@@ -322,11 +310,23 @@ export function initGlobalEnquiryForm() {
         const rawMessage = form.elements.message ? form.elements.message.value.trim() : '';
         const honeypot = form.elements.website ? form.elements.website.value : '';
 
+        // If not logged in, preserve entered values and redirect to login
+        if (!isUserLoggedIn) {
+            try {
+                sessionStorage.setItem('om_global_enquiry_draft', JSON.stringify({
+                    name, email, phone, service_slug: serviceSlug, location: locationVal, area: areaVal, message: rawMessage
+                }));
+            } catch (e) { }
+            const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#cta');
+            window.location.href = `./login.html?redirect=${returnUrl}&reason=enquiry_submit`;
+            return false;
+        }
+
         // Combine location and area into the project message for comprehensive company context
         const metaParts = [];
         if (locationVal) metaParts.push(`Location: ${locationVal}`);
         if (areaVal) metaParts.push(`Approx. Area / Type: ${areaVal}`);
-        
+
         let message = rawMessage;
         if (metaParts.length > 0) {
             message = `[${metaParts.join(' | ')}]\n\n${rawMessage}`;
@@ -350,14 +350,17 @@ export function initGlobalEnquiryForm() {
 
             try {
                 sessionStorage.removeItem('om_global_enquiry_draft');
-            } catch (e) {}
+            } catch (e) { }
 
             form.style.display = 'none';
             if (successEl) successEl.style.display = 'block';
         } catch (err) {
             console.error('Global enquiry submission error:', err);
             if (err.status === 401 || (err.message && (err.message.includes('401') || err.message.includes('Not authenticated')))) {
-                handleUnauthenticatedRedirect();
+                try {
+                    localStorage.removeItem('om_logged_in');
+                } catch (e) { }
+                window.location.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}&reason=enquiry_submit`;
                 return;
             }
             if (errorEl) {
@@ -403,7 +406,7 @@ export function initGlobalEnquiryForm() {
 
 function escapeHTML(str) {
     if (!str) return '';
-    return str.replace(/[&<>'"]/g, 
+    return str.replace(/[&<>'"]/g,
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 }
 
