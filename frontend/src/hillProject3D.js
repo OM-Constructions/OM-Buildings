@@ -1,10 +1,11 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
-function initHillProject3D() {
-    const container = document.getElementById('hill-project-container');
-    const fallback = document.getElementById('hill-project-fallback');
+function initProject3D(containerId, fallbackId, modelPath, options = {}) {
+    const container = document.getElementById(containerId);
+    const fallback = document.getElementById(fallbackId);
     if (!container) return;
 
     // Hide fallback
@@ -28,8 +29,12 @@ function initHillProject3D() {
     // Improve color and lighting rendering
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.1;
+    renderer.toneMappingExposure = options.exposure || 1.2;
     container.appendChild(renderer.domElement);
+
+    // Add Environment / Studio Lighting for 360 visibility
+    const pmremGenerator = new THREE.PMREMGenerator(renderer);
+    scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
@@ -45,36 +50,41 @@ function initHillProject3D() {
     controls.addEventListener('end', () => container.style.cursor = 'grab');
 
     // Lighting setup for a professional architectural look
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); // Stronger ambient to fill shadows
+    // A. Intense Ambient Light to guarantee absolute baseline visibility
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xfff5e6, 2.5); // Warm sun key light
-    directionalLight.position.set(20, 40, 20);
-    directionalLight.castShadow = true;
-    directionalLight.shadow.mapSize.width = 2048;
-    directionalLight.shadow.mapSize.height = 2048;
-    directionalLight.shadow.camera.near = 0.1;
-    directionalLight.shadow.camera.far = 100;
-    directionalLight.shadow.camera.left = -20;
-    directionalLight.shadow.camera.right = 20;
-    directionalLight.shadow.camera.top = 20;
-    directionalLight.shadow.camera.bottom = -20;
-    directionalLight.shadow.bias = -0.001;
-    directionalLight.shadow.normalBias = 0.02; // Improve shadow edge artifacts
-    scene.add(directionalLight);
+    // B. HemisphereLight for natural sky bounce
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xe8ecef, 1.5); 
+    hemiLight.position.set(0, 50, 0);
+    scene.add(hemiLight);
+
+    // C. Main DirectionalLight (Key) for soft, readable shadows
+    const keyLight = new THREE.DirectionalLight(0xfff5e6, 1.5); 
+    keyLight.position.set(20, 40, 20);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 2048;
+    keyLight.shadow.mapSize.height = 2048;
+    keyLight.shadow.camera.near = 0.1;
+    keyLight.shadow.camera.far = 100;
+    keyLight.shadow.camera.left = -20;
+    keyLight.shadow.camera.right = 20;
+    keyLight.shadow.camera.top = 20;
+    keyLight.shadow.camera.bottom = -20;
+    keyLight.shadow.bias = -0.002; 
+    keyLight.shadow.normalBias = 0.05;
+    scene.add(keyLight);
     
-    const fillLight = new THREE.DirectionalLight(0xe0e8ff, 1.5); // Cool fill light
-    fillLight.position.set(-20, 20, -20);
-    scene.add(fillLight);
-    
-    const rimLight = new THREE.DirectionalLight(0xffffff, 1.0); // Rim light for better separation
-    rimLight.position.set(20, 10, -20);
-    scene.add(rimLight);
+    // D. 360-Degree Fill Ring to eliminate any remaining dark angles
+    const fill1 = new THREE.DirectionalLight(0xffffff, 1.2); fill1.position.set(30, 15, 30); scene.add(fill1);
+    const fill2 = new THREE.DirectionalLight(0xffffff, 1.2); fill2.position.set(-30, 15, 30); scene.add(fill2);
+    const fill3 = new THREE.DirectionalLight(0xffffff, 1.2); fill3.position.set(-30, 15, -30); scene.add(fill3);
+    const fill4 = new THREE.DirectionalLight(0xffffff, 1.2); fill4.position.set(30, 15, -30); scene.add(fill4);
 
     // Load Model
     const loader = new GLTFLoader();
     loader.load(
-        './assets/models/hill-project.glb',
+        modelPath,
         (gltf) => {
             const model = gltf.scene;
             
@@ -84,16 +94,40 @@ function initHillProject3D() {
                     node.castShadow = true;
                     node.receiveShadow = true;
                     
+                    // Removed computeVertexNormals as it can break intentionally mirrored meshes
+                    
                     // Optional: adjust material slightly for better architectural look
                     if (node.material) {
-                        // Without an environment map (HDRI), highly metallic surfaces appear pitch black.
-                        // Cap metalness to prevent dark spots while keeping the architectural look.
-                        if (node.material.metalness !== undefined) {
-                            node.material.metalness = Math.min(0.2, node.material.metalness);
-                        }
-                        if (node.material.roughness !== undefined) {
-                            node.material.roughness = Math.max(0.5, node.material.roughness);
-                        }
+                        const materials = Array.isArray(node.material) ? node.material : [node.material];
+                        materials.forEach(mat => {
+                            // With an environment map added, metalness works properly!
+                            // Keep it natural, but prevent extreme metallic rendering.
+                            if (mat.metalness !== undefined) {
+                                mat.metalness = 0.1; // Extremely low to ensure diffuse visibility
+                            }
+                            if (mat.roughness !== undefined) {
+                                mat.roughness = 0.8; // Highly rough to catch ambient light
+                            }
+                            
+                            // Remove baked AO/Light maps that could force black shadows
+                            mat.aoMap = null;
+                            mat.lightMap = null;
+                            
+                            // Fix for models that refuse to light up on certain sides
+                            if (mat.map && modelPath.includes('commercial-complex')) {
+                                mat.emissiveMap = mat.map;
+                                mat.emissive = new THREE.Color(0x444444); // Stronger baseline illumination
+                                mat.emissiveIntensity = 1.0;
+                            } else if (mat.color && mat.color.getHex() < 0x111111) {
+                                mat.color.setHex(0x555555);
+                            }
+                            
+                            // Architectural models often have missing/inverted backfaces causing black rendering.
+                            mat.side = THREE.DoubleSide;
+                            
+                            // Ensure materials update
+                            mat.needsUpdate = true;
+                        });
                     }
                 }
             });
@@ -136,7 +170,7 @@ function initHillProject3D() {
         },
         undefined,
         (error) => {
-            console.error('Error loading Hill Project GLB:', error);
+            console.error('Error loading GLB:', modelPath, error);
             // Fallback: restore the original card styling if it fails
             if (fallback) fallback.style.display = 'block';
         }
@@ -177,8 +211,13 @@ function initHillProject3D() {
 }
 
 // Initialize when DOM is ready
+function initAllProjects() {
+    initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
+    initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
+}
+
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initHillProject3D);
+    document.addEventListener('DOMContentLoaded', initAllProjects);
 } else {
-    initHillProject3D();
+    initAllProjects();
 }
