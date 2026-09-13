@@ -95,7 +95,9 @@
             const header = document.querySelector(".auth-header");
             if (header) {
                 let noticeMsg = "<strong>Client Portal Access:</strong> Please sign in to submit and track your engineering consultation.";
-                if (reason === "pricing_access" || redirectUrl.includes("cost") || redirectUrl.includes("price")) {
+                if (reason === "enquiry_access" || redirectUrl.includes("#cta")) {
+                    noticeMsg = "<strong>Log In to Enquire:</strong> Please sign in to your client account to submit project specifications and request an engineering consultation.";
+                } else if (reason === "pricing_access" || redirectUrl.includes("cost") || redirectUrl.includes("price")) {
                     noticeMsg = "<strong>Verified Pricing Access:</strong> Please sign in to view itemized construction cost rates and rate schedules.";
                 } else if (reason === "service_access" || redirectUrl.includes("/services/")) {
                     noticeMsg = "<strong>Service Scope & Specifications:</strong> Please sign in with your client account to view full blueprints, technical deliverables, and service scopes.";
