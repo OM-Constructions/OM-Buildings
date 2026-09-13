@@ -84,6 +84,16 @@ export async function initServiceContactCards() {
             const signupPath = isServicePage ? '../../signup.html' : './signup.html';
             const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#' + uniqueId);
 
+            // Intercept direct card click so viewing full service specifications requires login
+            cardEl.addEventListener('click', (e) => {
+                if (e.target.closest('.enquiry-card-wrapper')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const targetHref = cardEl.getAttribute('href') || 'services/';
+                const serviceReturn = encodeURIComponent(targetHref);
+                window.location.href = `${loginPath}?redirect=${serviceReturn}&reason=service_access`;
+            });
+
             const authPanel = document.createElement('div');
             authPanel.className = 'service-client-access-panel';
             authPanel.style.display = 'none';
@@ -231,8 +241,29 @@ export async function initServiceContactCards() {
         wrapper.appendChild(toggleBtn);
         wrapper.appendChild(form);
         wrapper.appendChild(successDiv);
-        cardEl.appendChild(wrapper);
     });
+
+    // Manage price schedule visibility on Card 01 (CONSTRUCTION COST)
+    const priceBlock = document.getElementById('card-01-price-block');
+    if (priceBlock) {
+        const priceValue = priceBlock.querySelector('.price-value');
+        const priceBadge = priceBlock.querySelector('.price-locked-badge');
+        if (currentUser) {
+            if (priceValue) priceValue.style.display = 'block';
+            if (priceBadge) priceBadge.style.display = 'none';
+            priceBlock.classList.remove('price-locked-block');
+        } else {
+            if (priceValue) priceValue.style.display = 'none';
+            if (priceBadge) priceBadge.style.display = 'inline-flex';
+            priceBlock.classList.add('price-locked-block');
+            priceBlock.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const returnUrl = encodeURIComponent('services/construction-cost/');
+                window.location.href = `${loginPath}?redirect=${returnUrl}&reason=pricing_access`;
+            });
+        }
+    }
 
     // 2. Target Service Detail Pages (Dedicated Enquiry Box)
     initServiceDetailPageEnquiry();
