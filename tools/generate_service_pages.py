@@ -1,6 +1,17 @@
 import os
+from typing import TypedDict
 
-services_data = [
+
+class ServiceItem(TypedDict):
+    slug: str
+    eyebrow: str
+    title: str
+    intro: str
+    img: str
+    focus: list[str]
+
+
+services_data: list[ServiceItem] = [
     {
         "slug": "construction-cost",
         "eyebrow": "PRICE",

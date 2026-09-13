@@ -184,6 +184,9 @@ export function initServiceContactCards() {
 
     // 2. Target Service Detail Pages (Dedicated Enquiry Box)
     initServiceDetailPageEnquiry();
+
+    // 3. Target Global Project Enquiry Card (#cta)
+    initGlobalEnquiryForm();
 }
 
 function initServiceDetailPageEnquiry() {
@@ -311,6 +314,85 @@ function initServiceDetailPageEnquiry() {
     });
 
     targetEl.appendChild(box);
+}
+
+export function initGlobalEnquiryForm() {
+    const form = document.getElementById('global-enquiry-form');
+    if (!form) return;
+
+    if (form.dataset.enquiryBound === 'true') return;
+    form.dataset.enquiryBound = 'true';
+
+    const card = document.getElementById('global-enquiry-box');
+    const successEl = card ? card.querySelector('.global-enquiry-success') : null;
+    const errorEl = form.querySelector('.global-enquiry-error');
+    const submitBtn = form.querySelector('.global-enquiry-submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (errorEl) {
+            errorEl.style.display = 'none';
+            errorEl.textContent = '';
+        }
+
+        const name = form.elements.name ? form.elements.name.value.trim() : '';
+        const email = form.elements.email ? form.elements.email.value.trim() : '';
+        const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
+        const serviceSlug = form.elements.service_slug ? form.elements.service_slug.value : 'project-planning';
+        const location = form.elements.location ? form.elements.location.value.trim() : '';
+        const area = form.elements.area ? form.elements.area.value.trim() : '';
+        const rawMessage = form.elements.message ? form.elements.message.value.trim() : '';
+        const honeypot = form.elements.honeypot ? form.elements.honeypot.value : '';
+
+        // Bot honeypot detection
+        if (honeypot) {
+            form.style.display = 'none';
+            if (successEl) successEl.style.display = 'block';
+            return;
+        }
+
+        // Combine location and area into the project message for comprehensive company context
+        const metaParts = [];
+        if (location) metaParts.push(`Location: ${location}`);
+        if (area) metaParts.push(`Approx. Area / Type: ${area}`);
+        
+        let message = rawMessage;
+        if (metaParts.length > 0) {
+            message = `[${metaParts.join(' | ')}]\n\n${rawMessage}`;
+        }
+
+        const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Project Enquiry &rarr;';
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = 'Sending enquiry...';
+        }
+
+        try {
+            await submitEnquiry({
+                name,
+                email,
+                phone: phone || null,
+                serviceSlug: serviceSlug,
+                message: message,
+                honeypot: honeypot || ''
+            });
+
+            form.style.display = 'none';
+            if (successEl) successEl.style.display = 'block';
+        } catch (err) {
+            console.error('Global enquiry submission error:', err);
+            if (errorEl) {
+                errorEl.textContent = 'Failed to send your enquiry. Please check your network connection or reach us directly at omengineeringconsultants06@gmail.com.';
+                errorEl.style.display = 'block';
+            }
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        }
+    });
 }
 
 function escapeHTML(str) {
