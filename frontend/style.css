@@ -2238,6 +2238,10 @@ PER-SERVICE ENQUIRY CARDS
     box-shadow: 0 16px 36px rgba(7, 21, 47, 0.12);
 }
 
+.service-card.has-enquiry-open .service-hover-image {
+    display: none !important;
+}
+
 .enquiry-card-wrapper {
     position: relative;
     z-index: 10;
