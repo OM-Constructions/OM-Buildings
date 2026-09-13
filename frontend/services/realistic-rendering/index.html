@@ -149,13 +149,57 @@
             <img src="../../assets/services/realistic-rendering.png" alt="REALISTIC RENDERING Visual" class="gsap-reveal">
         </section>
 
-        <!-- 04 CTA -->
-        <section class="sp-section sp-cta">
+                <!-- 04 CTA & SERVICE ENQUIRY -->
+        <section class="sp-section sp-cta" id="enquire">
             <div class="container gsap-reveal">
                 <span class="sp-label" style="color: var(--navy-primary);">04 &mdash; READY?</span>
                 <h2>HAVE A PROJECT IN MIND?</h2>
-                <p>Let's discuss your requirements.</p>
-                <a href="../../index.html#cta" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary);">START A PROJECT &rarr;</a>
+                <p>Submit your requirements below to consult with our principal engineers and receive an indicative estimate for <strong>Realistic Rendering</strong>.</p>
+
+                <div class="service-enquiry-box" id="service-detail-enquiry-box" data-service-slug="realistic-rendering" data-service-name="Realistic Rendering">
+                    <div class="service-enquiry-header">
+                        <div class="service-enquiry-badge">DIRECT SERVICE ENQUIRY</div>
+                        <h3 class="service-enquiry-title">Enquire About Realistic Rendering</h3>
+                        <p class="service-enquiry-subtitle">Fill out the form below to receive an engineering consultation and cost estimate.</p>
+                    </div>
+
+                    <form class="service-enquiry-form" id="form-service-detail-enquiry" action="javascript:void(0);" method="POST">
+                        <div class="service-enquiry-row">
+                            <div class="service-enquiry-field">
+                                <label for="sp-name">Your Full Name *</label>
+                                <input type="text" id="sp-name" name="name" required placeholder="e.g. Rahul Sharma" class="service-enquiry-input" autocomplete="name" />
+                            </div>
+                            <div class="service-enquiry-field">
+                                <label for="sp-email">Email Address *</label>
+                                <input type="email" id="sp-email" name="email" required placeholder="name@example.com" class="service-enquiry-input" autocomplete="email" />
+                            </div>
+                        </div>
+                        <div class="service-enquiry-row">
+                            <div class="service-enquiry-field">
+                                <label for="sp-phone">Phone / WhatsApp (optional)</label>
+                                <input type="tel" id="sp-phone" name="phone" placeholder="+91 98765 43210" class="service-enquiry-input" autocomplete="tel" />
+                            </div>
+                            <div class="service-enquiry-field">
+                                <label for="sp-type">Service</label>
+                                <input type="text" id="sp-type" value="Realistic Rendering" class="service-enquiry-input service-enquiry-readonly" readonly />
+                            </div>
+                        </div>
+                        <div class="service-enquiry-field">
+                            <label for="sp-msg">Project Details & Requirements *</label>
+                            <textarea id="sp-msg" name="message" rows="3" required placeholder="Describe what you want to build: location, built-up area, specific requirements, or questions for our engineers..." class="service-enquiry-textarea"></textarea>
+                        </div>
+                        <input type="text" name="honeypot" class="enquiry-honeypot" style="position:absolute; left:-9999px; opacity:0; pointer-events:none;" tabindex="-1" autocomplete="off" />
+                        <div class="service-enquiry-actions">
+                            <button type="submit" class="service-enquiry-submit-btn">Send Enquiry &rarr;</button>
+                        </div>
+                        <div class="service-enquiry-error" style="display: none;"></div>
+                    </form>
+                    <div class="service-enquiry-success" style="display: none;">
+                        <div class="service-enquiry-success-icon">&#10003;</div>
+                        <h4>Thank you!</h4>
+                        <p>Thanks &mdash; we have received your enquiry for <strong>Realistic Rendering</strong> and sent you a confirmation email. Our engineers will review your scope and follow up shortly.</p>
+                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -184,6 +228,7 @@
 
     <!-- GSAP ANIMATIONS & CORE SCRIPTS -->
     <script type="module" src="../../src/main.js"></script>
+    <script type="module" src="../../src/serviceContactCards.js"></script>
     <script type="module">
         import gsap from 'gsap';
         import ScrollTrigger from 'gsap/ScrollTrigger';
