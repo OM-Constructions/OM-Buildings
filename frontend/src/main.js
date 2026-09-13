@@ -61,7 +61,7 @@ async function init() {
 
     try {
         scene = new THREE.Scene();
-        // scene.background = new THREE.Color(0xffffff); // Removed to allow transparency
+        scene.background = new THREE.Color(0xffffff);
         
         const w = window.innerWidth;
         const h = window.innerHeight;
@@ -69,7 +69,7 @@ async function init() {
         camera = new THREE.OrthographicCamera(w / -2, w / 2, h / 2, h / -2, 1, 1000);
         camera.position.z = 100;
         
-        renderer = new THREE.WebGLRenderer({ canvas: splashCanvas, antialias: true, alpha: true });
+        renderer = new THREE.WebGLRenderer({ canvas: splashCanvas, antialias: true, alpha: false });
         renderer.setSize(w, h);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         
