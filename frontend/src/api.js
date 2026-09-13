@@ -20,8 +20,13 @@ export async function submitEnquiry({ name, email, phone, serviceSlug, projectTy
       honeypot: honeypot || "",
     }),
   });
-  if (!res.ok) throw new Error("Failed to submit enquiry");
-  return res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const err = new Error(data.detail || `Failed to submit enquiry (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
 }
 
 export async function askAssistant(message, history = []) {

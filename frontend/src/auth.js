@@ -42,6 +42,10 @@ export async function login({ email, password }) {
     err.code = data.error || (data.detail === "email_not_verified" ? "email_not_verified" : null);
     throw err;
   }
+  try {
+    localStorage.setItem("om_logged_in", "true");
+    if (data.name) localStorage.setItem("om_user_name", data.name);
+  } catch (e) {}
   return data;
 }
 
@@ -84,6 +88,10 @@ export async function resendVerification(email) {
  * @returns {Promise<{ success: boolean, message: string }>}
  */
 export async function logout() {
+  try {
+    localStorage.removeItem("om_logged_in");
+    localStorage.removeItem("om_user_name");
+  } catch (e) {}
   const res = await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
     method: "POST",
     credentials: "include",
@@ -96,6 +104,18 @@ export async function logout() {
 }
 
 /**
+ * Synchronous check for stored login flag
+ * @returns {boolean}
+ */
+export function isStoredUserLoggedIn() {
+  try {
+    return localStorage.getItem("om_logged_in") === "true";
+  } catch (e) {
+    return false;
+  }
+}
+
+/**
  * Check if the user is logged in
  * @returns {Promise<{ name: string, email: string } | null>}
  */
@@ -105,8 +125,19 @@ export async function getCurrentUser() {
       method: "GET",
       credentials: "include",
     });
-    if (!res.ok) return null;
-    return await res.json();
+    if (!res.ok) {
+      try {
+        localStorage.removeItem("om_logged_in");
+        localStorage.removeItem("om_user_name");
+      } catch (e) {}
+      return null;
+    }
+    const data = await res.json();
+    try {
+      localStorage.setItem("om_logged_in", "true");
+      if (data && data.name) localStorage.setItem("om_user_name", data.name);
+    } catch (e) {}
+    return data;
   } catch (err) {
     return null;
   }
