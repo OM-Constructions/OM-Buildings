@@ -72,27 +72,53 @@ export async function initServiceContactCards() {
             e.stopPropagation();
         });
 
-        // Toggle button: Enquire about this service →
+        // Toggle button: Request Consultation →
         const toggleBtn = document.createElement('button');
         toggleBtn.type = 'button';
         toggleBtn.className = 'enquiry-toggle';
         toggleBtn.id = `toggle-${uniqueId}`;
         toggleBtn.setAttribute('aria-expanded', 'false');
+        toggleBtn.innerHTML = 'Request Consultation &rarr;';
 
         if (!currentUser) {
-            toggleBtn.innerHTML = '🔒 Log In to Enquire &rarr;';
+            const signupPath = isServicePage ? '../../signup.html' : './signup.html';
+            const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#' + uniqueId);
+
+            const authPanel = document.createElement('div');
+            authPanel.className = 'service-client-access-panel';
+            authPanel.style.display = 'none';
+            authPanel.innerHTML = `
+                <div class="service-access-header-top">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+                    <span class="service-access-badge">CLIENT PORTAL ACCESS</span>
+                </div>
+                <p class="service-access-desc">Sign in or register your client account to request direct structural consultation for <strong>${escapeHTML(serviceName)}</strong>.</p>
+                <div class="service-access-actions">
+                    <a href="${loginPath}?redirect=${returnUrl}" class="service-access-btn-primary">Sign In &rarr;</a>
+                    <a href="${signupPath}?redirect=${returnUrl}" class="service-access-btn-secondary">Register</a>
+                </div>
+            `;
+
             toggleBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#' + uniqueId);
-                window.location.href = `${loginPath}?redirect=${returnUrl}`;
+                const isOpen = authPanel.style.display !== 'none';
+                if (isOpen) {
+                    authPanel.style.display = 'none';
+                    toggleBtn.setAttribute('aria-expanded', 'false');
+                    cardEl.classList.remove('has-enquiry-open');
+                } else {
+                    authPanel.style.display = 'block';
+                    toggleBtn.setAttribute('aria-expanded', 'true');
+                    cardEl.classList.add('has-enquiry-open');
+                }
             });
+
             wrapper.appendChild(toggleBtn);
+            wrapper.appendChild(authPanel);
             cardEl.appendChild(wrapper);
             return;
         }
-
-        toggleBtn.innerHTML = 'Enquire about this service &rarr;';
 
         // Compact Form with pre-filled verified user credentials
         const form = document.createElement('form');
@@ -104,6 +130,10 @@ export async function initServiceContactCards() {
         const clientEmailVal = escapeHTML(currentUser.email || '');
 
         form.innerHTML = `
+            <div class="client-portal-user-info" style="font-size: 0.78rem; color: #64748b; margin-bottom: 8px; justify-content: flex-start;">
+                <span class="client-status-indicator"></span>
+                <span>Verified: <strong>${clientNameVal}</strong></span>
+            </div>
             <div class="enquiry-field">
                 <input type="text" name="name" required value="${clientNameVal}" placeholder="Your Name" class="enquiry-input" autocomplete="name" />
             </div>
@@ -249,24 +279,28 @@ async function initServiceDetailPageEnquiry() {
 
     if (!currentUser) {
         box.innerHTML = `
-            <div class="service-enquiry-header">
-                <div class="service-enquiry-badge">DIRECT SERVICE ENQUIRY</div>
-                <h3 class="service-enquiry-title">Enquire About ${escapeHTML(serviceName)}</h3>
-                <p class="service-enquiry-subtitle">Customer login is required to submit consultation requests and review engineering drawings.</p>
-            </div>
-            <div class="service-enquiry-auth-gate" style="text-align: center; padding: 32px 16px;">
-                <div style="font-size: 2.5rem; margin-bottom: 12px;">🔒</div>
-                <h4 style="font-size: 1.3rem; color: #0f172a; margin-bottom: 8px; font-weight: 700;">Customer Login Required</h4>
-                <p style="color: #64748b; font-size: 0.95rem; max-width: 480px; margin: 0 auto 24px; line-height: 1.5;">
-                    To submit an enquiry for <strong>${escapeHTML(serviceName)}</strong> and track your engineering consultation in your customer portal, please sign in or register.
+            <div class="service-page-auth-panel">
+                <div class="service-auth-icon-circle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="M9 12l2 2 4-4"/>
+                    </svg>
+                </div>
+                <h4>Client Consultation Access</h4>
+                <p>
+                    To submit project specifications for <strong>${escapeHTML(serviceName)}</strong>, request engineering drawings review, and receive an indicative estimate, please access your verified client account.
                 </p>
-                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-                    <a href="${loginPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}" class="service-enquiry-submit-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
-                        Log In to Continue &rarr;
+                <div class="service-auth-panel-actions">
+                    <a href="${loginPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}" class="sp-auth-btn-primary">
+                        Client Sign In &rarr;
                     </a>
-                    <a href="${signupPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}" class="service-enquiry-submit-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; background:#f8fafc; color:#0f172a; border:1px solid #cbd5e1;">
-                        Create Account
+                    <a href="${signupPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}" class="sp-auth-btn-secondary">
+                        Register Client Account
                     </a>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; color: #64748b; margin-top: 14px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    <span>Confidential &amp; Encrypted Architectural &bull; Structural Data Safeguard</span>
                 </div>
             </div>
         `;
@@ -283,8 +317,14 @@ async function initServiceDetailPageEnquiry() {
             <h3 class="service-enquiry-title">Enquire About ${escapeHTML(serviceName)}</h3>
             <p class="service-enquiry-subtitle">Fill out the form below to receive a consultation and indicative estimate for your project.</p>
         </div>
-        <div class="client-auth-status-pill" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(201, 151, 34, 0.12); border: 1px solid rgba(201, 151, 34, 0.35); color: #B37D14; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 20px;">
-            <span>✓ Signed in as <strong>${clientNameVal}</strong> (${clientEmailVal})</span> &bull; <a href="${isServicePage ? '../../my-requests.html' : './my-requests.html'}" style="color: #0f172a; text-decoration: underline; margin-left: 4px;">My Portal</a>
+        <div class="client-portal-status-bar" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; margin-bottom: 20px;">
+            <div class="client-portal-user-info" style="color: #0f172a;">
+                <span class="client-status-indicator"></span>
+                <span>Verified Client: <strong>${clientNameVal}</strong> <span style="color: #64748b;">(${clientEmailVal})</span></span>
+            </div>
+            <a href="${isServicePage ? '../../my-requests.html' : './my-requests.html'}" class="client-portal-link" style="color: #07152F;">
+                Open Client Portal &rarr;
+            </a>
         </div>
         <form class="service-enquiry-form" id="form-service-detail-enquiry">
             <div class="service-enquiry-row">
@@ -411,14 +451,21 @@ export async function initGlobalEnquiryForm() {
     if (form.elements.name) form.elements.name.value = currentUser.name || '';
     if (form.elements.email) form.elements.email.value = currentUser.email || '';
 
-    // Show verified user badge
-    let pill = card ? card.querySelector('.client-auth-status-pill') : null;
-    if (!pill && card) {
-        pill = document.createElement('div');
-        pill.className = 'client-auth-status-pill';
-        pill.style.cssText = 'display: inline-flex; align-items: center; gap: 8px; background: rgba(201, 151, 34, 0.15); border: 1px solid rgba(201, 151, 34, 0.4); color: #F59E0B; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 20px;';
-        pill.innerHTML = `<span>✓ Signed in as <strong>${escapeHTML(currentUser.name)}</strong> (${escapeHTML(currentUser.email)})</span> &bull; <a href="./my-requests.html" style="color: #fff; text-decoration: underline; margin-left: 4px;">My Portal</a>`;
-        form.parentNode.insertBefore(pill, form);
+    // Show verified user executive status bar
+    let statusBar = card ? card.querySelector('.client-portal-status-bar') : null;
+    if (!statusBar && card) {
+        statusBar = document.createElement('div');
+        statusBar.className = 'client-portal-status-bar';
+        statusBar.innerHTML = `
+            <div class="client-portal-user-info">
+                <span class="client-status-indicator"></span>
+                <span>Verified Client: <strong>${escapeHTML(currentUser.name)}</strong> <span style="color: rgba(255, 255, 255, 0.65);">(${escapeHTML(currentUser.email)})</span></span>
+            </div>
+            <a href="./my-requests.html" class="client-portal-link">
+                Open Client Portal &rarr;
+            </a>
+        `;
+        form.parentNode.insertBefore(statusBar, form);
     }
 
     if (form.dataset.enquiryBound === 'true') return;
