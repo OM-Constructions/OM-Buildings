@@ -7,30 +7,56 @@ import { LogoInteraction } from './interaction.js';
 import { initHeroVisual } from './heroVisual.js';
 import { initServicesHover } from './servicesHover.js';
 import { initAIAssistant } from './aiAssistant.js';
-import { initServiceContactCards } from './serviceContactCards.js?v=9';
+import { initServiceContactCards } from './serviceContactCards.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
 let scene, camera, renderer, logoSystem, interaction;
 
 async function init() {
-    // Initialize Per-Service Enquiry Cards
-    initServiceContactCards();
+    // 1. Initialize enquiry forms
+    try {
+        await initServiceContactCards();
+    } catch (e) {
+        console.warn('initServiceContactCards warning:', e);
+    }
 
-    // Initialize OM Engineering AI Consultant Box early
-    initAIAssistant();
+    // 2. Initialize AI Assistant
+    try {
+        initAIAssistant();
+    } catch (e) {
+        console.warn('initAIAssistant warning:', e);
+    }
 
-    // Initialize Hero right-side visual
+    // 3. Check if page has the WebGL 3D intro splash (only homepage has this)
+    const splashCanvas = document.getElementById('webgl-canvas');
+    const splashSection = document.getElementById('intro-splash');
+
+    if (!splashCanvas || !splashSection) {
+        // We are on a subpage or service detail page: reveal content immediately
+        const hpContent = document.getElementById('homepage-content');
+        if (hpContent) {
+            hpContent.style.opacity = '1';
+            hpContent.style.visibility = 'visible';
+        }
+        const nav = document.getElementById('navbar');
+        if (nav) {
+            nav.style.opacity = '1';
+            nav.style.visibility = 'visible';
+        }
+        document.body.style.overflowY = 'auto';
+        document.body.style.overflowX = 'hidden';
+
+        initNavbarScroll();
+        initMobileNav();
+        return;
+    }
+
+    // 4. On Homepage: initialize homepage-specific components
     initHeroVisual();
-
-    // Initialize ScrollTrigger Animations for homepage
     initScrollAnimations();
-    
-    // Initialize Navbar scroll effect and Mobile Nav
     initNavbarScroll();
     initMobileNav();
-
-    // Initialize Services Hover Interrupt Management
     initServicesHover();
 
     try {
@@ -43,8 +69,7 @@ async function init() {
         camera = new THREE.OrthographicCamera(w / -2, w / 2, h / 2, h / -2, 1, 1000);
         camera.position.z = 100;
         
-        const canvas = document.getElementById('webgl-canvas');
-        renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+        renderer = new THREE.WebGLRenderer({ canvas: splashCanvas, antialias: true, alpha: false });
         renderer.setSize(w, h);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         
@@ -55,14 +80,12 @@ async function init() {
         interaction = new LogoInteraction(camera, logoSystem, renderer);
         
         window.addEventListener('resize', onWindowResize);
-        
         renderer.setAnimationLoop(render);
         
         playLogoAnimation(logoSystem, interaction);
     } catch (err) {
         console.warn('WebGL initialization skipped or failed, revealing homepage content:', err);
-        const introSplash = document.getElementById('intro-splash');
-        if (introSplash) introSplash.style.display = 'none';
+        if (splashSection) splashSection.style.display = 'none';
         gsap.to(['#navbar', '#homepage-content', 'footer', '#om-ai-widget'], {
             opacity: 1,
             visibility: "visible",
