@@ -19,17 +19,27 @@ export function playLogoAnimation(logoSystem, interaction) {
     const isMobile = window.innerWidth <= 768;
     
     const tl = gsap.timeline({
-        delay: 0.2,
+        delay: isMobile ? 0.05 : 0.2,
         onComplete: () => {
             if (interaction) {
                 console.log("INTRO COMPLETE - ENABLING HOVER");
                 interaction.enable();
             }
+            
+            // On mobile, fade out splash instantly without flash
+            if (isMobile) {
+                gsap.to('#intro-splash', {
+                    opacity: 0,
+                    duration: 0.2,
+                    ease: "power2.out"
+                });
+            }
+            
             // Transition into the actual homepage
             gsap.to(['#navbar', '#homepage-content', 'footer', '#om-ai-widget'], {
                 opacity: 1,
                 visibility: "visible",
-                duration: isMobile ? 0.5 : 1.5,
+                duration: isMobile ? 0.3 : 1.5,
                 ease: "power2.out"
             });
             // Unlock scrolling
@@ -40,12 +50,12 @@ export function playLogoAnimation(logoSystem, interaction) {
             setTimeout(() => {
                 const splash = document.getElementById('intro-splash');
                 if (splash) splash.style.display = 'none';
-            }, 1000);
+            }, isMobile ? 250 : 1000);
         }
     });
     
     if (isMobile) {
-        tl.timeScale(3.5); // Speed up the animation significantly on mobile (approx 1s total)
+        tl.timeScale(4.5); // Fast mobile intro ~1s
     }
     
     // PHASE 1: Q Reveal (0.00s - 2.10s)
