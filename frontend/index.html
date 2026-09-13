@@ -186,13 +186,9 @@
                     <a href="services/construction-cost/" class="service-card" data-index="1">
                         <span class="service-number">01</span>
                         <h3 class="service-title">CONSTRUCTION COST</h3>
-                        <div class="service-price-block price-locked-block" id="card-01-price-block">
-                            <span class="price-label">PRICE SCHEDULE</span>
-                            <span class="price-value price-auth-required" style="display: none;">₹2,500 / sqft</span>
-                            <span class="price-locked-badge">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-                                Sign in to view rates &rarr;
-                            </span>
+                        <div class="service-price-block">
+                            <span class="price-label">PRICE</span>
+                            <span class="price-value">₹2,500 / sqft</span>
                         </div>
                         <p class="service-desc">Construction cost estimation and budgeting for your project.</p>
                         <div class="service-hover-image">
@@ -566,136 +562,83 @@
                     </p>
 
                     <div class="global-enquiry-card" id="global-enquiry-box">
-                        <!-- GUEST STATE: Clean Unified Corporate Consultation Gate -->
-                        <div class="global-enquiry-auth-gate" id="global-enquiry-auth-gate">
-                            <div class="auth-gate-shield-wrapper">
-                                <svg class="auth-gate-shield-icon" viewBox="0 0 24 24">
-                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                    <path d="M9 12l2 2 4-4"/>
-                                </svg>
-                            </div>
-                            <span class="auth-gate-eyebrow">CLIENT CONSULTATION PORTAL &bull; VERIFIED ACCESS</span>
-                            <h3 class="auth-gate-headline">Log In to Enquire</h3>
-                            <p class="auth-gate-subtext">
-                                To enquire about your project, safeguard proprietary specifications, and consult directly with our principal structural engineers, please sign in to your client account.
-                            </p>
-                            <div class="auth-gate-pillars">
-                                <div class="auth-gate-pillar-item">
-                                    <div class="auth-gate-pillar-title">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                        Proprietary Safeguard
-                                    </div>
-                                    <div class="auth-gate-pillar-desc">Confidential handling of architectural plans, soil data, and structural loads.</div>
-                                </div>
-                                <div class="auth-gate-pillar-item">
-                                    <div class="auth-gate-pillar-title">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                        Principal Review
-                                    </div>
-                                    <div class="auth-gate-pillar-desc">Direct technical assessment by licensed structural and MEP engineers.</div>
-                                </div>
-                                <div class="auth-gate-pillar-item">
-                                    <div class="auth-gate-pillar-title">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                        Revision & BOQ Tracking
-                                    </div>
-                                    <div class="auth-gate-pillar-desc">Centralized access to project history, estimates, and verified documents.</div>
-                                </div>
-                            </div>
-                            <div class="auth-gate-actions">
-                                <a href="./login.html?redirect=%2F%23cta" class="btn-portal-primary">
-                                    Log In to Enquire &rarr;
-                                </a>
-                                <a href="./signup.html?redirect=%2F%23cta" class="btn-portal-secondary">
-                                    Create Client Account
-                                </a>
-                            </div>
-                            <p class="auth-gate-footer-note">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 4px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                                New clients receive immediate access to our digital enquiry tracking portal upon registration.
-                            </p>
+                        <div class="global-enquiry-header">
+                            <div class="service-enquiry-badge">PROJECT CONSULTATION ENQUIRY</div>
+                            <h3 class="global-enquiry-title">Start Your Project Consultation</h3>
+                            <p class="global-enquiry-subtitle">Fill out the details below and our senior engineering team will connect with you within 24 hours.</p>
                         </div>
-
-                        <!-- AUTHENTICATED CLIENT STATE: Form & Header (revealed when logged in) -->
-                        <div class="global-enquiry-form-wrapper" id="global-enquiry-form-wrapper" style="display: none;">
-                            <div class="global-enquiry-header">
-                                <div class="service-enquiry-badge">PROJECT CONSULTATION ENQUIRY</div>
-                                <h3 class="global-enquiry-title">Start Your Project Consultation</h3>
-                                <p class="global-enquiry-subtitle">Fill out the details below and our senior engineering team will connect with you within 24 hours.</p>
-                            </div>
-                            <form class="global-enquiry-form" id="global-enquiry-form" action="javascript:void(0);" method="POST">
-                                <div class="global-enquiry-row">
-                                    <div class="global-enquiry-field">
-                                        <label for="ge-name">Your Full Name *</label>
-                                        <input type="text" id="ge-name" name="name" required placeholder="e.g. Rahul Sharma"
-                                            class="global-enquiry-input" autocomplete="name" />
-                                    </div>
-                                    <div class="global-enquiry-field">
-                                        <label for="ge-email">Email Address *</label>
-                                        <input type="email" id="ge-email" name="email" required
-                                            placeholder="name@example.com" class="global-enquiry-input"
-                                            autocomplete="email" />
-                                    </div>
-                                </div>
-                                <div class="global-enquiry-row">
-                                    <div class="global-enquiry-field">
-                                        <label for="ge-phone">Phone / WhatsApp (optional)</label>
-                                        <input type="tel" id="ge-phone" name="phone" placeholder="+91 98765 43210"
-                                            class="global-enquiry-input" autocomplete="tel" />
-                                    </div>
-                                    <div class="global-enquiry-field">
-                                        <label for="ge-service">Service of Primary Interest</label>
-                                        <select id="ge-service" name="service_slug" class="global-enquiry-select">
-                                            <option value="project-planning">General Consultation & Project Planning
-                                            </option>
-                                            <option value="architectural-design">Architectural Design</option>
-                                            <option value="architectural-2d-plans">Architectural 2D Plans</option>
-                                            <option value="structural-design">Structural Design</option>
-                                            <option value="3d-building-design">3D Building Design</option>
-                                            <option value="interior-design">Interior Design</option>
-                                            <option value="geotechnical-report">Geotechnical Report</option>
-                                            <option value="mep-designs">MEP Designs</option>
-                                            <option value="realistic-rendering">Realistic Rendering</option>
-                                            <option value="estimation-costing">Estimation & Costing</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="global-enquiry-row">
-                                    <div class="global-enquiry-field">
-                                        <label for="ge-location">Project Location (optional)</label>
-                                        <input type="text" id="ge-location" name="location"
-                                            placeholder="City, Area or State (e.g. Bangalore)"
-                                            class="global-enquiry-input" />
-                                    </div>
-                                    <div class="global-enquiry-field">
-                                        <label for="ge-area">Approx. Built-up Area / Type (optional)</label>
-                                        <input type="text" id="ge-area" name="area"
-                                            placeholder="e.g. 2,500 sq ft, 3BHK Villa, G+2 Commercial"
-                                            class="global-enquiry-input" />
-                                    </div>
+                        <form class="global-enquiry-form" id="global-enquiry-form" action="javascript:void(0);" method="POST">
+                            <div class="global-enquiry-row">
+                                <div class="global-enquiry-field">
+                                    <label for="ge-name">Your Full Name *</label>
+                                    <input type="text" id="ge-name" name="name" required placeholder="e.g. Rahul Sharma"
+                                        class="global-enquiry-input" autocomplete="name" />
                                 </div>
                                 <div class="global-enquiry-field">
-                                    <label for="ge-message">Project Description & Requirements *</label>
-                                    <textarea id="ge-message" name="message" rows="4" required
-                                        placeholder="Describe what you want to build: building type, specific requirements, timeline, budget expectations, or any questions for our engineers..."
-                                        class="global-enquiry-textarea"></textarea>
+                                    <label for="ge-email">Email Address *</label>
+                                    <input type="email" id="ge-email" name="email" required
+                                        placeholder="name@example.com" class="global-enquiry-input"
+                                        autocomplete="email" />
                                 </div>
-                                <input type="text" name="honeypot" class="enquiry-honeypot"
-                                    style="position:absolute; left:-9999px; opacity:0; pointer-events:none;" tabindex="-1"
-                                    autocomplete="off" />
-                                <div class="global-enquiry-actions">
-                                    <button type="submit" class="global-enquiry-submit-btn">Send Project Enquiry
-                                        &rarr;</button>
-                                </div>
-                                <div class="global-enquiry-error" style="display: none;"></div>
-                            </form>
-                            <div class="global-enquiry-success" style="display: none;">
-                                <div class="service-enquiry-success-icon">&#10003;</div>
-                                <h4>Enquiry Received Successfully!</h4>
-                                <p>Thanks &mdash; we've received your project details and sent you a confirmation email. Our
-                                    senior engineering consultants will review your scope and get in touch within 24 hours.
-                                </p>
                             </div>
+                            <div class="global-enquiry-row">
+                                <div class="global-enquiry-field">
+                                    <label for="ge-phone">Phone / WhatsApp (optional)</label>
+                                    <input type="tel" id="ge-phone" name="phone" placeholder="+91 98765 43210"
+                                        class="global-enquiry-input" autocomplete="tel" />
+                                </div>
+                                <div class="global-enquiry-field">
+                                    <label for="ge-service">Service of Primary Interest</label>
+                                    <select id="ge-service" name="service_slug" class="global-enquiry-select">
+                                        <option value="project-planning">General Consultation & Project Planning
+                                        </option>
+                                        <option value="architectural-design">Architectural Design</option>
+                                        <option value="architectural-2d-plans">Architectural 2D Plans</option>
+                                        <option value="structural-design">Structural Design</option>
+                                        <option value="3d-building-design">3D Building Design</option>
+                                        <option value="interior-design">Interior Design</option>
+                                        <option value="geotechnical-report">Geotechnical Report</option>
+                                        <option value="mep-designs">MEP Designs</option>
+                                        <option value="realistic-rendering">Realistic Rendering</option>
+                                        <option value="estimation-costing">Estimation & Costing</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="global-enquiry-row">
+                                <div class="global-enquiry-field">
+                                    <label for="ge-location">Project Location (optional)</label>
+                                    <input type="text" id="ge-location" name="location"
+                                        placeholder="City, Area or State (e.g. Bangalore)"
+                                        class="global-enquiry-input" />
+                                </div>
+                                <div class="global-enquiry-field">
+                                    <label for="ge-area">Approx. Built-up Area / Type (optional)</label>
+                                    <input type="text" id="ge-area" name="area"
+                                        placeholder="e.g. 2,500 sq ft, 3BHK Villa, G+2 Commercial"
+                                        class="global-enquiry-input" />
+                                </div>
+                            </div>
+                            <div class="global-enquiry-field">
+                                <label for="ge-message">Project Description & Requirements *</label>
+                                <textarea id="ge-message" name="message" rows="4" required
+                                    placeholder="Describe what you want to build: building type, specific requirements, timeline, budget expectations, or any questions for our engineers..."
+                                    class="global-enquiry-textarea"></textarea>
+                            </div>
+                            <input type="text" name="honeypot" class="enquiry-honeypot"
+                                style="position:absolute; left:-9999px; opacity:0; pointer-events:none;" tabindex="-1"
+                                autocomplete="off" />
+                            <div class="global-enquiry-actions">
+                                <button type="submit" class="global-enquiry-submit-btn">Send Project Enquiry
+                                    &rarr;</button>
+                            </div>
+                            <div class="global-enquiry-error" style="display: none;"></div>
+                        </form>
+                        <div class="global-enquiry-success" style="display: none;">
+                            <div class="service-enquiry-success-icon">&#10003;</div>
+                            <h4>Enquiry Received Successfully!</h4>
+                            <p>Thanks &mdash; we've received your project details and sent you a confirmation email. Our
+                                senior engineering consultants will review your scope and get in touch within 24 hours.
+                            </p>
                         </div>
                     </div>
 
