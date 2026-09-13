@@ -51,11 +51,38 @@ export async function initServiceContactCards() {
  * Initializes the enquiry form on Service Detail Pages (/services/*/index.html)
  */
 export async function initServiceDetailPageEnquiry() {
-    const box = document.getElementById('service-detail-enquiry-box');
+    // Deduplicate any duplicate enquiry boxes if present
+    const allBoxes = Array.from(document.querySelectorAll('.service-enquiry-box, #service-detail-enquiry-box'));
+    if (allBoxes.length > 1) {
+        // Keep the first static box, remove all extra duplicates
+        for (let i = 1; i < allBoxes.length; i++) {
+            allBoxes[i].remove();
+        }
+    }
+    const strayPanels = document.querySelectorAll('.service-page-auth-panel');
+    strayPanels.forEach(p => p.remove());
+
+    const box = document.getElementById('service-detail-enquiry-box') || allBoxes[0];
     if (!box) return;
 
     if (box.dataset.enquiryBound === 'true') return;
     box.dataset.enquiryBound = 'true';
+
+    // Watch for any dynamically injected duplicate box and remove immediately
+    if (typeof MutationObserver !== 'undefined') {
+        const observer = new MutationObserver(() => {
+            const boxes = document.querySelectorAll('.service-enquiry-box');
+            if (boxes.length > 1) {
+                for (let i = 1; i < boxes.length; i++) {
+                    boxes[i].remove();
+                }
+            }
+        });
+        const ctaSec = document.querySelector('.sp-cta') || document.body;
+        if (ctaSec) {
+            observer.observe(ctaSec, { childList: true, subtree: true });
+        }
+    }
 
     const serviceSlug = box.getAttribute('data-service-slug') || 'project-planning';
     const serviceName = box.getAttribute('data-service-name') || 'Project Consultation';
