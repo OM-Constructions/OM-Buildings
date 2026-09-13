@@ -4,8 +4,9 @@ export const API_BASE_URL =
     ? (window.location.port === "8000" ? "" : "http://localhost:8000")
     : "");
 
-export async function submitEnquiry({ name, email, phone, projectType, message, honeypot }) {
-  const res = await fetch(`${API_BASE_URL}/api/v1/contact/`, {
+export async function submitEnquiry({ name, email, phone, serviceSlug, projectType, message, honeypot }) {
+  const slug = serviceSlug || projectType;
+  const res = await fetch(`${API_BASE_URL}/api/v1/enquiries/`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     credentials: "include",
@@ -13,13 +14,13 @@ export async function submitEnquiry({ name, email, phone, projectType, message, 
       name,
       email,
       phone: phone || null,
-      project_type: projectType || null,
+      service_slug: slug,
       message,
       website: honeypot || "",
       honeypot: honeypot || "",
     }),
   });
-  if (!res.ok) throw new Error("Failed to submit");
+  if (!res.ok) throw new Error("Failed to submit enquiry");
   return res.json();
 }
 
