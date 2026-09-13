@@ -384,7 +384,17 @@ HOMEPAGE CONTENT CONTAINER
 #homepage-content {
     opacity: 0;
     visibility: hidden;
-    /* Revealed by animation.js */
+    /* Revealed by animation.js on homepage */
+}
+
+/* Subpages and Service Detail Pages must ALWAYS be visible */
+body:not(:has(#intro-splash)) #homepage-content,
+.service-page-main,
+main:not(#homepage-content),
+.service-page-hero,
+.sp-section {
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 /* Common Section Rules */

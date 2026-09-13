@@ -9,7 +9,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="style.css?v=8">
+    <link rel="stylesheet" href="style.css?v=10">
 
     <script type="importmap">
         {
@@ -716,8 +716,22 @@
     </footer>
 
     <!-- ENTRY POINT -->
-    <script type="module" src="./src/main.js?v=9"></script>
+    <script type="module" src="./src/main.js?v=10"></script>
     <script type="module" src="./src/serviceContactCards.js?v=8"></script>
+    <script id="om-splash-safety-fallback">
+        setTimeout(() => {
+            const hp = document.getElementById("homepage-content");
+            if (hp && (getComputedStyle(hp).opacity === "0" || getComputedStyle(hp).visibility === "hidden")) {
+                hp.style.opacity = "1";
+                hp.style.visibility = "visible";
+                const splash = document.getElementById("intro-splash");
+                if (splash) splash.style.display = "none";
+                const nav = document.getElementById("navbar");
+                if (nav) { nav.style.opacity = "1"; nav.style.visibility = "visible"; }
+                document.body.style.overflowY = "auto";
+            }
+        }, 2200);
+    </script>
 </body>
 
 </html>
