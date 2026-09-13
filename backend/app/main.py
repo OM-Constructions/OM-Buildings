@@ -4,7 +4,7 @@ from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
 from app.config import settings
-from app.routes import contact, auth, me
+from app.routes import contact, auth, me, assistant
 
 app = FastAPI(
     title="OM Buildings API",
@@ -35,6 +35,7 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["auth"])
 app.include_router(me.router, prefix="/api/v1/me", tags=["me"])
 app.include_router(contact.router, prefix="/api/v1/contact", tags=["contact"])
 app.include_router(contact.router, prefix="/api/v1/enquiries", tags=["enquiries"])
+app.include_router(assistant.router, prefix="/api/v1/assistant", tags=["assistant"])
 
 @app.get("/api/v1/health")
 def health_check():
