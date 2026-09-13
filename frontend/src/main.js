@@ -7,7 +7,7 @@ import { LogoInteraction } from './interaction.js';
 import { initHeroVisual } from './heroVisual.js';
 import { initServicesHover } from './servicesHover.js';
 import { initAIAssistant } from './aiAssistant.js';
-import { initServiceContactCards } from './serviceContactCards.js';
+import { initServiceContactCards } from './serviceEnquiry.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
