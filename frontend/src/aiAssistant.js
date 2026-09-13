@@ -3,6 +3,7 @@
  * Provides real-time guidance on architectural design, structural engineering,
  * estimation & costing, tech capabilities, and project consultation.
  */
+import { askAssistant } from './api.js';
 
 export function initAIAssistant() {
     if (document.getElementById('om-ai-widget')) return;
@@ -314,23 +315,8 @@ In the meantime, feel free to explore our services or calculate indicative costs
         };
     }
 
-    // General fallback with helpful guidance
-    return {
-        title: "OM Engineering Assistant",
-        content: `I'd be glad to assist with that! At **OM Constructions & Structural Engineering Consultants**, we specialize in:
-- **Architectural & 2D Vaastu Plans**
-- **Structural Engineering & Geotechnical Soil Reports**
-- **3D Elevation & Photorealistic Renderings**
-- **Quantity Estimation, Costing & Turnkey Project Management**
-- **AI-powered Engineering & Modern Tech Solutions**
-
-Would you like to explore any of these areas, get an indicative estimate, or speak with an engineer?`,
-        actions: [
-            { text: "🏗️ View 10 Services", query: "services" },
-            { text: "📐 Cost Estimator", query: "estimator" },
-            { text: "📞 Contact Engineer", query: "contact" }
-        ]
-    };
+    // Unmatched query: return null to trigger real AI backend
+    return null;
 }
 
 /**
@@ -350,6 +336,9 @@ function setupAIAssistantEvents(atlasAvatarPath) {
 
     let isOpen = false;
     let isTyping = false;
+    let chatHistory = [];
+    let userMessageCount = 0;
+    const SESSION_CAP = 20;
 
     // Show initial greeting
     function renderWelcome() {
@@ -411,28 +400,91 @@ Choose a topic below or type any question!`,
     }
 
     resetBtn.addEventListener('click', () => {
+        chatHistory = [];
+        userMessageCount = 0;
         renderWelcome();
     });
 
     // Handle Form Submit
-    form.addEventListener('submit', (e) => {
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const query = input.value.trim();
         if (!query || isTyping) return;
 
         input.value = '';
         addUserMessage(query);
+        userMessageCount++;
 
-        // Resolve answer
-        const response = resolveQuery(query);
+        // 1. First check instant zero-token match from hardcoded knowledge base
+        const localMatch = resolveQuery(query);
+        if (localMatch) {
+            isTyping = true;
+            showTypingIndicator();
+            chatHistory.push({ role: 'user', content: query });
+            chatHistory.push({ role: 'assistant', content: localMatch.content });
+            setTimeout(() => {
+                removeTypingIndicator();
+                addBotMessage(localMatch, true);
+                isTyping = false;
+            }, 350 + Math.random() * 200);
+            return;
+        }
+
+        // 2. Check session cap for open-ended queries
+        if (userMessageCount > SESSION_CAP) {
+            isTyping = true;
+            showTypingIndicator();
+            setTimeout(() => {
+                removeTypingIndicator();
+                addBotMessage({
+                    title: "Consultation Limit Reached",
+                    content: "You've asked several questions in this session. For custom structural reviews, site soil testing, or detailed project quotations, please submit an enquiry below to speak directly with our senior engineering consultants.",
+                    actions: [
+                        { text: "🚀 Submit Project Enquiry", action: "scrollToCta" },
+                        { text: "📞 Book Free Consultation", query: "contact" }
+                    ]
+                }, true);
+                isTyping = false;
+            }, 350);
+            return;
+        }
+
+        // 3. Fallback to real AI backend for open-ended queries
         isTyping = true;
         showTypingIndicator();
+        chatHistory.push({ role: 'user', content: query });
 
-        setTimeout(() => {
+        try {
+            // Pass last few exchanges to keep token usage small and predictable
+            const recentHistory = chatHistory.slice(-12);
+            const data = await askAssistant(query, recentHistory);
             removeTypingIndicator();
-            addBotMessage(response, true);
+            const replyText = data && data.reply ? data.reply : "Thank you for your enquiry. Please submit your project details to speak with our engineering team.";
+            chatHistory.push({ role: 'assistant', content: replyText });
+            addBotMessage({
+                content: replyText,
+                actions: [
+                    { text: "🚀 Submit Project Enquiry", action: "scrollToCta" },
+                    { text: "🏗️ View 10 Services", query: "services" }
+                ]
+            }, true);
+        } catch (err) {
+            console.error('[ATLAS ASSISTANT ERROR]', err);
+            removeTypingIndicator();
+            const fallbackMsg = "I'd be glad to assist with that! At **OM Constructions & Structural Engineering Consultants**, we specialize in Architectural Design, Structural Engineering, Geotechnical Soil Reports, 3D Elevation, and Cost Estimation. Please submit your project details below to consult directly with our engineers.";
+            chatHistory.push({ role: 'assistant', content: fallbackMsg });
+            addBotMessage({
+                title: "OM Engineering Consultation",
+                content: fallbackMsg,
+                actions: [
+                    { text: "🚀 Submit Project Enquiry", action: "scrollToCta" },
+                    { text: "🏗️ View 10 Services", query: "services" },
+                    { text: "📞 Contact Engineer", query: "contact" }
+                ]
+            }, true);
+        } finally {
             isTyping = false;
-        }, 350 + Math.random() * 200);
+        }
     });
 
     // Handle Quick Action Chips
@@ -468,14 +520,18 @@ Choose a topic below or type any question!`,
     function triggerQuery(key, displayText) {
         addUserMessage(displayText || key);
         const response = KNOWLEDGE_BASE[key] || resolveQuery(key);
-        isTyping = true;
-        showTypingIndicator();
+        if (response) {
+            chatHistory.push({ role: 'user', content: displayText || key });
+            chatHistory.push({ role: 'assistant', content: response.content });
+            isTyping = true;
+            showTypingIndicator();
 
-        setTimeout(() => {
-            removeTypingIndicator();
-            addBotMessage(response, true);
-            isTyping = false;
-        }, 350 + Math.random() * 200);
+            setTimeout(() => {
+                removeTypingIndicator();
+                addBotMessage(response, true);
+                isTyping = false;
+            }, 350 + Math.random() * 200);
+        }
     }
 
     function addUserMessage(text) {
