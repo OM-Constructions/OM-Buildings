@@ -1,4 +1,5 @@
 import { submitEnquiry } from './api.js';
+import { getCurrentUser } from './auth.js';
 
 // This map must stay in sync with backend/app/services/service_catalog.py
 const SERVICE_SLUGS = {
@@ -33,7 +34,11 @@ function resolveServiceSlug(rawTitle) {
     return null;
 }
 
-export function initServiceContactCards() {
+export async function initServiceContactCards() {
+    const currentUser = await getCurrentUser().catch(() => null);
+    const isServicePage = typeof window !== 'undefined' && window.location.pathname.includes('/services/');
+    const loginPath = isServicePage ? '../../login.html' : './login.html';
+
     // 1. Target every .service-card element inside #services (Homepage)
     const homepageCards = Array.from(document.querySelectorAll('#services .service-card'));
 
@@ -73,20 +78,37 @@ export function initServiceContactCards() {
         toggleBtn.className = 'enquiry-toggle';
         toggleBtn.id = `toggle-${uniqueId}`;
         toggleBtn.setAttribute('aria-expanded', 'false');
+
+        if (!currentUser) {
+            toggleBtn.innerHTML = '🔒 Log In to Enquire &rarr;';
+            toggleBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#' + uniqueId);
+                window.location.href = `${loginPath}?redirect=${returnUrl}`;
+            });
+            wrapper.appendChild(toggleBtn);
+            cardEl.appendChild(wrapper);
+            return;
+        }
+
         toggleBtn.innerHTML = 'Enquire about this service &rarr;';
 
-        // Compact Form
+        // Compact Form with pre-filled verified user credentials
         const form = document.createElement('form');
         form.className = 'enquiry-card-form';
         form.id = `form-${uniqueId}`;
         form.style.display = 'none';
 
+        const clientNameVal = escapeHTML(currentUser.name || '');
+        const clientEmailVal = escapeHTML(currentUser.email || '');
+
         form.innerHTML = `
             <div class="enquiry-field">
-                <input type="text" name="name" required placeholder="Your Name" class="enquiry-input" autocomplete="name" />
+                <input type="text" name="name" required value="${clientNameVal}" placeholder="Your Name" class="enquiry-input" autocomplete="name" />
             </div>
             <div class="enquiry-field">
-                <input type="email" name="email" required placeholder="Your Email" class="enquiry-input" autocomplete="email" />
+                <input type="email" name="email" required value="${clientEmailVal}" placeholder="Your Email" class="enquiry-input" autocomplete="email" />
             </div>
             <div class="enquiry-field">
                 <input type="tel" name="phone" placeholder="Phone (optional)" class="enquiry-input" autocomplete="tel" />
@@ -189,7 +211,7 @@ export function initServiceContactCards() {
     initGlobalEnquiryForm();
 }
 
-function initServiceDetailPageEnquiry() {
+async function initServiceDetailPageEnquiry() {
     // Look for explicit placeholder or the CTA container on service pages
     const explicitTarget = document.querySelector('.service-page-enquiry-card, [data-service-name]');
     const ctaContainer = document.querySelector('.sp-cta .container');
@@ -216,9 +238,44 @@ function initServiceDetailPageEnquiry() {
     targetEl.dataset.detailEnquiryInjected = 'true';
     const { name: serviceName, slug: serviceSlug } = serviceEntry;
 
+    const currentUser = await getCurrentUser().catch(() => null);
+    const isServicePage = typeof window !== 'undefined' && window.location.pathname.includes('/services/');
+    const loginPath = isServicePage ? '../../login.html' : './login.html';
+    const signupPath = isServicePage ? '../../signup.html' : './signup.html';
+
     const box = document.createElement('div');
     box.className = 'service-enquiry-box';
     box.id = 'service-detail-enquiry-box';
+
+    if (!currentUser) {
+        box.innerHTML = `
+            <div class="service-enquiry-header">
+                <div class="service-enquiry-badge">DIRECT SERVICE ENQUIRY</div>
+                <h3 class="service-enquiry-title">Enquire About ${escapeHTML(serviceName)}</h3>
+                <p class="service-enquiry-subtitle">Customer login is required to submit consultation requests and review engineering drawings.</p>
+            </div>
+            <div class="service-enquiry-auth-gate" style="text-align: center; padding: 32px 16px;">
+                <div style="font-size: 2.5rem; margin-bottom: 12px;">🔒</div>
+                <h4 style="font-size: 1.3rem; color: #0f172a; margin-bottom: 8px; font-weight: 700;">Customer Login Required</h4>
+                <p style="color: #64748b; font-size: 0.95rem; max-width: 480px; margin: 0 auto 24px; line-height: 1.5;">
+                    To submit an enquiry for <strong>${escapeHTML(serviceName)}</strong> and track your engineering consultation in your customer portal, please sign in or register.
+                </p>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    <a href="${loginPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}" class="service-enquiry-submit-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">
+                        Log In to Continue &rarr;
+                    </a>
+                    <a href="${signupPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}" class="service-enquiry-submit-btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; background:#f8fafc; color:#0f172a; border:1px solid #cbd5e1;">
+                        Create Account
+                    </a>
+                </div>
+            </div>
+        `;
+        targetEl.appendChild(box);
+        return;
+    }
+
+    const clientNameVal = escapeHTML(currentUser.name || '');
+    const clientEmailVal = escapeHTML(currentUser.email || '');
 
     box.innerHTML = `
         <div class="service-enquiry-header">
@@ -226,15 +283,18 @@ function initServiceDetailPageEnquiry() {
             <h3 class="service-enquiry-title">Enquire About ${escapeHTML(serviceName)}</h3>
             <p class="service-enquiry-subtitle">Fill out the form below to receive a consultation and indicative estimate for your project.</p>
         </div>
+        <div class="client-auth-status-pill" style="display: inline-flex; align-items: center; gap: 8px; background: rgba(201, 151, 34, 0.12); border: 1px solid rgba(201, 151, 34, 0.35); color: #B37D14; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 20px;">
+            <span>✓ Signed in as <strong>${clientNameVal}</strong> (${clientEmailVal})</span> &bull; <a href="${isServicePage ? '../../my-requests.html' : './my-requests.html'}" style="color: #0f172a; text-decoration: underline; margin-left: 4px;">My Portal</a>
+        </div>
         <form class="service-enquiry-form" id="form-service-detail-enquiry">
             <div class="service-enquiry-row">
                 <div class="service-enquiry-field">
                     <label for="sp-name">Your Name *</label>
-                    <input type="text" id="sp-name" name="name" required placeholder="Full name" class="service-enquiry-input" autocomplete="name" />
+                    <input type="text" id="sp-name" name="name" required value="${clientNameVal}" placeholder="Full name" class="service-enquiry-input" autocomplete="name" />
                 </div>
                 <div class="service-enquiry-field">
                     <label for="sp-email">Email Address *</label>
-                    <input type="email" id="sp-email" name="email" required placeholder="name@example.com" class="service-enquiry-input" autocomplete="email" />
+                    <input type="email" id="sp-email" name="email" required value="${clientEmailVal}" placeholder="name@example.com" class="service-enquiry-input" autocomplete="email" />
                 </div>
             </div>
             <div class="service-enquiry-row">
@@ -306,6 +366,10 @@ function initServiceDetailPageEnquiry() {
             successEl.style.display = 'block';
         } catch (err) {
             console.error('Service page enquiry error:', err);
+            if (err.message && (err.message.includes('401') || err.message.includes('Not authenticated'))) {
+                window.location.href = `${loginPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}`;
+                return;
+            }
             errorEl.textContent = 'Failed to send your enquiry. Please check your connection or contact us directly.';
             errorEl.style.display = 'block';
             submitBtn.disabled = false;
@@ -316,60 +380,45 @@ function initServiceDetailPageEnquiry() {
     targetEl.appendChild(box);
 }
 
-export function initGlobalEnquiryForm() {
+export async function initGlobalEnquiryForm() {
     const form = document.getElementById('global-enquiry-form');
     if (!form) return;
 
     const card = document.getElementById('global-enquiry-box');
+    const authGate = card ? card.querySelector('#global-enquiry-auth-gate') : null;
     const successEl = card ? card.querySelector('.global-enquiry-success') : null;
     const errorEl = form.querySelector('.global-enquiry-error');
     const submitBtn = form.querySelector('.global-enquiry-submit-btn');
 
-    // Auto-recovery: if page was loaded with GET form parameters, submit immediately
-    if (typeof window !== 'undefined' && window.location.search) {
-        const params = new URLSearchParams(window.location.search);
-        const qName = params.get('name');
-        const qEmail = params.get('email');
-        const qMessage = params.get('message');
-        if (qName && qEmail && qMessage) {
-            const qPhone = params.get('phone') || '';
-            const qService = params.get('service_slug') || 'project-planning';
-            const qLocation = params.get('location') || '';
-            const qArea = params.get('area') || '';
-            const qHoneypot = params.get('honeypot') || '';
+    const currentUser = await getCurrentUser().catch(() => null);
 
-            const meta = [];
-            if (qLocation) meta.push(`Location: ${qLocation}`);
-            if (qArea) meta.push(`Approx. Area / Type: ${qArea}`);
-            const fullMsg = meta.length ? `[${meta.join(' | ')}]\n\n${qMessage}` : qMessage;
-
-            // Clean address bar
-            window.history.replaceState({}, document.title, window.location.pathname + '#cta');
-
-            form.style.display = 'none';
-            if (successEl) {
-                successEl.style.display = 'block';
-                successEl.innerHTML = `
-                    <div class="service-enquiry-success-icon">&#10003;</div>
-                    <h4>Enquiry Received Successfully!</h4>
-                    <p>Thanks <strong>${escapeHTML(qName)}</strong> &mdash; we've received your project details and sent a confirmation email to <strong>${escapeHTML(qEmail)}</strong> and to our engineering team.</p>
-                `;
-            }
-
-            submitEnquiry({
-                name: qName,
-                email: qEmail,
-                phone: qPhone || null,
-                serviceSlug: qService,
-                message: fullMsg,
-                honeypot: qHoneypot
-            }).then(() => {
-                console.log('[AUTO-RECOVERY SUCCESS] Enquiry submitted and dual emails triggered.');
-            }).catch(err => {
-                console.error('[AUTO-RECOVERY ERROR]', err);
-            });
-            return;
+    if (!currentUser) {
+        form.style.display = 'none';
+        if (authGate) {
+            authGate.style.display = 'block';
+            const loginBtn = authGate.querySelector('a[href*="login.html"]');
+            if (loginBtn) loginBtn.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}`;
+            const signupBtn = authGate.querySelector('a[href*="signup.html"]');
+            if (signupBtn) signupBtn.href = `./signup.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}`;
         }
+        return;
+    }
+
+    // User is authenticated: ensure form is displayed and prefill verified user credentials
+    if (authGate) authGate.style.display = 'none';
+    form.style.display = 'block';
+
+    if (form.elements.name) form.elements.name.value = currentUser.name || '';
+    if (form.elements.email) form.elements.email.value = currentUser.email || '';
+
+    // Show verified user badge
+    let pill = card ? card.querySelector('.client-auth-status-pill') : null;
+    if (!pill && card) {
+        pill = document.createElement('div');
+        pill.className = 'client-auth-status-pill';
+        pill.style.cssText = 'display: inline-flex; align-items: center; gap: 8px; background: rgba(201, 151, 34, 0.15); border: 1px solid rgba(201, 151, 34, 0.4); color: #F59E0B; padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin-bottom: 20px;';
+        pill.innerHTML = `<span>✓ Signed in as <strong>${escapeHTML(currentUser.name)}</strong> (${escapeHTML(currentUser.email)})</span> &bull; <a href="./my-requests.html" style="color: #fff; text-decoration: underline; margin-left: 4px;">My Portal</a>`;
+        form.parentNode.insertBefore(pill, form);
     }
 
     if (form.dataset.enquiryBound === 'true') return;
@@ -384,8 +433,8 @@ export function initGlobalEnquiryForm() {
             errorEl.textContent = '';
         }
 
-        const name = form.elements.name ? form.elements.name.value.trim() : '';
-        const email = form.elements.email ? form.elements.email.value.trim() : '';
+        const name = form.elements.name ? form.elements.name.value.trim() : (currentUser.name || '');
+        const email = form.elements.email ? form.elements.email.value.trim() : (currentUser.email || '');
         const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
         const serviceSlug = form.elements.service_slug ? form.elements.service_slug.value : 'project-planning';
         const location = form.elements.location ? form.elements.location.value.trim() : '';
@@ -430,6 +479,10 @@ export function initGlobalEnquiryForm() {
             if (successEl) successEl.style.display = 'block';
         } catch (err) {
             console.error('Global enquiry submission error:', err);
+            if (err.message && (err.message.includes('401') || err.message.includes('Not authenticated'))) {
+                window.location.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}`;
+                return;
+            }
             if (errorEl) {
                 errorEl.textContent = 'Failed to send your enquiry. Please check your network connection or reach us directly at omengineeringconsultants06@gmail.com.';
                 errorEl.style.display = 'block';
