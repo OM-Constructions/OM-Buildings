@@ -24,3 +24,13 @@ export async function submitEnquiry({ name, email, phone, serviceSlug, projectTy
   return res.json();
 }
 
+export async function askAssistant(message, history = []) {
+  const res = await fetch(`${API_BASE_URL}/api/v1/assistant/chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, history }),
+  });
+  if (!res.ok) throw new Error("Assistant request failed");
+  return res.json();
+}
+
