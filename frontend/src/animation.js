@@ -1,6 +1,9 @@
 import gsap from 'gsap';
 
 export function playLogoAnimation(logoSystem, interaction) {
+    // Lock scrolling initially to prevent scrolling during intro
+    document.body.style.overflow = 'hidden';
+    
     // Reset states
     gsap.set(logoSystem.materials.ring.uniforms.uProgress, { value: 0.0 });
     
@@ -26,31 +29,9 @@ export function playLogoAnimation(logoSystem, interaction) {
                 interaction.enable();
             }
             
-            // On mobile, fade out splash instantly without flash
-            if (isMobile) {
-                gsap.to('#intro-splash', {
-                    opacity: 0,
-                    duration: 0.2,
-                    ease: "power2.out"
-                });
-            }
-            
-            // Transition into the actual homepage
-            gsap.to(['#navbar', '#homepage-content', 'footer', '#om-ai-widget'], {
-                opacity: 1,
-                visibility: "visible",
-                duration: isMobile ? 0.3 : 1.5,
-                ease: "power2.out"
-            });
-            // Unlock scrolling
+            // Unlock scrolling after the entire intro finishes
             document.body.style.overflowY = 'auto';
             document.body.style.overflowX = 'hidden';
-            
-            // Clean up splash container
-            setTimeout(() => {
-                const splash = document.getElementById('intro-splash');
-                if (splash) splash.style.display = 'none';
-            }, isMobile ? 250 : 1000);
         }
     });
     
@@ -124,5 +105,15 @@ export function playLogoAnimation(logoSystem, interaction) {
         filter: "brightness(1)",
         duration: 0.8,
         ease: "power1.inOut"
-    }, "textReveal+=0.2");
+    }, "textReveal+=0.2")
+
+    // PHASE 5: Page Reveal
+    .add("pageReveal", "+=0.2") // Wait a moment after text is revealed
+    
+    .to(['#navbar', '#homepage-content', 'footer', '#om-ai-widget'], {
+        opacity: 1,
+        visibility: "visible",
+        duration: 1.0,
+        ease: "power2.out"
+    }, "pageReveal");
 }
