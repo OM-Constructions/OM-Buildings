@@ -23,9 +23,23 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_DAYS: int = 7
     VERIFICATION_TOKEN_EXPIRE_HOURS: int = 24
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:8000")
+    FRONTEND_ORIGIN: Optional[str] = os.getenv("FRONTEND_ORIGIN", None)
+    RATE_LIMIT_PER_MINUTE: int = int(os.getenv("RATE_LIMIT_PER_MINUTE", "5"))
+
+    # Email configuration (SMTP)
+    EMAIL_PROVIDER: str = os.getenv("EMAIL_PROVIDER", "smtp")
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "465"))
+    SMTP_USER: str = os.getenv("SMTP_USER", os.getenv("EMAIL_FROM", "omengineeringconsultants06@gmail.com"))
+    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD", os.getenv("GMAIL_APP_PASSWORD", None))
+    EMAIL_FROM: str = os.getenv("EMAIL_FROM", "omengineeringconsultants06@gmail.com")
+    COMPANY_NOTIFICATION_EMAIL: str = os.getenv("COMPANY_NOTIFICATION_EMAIL", os.getenv("EMAIL_TO", "omengineeringconsultants06@gmail.com"))
+    EMAIL_TO: str = COMPANY_NOTIFICATION_EMAIL
+    GMAIL_APP_PASSWORD: Optional[str] = SMTP_PASSWORD
     RESEND_API_KEY: Optional[str] = os.getenv("RESEND_API_KEY", None)
     
     CORS_ORIGINS: List[str] = [
+        "https://om-buildings.vercel.app",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
         "http://localhost:8080",
