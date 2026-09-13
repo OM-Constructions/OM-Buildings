@@ -62,27 +62,39 @@ async function init() {
     try {
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0xffffff);
-        
+
         const w = window.innerWidth;
         const h = window.innerHeight;
-        
+
         camera = new THREE.OrthographicCamera(w / -2, w / 2, h / 2, h / -2, 1, 1000);
         camera.position.z = 100;
-        
+
         renderer = new THREE.WebGLRenderer({ canvas: splashCanvas, antialias: true, alpha: false });
         renderer.setSize(w, h);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        
+
         logoSystem = new LogoSystem(scene);
         await logoSystem.loadAssets();
         logoSystem.updateScale(w, h);
-        
+
         interaction = new LogoInteraction(camera, logoSystem, renderer);
-        
+
         window.addEventListener('resize', onWindowResize);
-        renderer.setAnimationLoop(render);
-        
-        playLogoAnimation(logoSystem, interaction);
+        // Pause WebGL rendering when intro-splash is scrolled out of view
+        if (splashSection) {
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting) {
+                    renderer.setAnimationLoop(render);
+                } else {
+                    renderer.setAnimationLoop(null);
+                }
+            });
+            observer.observe(splashSection);
+        } else {
+            renderer.setAnimationLoop(render);
+        }
+
+        playLogoAnimation(logoSystem, interaction, renderer);
     } catch (err) {
         console.warn('WebGL initialization skipped or failed, revealing homepage content:', err);
         if (splashSection) splashSection.style.display = 'none';
@@ -99,19 +111,19 @@ async function init() {
 function initScrollAnimations() {
     // Subtle fade-up for section titles and cards
     const sections = gsap.utils.toArray('section:not(#intro-splash):not(#hero)');
-    
+
     sections.forEach(section => {
-        gsap.fromTo(section, 
+        gsap.fromTo(section,
             { opacity: 0, y: 40 },
-            { 
+            {
                 scrollTrigger: {
                     trigger: section,
                     start: "top 80%",
                     toggleActions: "play none none none"
                 },
-                opacity: 1, 
-                y: 0, 
-                duration: 0.8, 
+                opacity: 1,
+                y: 0,
+                duration: 0.8,
                 ease: "power2.out"
             }
         );
@@ -120,7 +132,7 @@ function initScrollAnimations() {
     // Founder Profile Specific Animations
     const founderProfile = document.querySelector('.founder-profile');
     if (founderProfile) {
-        gsap.fromTo('.founder-image-col', 
+        gsap.fromTo('.founder-image-col',
             { opacity: 0, x: -30 },
             {
                 scrollTrigger: {
@@ -134,8 +146,8 @@ function initScrollAnimations() {
                 ease: "power2.out"
             }
         );
-        
-        gsap.fromTo('.founder-info-col > *', 
+
+        gsap.fromTo('.founder-info-col > *',
             { opacity: 0, y: 20 },
             {
                 scrollTrigger: {
@@ -169,7 +181,7 @@ function initMobileNav() {
     const mobileMenuClose = document.getElementById('mobile-menu-close');
     const navMenu = document.getElementById('nav-menu');
     const backdrop = document.getElementById('mobile-nav-backdrop');
-    
+
     if (!mobileMenuBtn || !navMenu) return;
 
     function openMenu() {
@@ -195,11 +207,11 @@ function initMobileNav() {
     }
 
     mobileMenuBtn.addEventListener('click', openMenu);
-    
+
     if (mobileMenuClose) {
         mobileMenuClose.addEventListener('click', closeMenu);
     }
-    
+
     if (backdrop) {
         backdrop.addEventListener('click', closeMenu);
     }
@@ -214,15 +226,15 @@ function initMobileNav() {
 function onWindowResize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
-    
+
     camera.left = w / -2;
     camera.right = w / 2;
     camera.top = h / 2;
     camera.bottom = h / -2;
     camera.updateProjectionMatrix();
-    
+
     renderer.setSize(w, h);
-    
+
     if (logoSystem) {
         logoSystem.updateScale(w, h);
     }

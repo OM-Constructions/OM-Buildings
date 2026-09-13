@@ -19,13 +19,13 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
     scene.background = new THREE.Color(0xffffff);
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    
+
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setSize(width, height);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    
+
     // Improve color and lighting rendering
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -55,12 +55,12 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
     scene.add(ambientLight);
 
     // B. HemisphereLight for natural sky bounce
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xe8ecef, 1.5); 
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xe8ecef, 1.5);
     hemiLight.position.set(0, 50, 0);
     scene.add(hemiLight);
 
     // C. Main DirectionalLight (Key) for soft, readable shadows
-    const keyLight = new THREE.DirectionalLight(0xfff5e6, 1.5); 
+    const keyLight = new THREE.DirectionalLight(0xfff5e6, 1.5);
     keyLight.position.set(20, 40, 20);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 2048;
@@ -71,10 +71,10 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
     keyLight.shadow.camera.right = 20;
     keyLight.shadow.camera.top = 20;
     keyLight.shadow.camera.bottom = -20;
-    keyLight.shadow.bias = -0.002; 
+    keyLight.shadow.bias = -0.002;
     keyLight.shadow.normalBias = 0.05;
     scene.add(keyLight);
-    
+
     // D. 360-Degree Fill Ring to eliminate any remaining dark angles
     const fill1 = new THREE.DirectionalLight(0xffffff, 1.2); fill1.position.set(30, 15, 30); scene.add(fill1);
     const fill2 = new THREE.DirectionalLight(0xffffff, 1.2); fill2.position.set(-30, 15, 30); scene.add(fill2);
@@ -87,44 +87,26 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
         modelPath,
         (gltf) => {
             const model = gltf.scene;
-            
+
             // Enable shadows on all meshes
             model.traverse((node) => {
                 if (node.isMesh) {
                     node.castShadow = true;
                     node.receiveShadow = true;
-                    
+
                     // Removed computeVertexNormals as it can break intentionally mirrored meshes
-                    
+
                     // Optional: adjust material slightly for better architectural look
                     if (node.material) {
                         const materials = Array.isArray(node.material) ? node.material : [node.material];
                         materials.forEach(mat => {
-                            // With an environment map added, metalness works properly!
-                            // Keep it natural, but prevent extreme metallic rendering.
-                            if (mat.metalness !== undefined) {
-                                mat.metalness = 0.1; // Extremely low to ensure diffuse visibility
-                            }
-                            if (mat.roughness !== undefined) {
-                                mat.roughness = 0.8; // Highly rough to catch ambient light
-                            }
-                            
                             // Remove baked AO/Light maps that could force black shadows
                             mat.aoMap = null;
                             mat.lightMap = null;
-                            
-                            // Fix for models that refuse to light up on certain sides
-                            if (mat.map && modelPath.includes('commercial-complex')) {
-                                mat.emissiveMap = mat.map;
-                                mat.emissive = new THREE.Color(0x444444); // Stronger baseline illumination
-                                mat.emissiveIntensity = 1.0;
-                            } else if (mat.color && mat.color.getHex() < 0x111111) {
-                                mat.color.setHex(0x555555);
-                            }
-                            
+
                             // Architectural models often have missing/inverted backfaces causing black rendering.
                             mat.side = THREE.DoubleSide;
-                            
+
                             // Ensure materials update
                             mat.needsUpdate = true;
                         });
@@ -135,16 +117,16 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
             // Calculate bounding box and center/scale model
             const box = new THREE.Box3().setFromObject(model);
             const size = box.getSize(new THREE.Vector3());
-            
+
             const maxDim = Math.max(size.x, size.y, size.z);
-            const targetSize = 10; 
+            const targetSize = 10;
             const scale = targetSize / maxDim;
             model.scale.setScalar(scale);
 
             // Recompute box after scaling
             const scaledBox = new THREE.Box3().setFromObject(model);
             const scaledCenter = scaledBox.getCenter(new THREE.Vector3());
-            
+
             // Center model at origin
             model.position.sub(scaledCenter);
 
@@ -163,7 +145,7 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
             camera.position.set(targetSize * 0.8, targetSize * 0.6, targetSize * 1.5);
             camera.lookAt(0, 0, 0);
             controls.target.set(0, 0, 0);
-            
+
             // Limit zoom
             controls.minDistance = targetSize * 0.5;
             controls.maxDistance = targetSize * 3;
@@ -176,9 +158,19 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
         }
     );
 
+    // Pause animation when out of view
+    let isVisible = true;
+    if (window.IntersectionObserver) {
+        const visObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => isVisible = entry.isIntersecting);
+        }, { rootMargin: '100px 0px' });
+        visObserver.observe(container);
+    }
+
     // Animation Loop
     function animate() {
         requestAnimationFrame(animate);
+        if (!isVisible) return; // Save CPU/GPU when card is off-screen
         controls.update();
         renderer.render(scene, camera);
     }
@@ -189,18 +181,18 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
         if (!container) return;
         const newWidth = container.clientWidth;
         const newHeight = container.clientHeight;
-        
+
         // Prevent setting size to 0
         if (newWidth === 0 || newHeight === 0) return;
-        
+
         camera.aspect = newWidth / newHeight;
         camera.updateProjectionMatrix();
-        
+
         renderer.setSize(newWidth, newHeight);
     }
-    
+
     window.addEventListener('resize', onWindowResize);
-    
+
     // Observer for grid layout changes
     if (window.ResizeObserver) {
         const resizeObserver = new ResizeObserver(() => {
@@ -210,10 +202,30 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
     }
 }
 
-// Initialize when DOM is ready
+// Initialize lazily when user scrolls near the work section
 function initAllProjects() {
-    initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
-    initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
+    const workSection = document.getElementById('work');
+    if (!workSection) return;
+
+    let initialized = false;
+    if (window.IntersectionObserver) {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !initialized) {
+                    initialized = true;
+                    // Lazy initialize models only when the section approaches
+                    initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
+                    initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
+                    observer.disconnect();
+                }
+            });
+        }, { rootMargin: '400px 0px' });
+        observer.observe(workSection);
+    } else {
+        // Fallback for very old browsers
+        initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
+        initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
+    }
 }
 
 if (document.readyState === 'loading') {
