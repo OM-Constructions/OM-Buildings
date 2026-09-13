@@ -67,94 +67,58 @@ export async function initServiceContactCards() {
         wrapper.className = 'enquiry-card-wrapper';
         wrapper.id = uniqueId;
 
-        // Stop click events from bubbling to parent link if card is an <a> tag
+        // Stop click events from bubbling to parent link when clicking inside enquiry form/button
         wrapper.addEventListener('click', (e) => {
             e.stopPropagation();
         });
 
-        // Toggle button: Request Consultation →
+        // Toggle button: Enquire about this service →
         const toggleBtn = document.createElement('button');
         toggleBtn.type = 'button';
         toggleBtn.className = 'enquiry-toggle';
         toggleBtn.id = `toggle-${uniqueId}`;
         toggleBtn.setAttribute('aria-expanded', 'false');
-        toggleBtn.innerHTML = 'Request Consultation &rarr;';
+        toggleBtn.innerHTML = 'Enquire about this service &rarr;';
 
-        if (!currentUser) {
-            const signupPath = isServicePage ? '../../signup.html' : './signup.html';
-            const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#' + uniqueId);
-
-            // Intercept direct card click so viewing full service specifications requires login
-            cardEl.addEventListener('click', (e) => {
-                if (e.target.closest('.enquiry-card-wrapper')) return;
-                e.preventDefault();
-                e.stopPropagation();
-                const targetHref = cardEl.getAttribute('href') || 'services/';
-                const serviceReturn = encodeURIComponent(targetHref);
-                window.location.href = `${loginPath}?redirect=${serviceReturn}&reason=service_access`;
-            });
-
-            const authPanel = document.createElement('div');
-            authPanel.className = 'service-client-access-panel';
-            authPanel.style.display = 'none';
-            authPanel.innerHTML = `
-                <div class="service-access-header-top">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
-                    <span class="service-access-badge">CLIENT PORTAL ACCESS</span>
-                </div>
-                <p class="service-access-desc">Sign in or register your client account to request direct structural consultation for <strong>${escapeHTML(serviceName)}</strong>.</p>
-                <div class="service-access-actions">
-                    <a href="${loginPath}?redirect=${returnUrl}" class="service-access-btn-primary">Sign In &rarr;</a>
-                    <a href="${signupPath}?redirect=${returnUrl}" class="service-access-btn-secondary">Register</a>
-                </div>
-            `;
-
-            toggleBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const isOpen = authPanel.style.display !== 'none';
-                if (isOpen) {
-                    authPanel.style.display = 'none';
-                    toggleBtn.setAttribute('aria-expanded', 'false');
-                    cardEl.classList.remove('has-enquiry-open');
-                } else {
-                    authPanel.style.display = 'block';
-                    toggleBtn.setAttribute('aria-expanded', 'true');
-                    cardEl.classList.add('has-enquiry-open');
-                }
-            });
-
-            wrapper.appendChild(toggleBtn);
-            wrapper.appendChild(authPanel);
-            cardEl.appendChild(wrapper);
-            return;
-        }
-
-        // Compact Form with pre-filled verified user credentials
+        // Compact Form
         const form = document.createElement('form');
         form.className = 'enquiry-card-form';
         form.id = `form-${uniqueId}`;
         form.style.display = 'none';
 
-        const clientNameVal = escapeHTML(currentUser.name || '');
-        const clientEmailVal = escapeHTML(currentUser.email || '');
+        const clientNameVal = currentUser ? escapeHTML(currentUser.name || '') : '';
+        const clientEmailVal = currentUser ? escapeHTML(currentUser.email || '') : '';
+
+        // Restore draft if present
+        let savedDraft = null;
+        try {
+            const rawDraft = sessionStorage.getItem('om_card_enquiry_' + serviceSlug);
+            if (rawDraft) savedDraft = JSON.parse(rawDraft);
+        } catch (e) {}
+
+        const initialName = clientNameVal || (savedDraft ? escapeHTML(savedDraft.name || '') : '');
+        const initialEmail = clientEmailVal || (savedDraft ? escapeHTML(savedDraft.email || '') : '');
+        const initialPhone = savedDraft ? escapeHTML(savedDraft.phone || '') : '';
+        const initialMessage = savedDraft ? escapeHTML(savedDraft.message || '') : `I'm interested in ${escapeHTML(serviceName)}.`;
 
         form.innerHTML = `
+            ${currentUser ? `
             <div class="client-portal-user-info" style="font-size: 0.78rem; color: #64748b; margin-bottom: 8px; justify-content: flex-start;">
                 <span class="client-status-indicator"></span>
                 <span>Verified: <strong>${clientNameVal}</strong></span>
             </div>
+            ` : ''}
             <div class="enquiry-field">
-                <input type="text" name="name" required value="${clientNameVal}" placeholder="Your Name" class="enquiry-input" autocomplete="name" />
+                <input type="text" name="name" required value="${initialName}" placeholder="Your Name *" class="enquiry-input" autocomplete="name" />
             </div>
             <div class="enquiry-field">
-                <input type="email" name="email" required value="${clientEmailVal}" placeholder="Your Email" class="enquiry-input" autocomplete="email" />
+                <input type="email" name="email" required value="${initialEmail}" placeholder="Your Email *" class="enquiry-input" autocomplete="email" />
             </div>
             <div class="enquiry-field">
-                <input type="tel" name="phone" placeholder="Phone (optional)" class="enquiry-input" autocomplete="tel" />
+                <input type="tel" name="phone" value="${initialPhone}" placeholder="Phone (optional)" class="enquiry-input" autocomplete="tel" />
             </div>
             <div class="enquiry-field">
-                <textarea name="message" rows="2" placeholder="I'm interested in ${escapeHTML(serviceName)}." class="enquiry-textarea"></textarea>
+                <textarea name="message" rows="2" placeholder="I'm interested in ${escapeHTML(serviceName)}." class="enquiry-textarea">${initialMessage}</textarea>
             </div>
             <input type="text" name="honeypot" class="enquiry-honeypot" style="position:absolute; left:-9999px; opacity:0; pointer-events:none;" tabindex="-1" autocomplete="off" />
             <div class="enquiry-actions">
@@ -183,9 +147,16 @@ export async function initServiceContactCards() {
                 toggleBtn.setAttribute('aria-expanded', 'true');
                 cardEl.classList.add('has-enquiry-open');
                 const nameInput = form.querySelector('input[name="name"]');
-                if (nameInput) setTimeout(() => nameInput.focus(), 50);
+                if (nameInput && !nameInput.value) setTimeout(() => nameInput.focus(), 50);
             }
         });
+
+        // Auto-open if user was redirected back to this specific card anchor or saved draft exists
+        if (window.location.hash === `#${uniqueId}` || (savedDraft && window.location.hash.includes('enquiry'))) {
+            form.style.display = 'flex';
+            toggleBtn.setAttribute('aria-expanded', 'true');
+            cardEl.classList.add('has-enquiry-open');
+        }
 
         // Form submit handler
         form.addEventListener('submit', async (e) => {
@@ -211,6 +182,16 @@ export async function initServiceContactCards() {
                 return;
             }
 
+            // If not logged in, save draft to sessionStorage and redirect to login
+            if (!currentUser) {
+                try {
+                    sessionStorage.setItem('om_card_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
+                } catch (e) {}
+                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#' + uniqueId);
+                window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
+                return;
+            }
+
             const originalBtnText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Sending...';
@@ -224,6 +205,10 @@ export async function initServiceContactCards() {
                     message,
                     honeypot: honeypot || ''
                 });
+
+                try {
+                    sessionStorage.removeItem('om_card_enquiry_' + serviceSlug);
+                } catch (e) {}
 
                 // On success, replace the form with the confirmation email message
                 form.style.display = 'none';
@@ -241,29 +226,8 @@ export async function initServiceContactCards() {
         wrapper.appendChild(toggleBtn);
         wrapper.appendChild(form);
         wrapper.appendChild(successDiv);
+        cardEl.appendChild(wrapper);
     });
-
-    // Manage price schedule visibility on Card 01 (CONSTRUCTION COST)
-    const priceBlock = document.getElementById('card-01-price-block');
-    if (priceBlock) {
-        const priceValue = priceBlock.querySelector('.price-value');
-        const priceBadge = priceBlock.querySelector('.price-locked-badge');
-        if (currentUser) {
-            if (priceValue) priceValue.style.display = 'block';
-            if (priceBadge) priceBadge.style.display = 'none';
-            priceBlock.classList.remove('price-locked-block');
-        } else {
-            if (priceValue) priceValue.style.display = 'none';
-            if (priceBadge) priceBadge.style.display = 'inline-flex';
-            priceBlock.classList.add('price-locked-block');
-            priceBlock.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                const returnUrl = encodeURIComponent('services/construction-cost/');
-                window.location.href = `${loginPath}?redirect=${returnUrl}&reason=pricing_access`;
-            });
-        }
-    }
 
     // 2. Target Service Detail Pages (Dedicated Enquiry Box)
     initServiceDetailPageEnquiry();
@@ -302,45 +266,25 @@ async function initServiceDetailPageEnquiry() {
     const currentUser = await getCurrentUser().catch(() => null);
     const isServicePage = typeof window !== 'undefined' && window.location.pathname.includes('/services/');
     const loginPath = isServicePage ? '../../login.html' : './login.html';
-    const signupPath = isServicePage ? '../../signup.html' : './signup.html';
 
     const box = document.createElement('div');
     box.className = 'service-enquiry-box';
     box.id = 'service-detail-enquiry-box';
 
-    if (!currentUser) {
-        box.innerHTML = `
-            <div class="service-page-auth-panel">
-                <div class="service-auth-icon-circle">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                        <path d="M9 12l2 2 4-4"/>
-                    </svg>
-                </div>
-                <h4>Client Consultation Access</h4>
-                <p>
-                    To submit project specifications for <strong>${escapeHTML(serviceName)}</strong>, request engineering drawings review, and receive an indicative estimate, please access your verified client account.
-                </p>
-                <div class="service-auth-panel-actions">
-                    <a href="${loginPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}" class="sp-auth-btn-primary">
-                        Client Sign In &rarr;
-                    </a>
-                    <a href="${signupPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}" class="sp-auth-btn-secondary">
-                        Register Client Account
-                    </a>
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; color: #64748b; margin-top: 14px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                    <span>Confidential &amp; Encrypted Architectural &bull; Structural Data Safeguard</span>
-                </div>
-            </div>
-        `;
-        targetEl.appendChild(box);
-        return;
-    }
+    const clientNameVal = currentUser ? escapeHTML(currentUser.name || '') : '';
+    const clientEmailVal = currentUser ? escapeHTML(currentUser.email || '') : '';
 
-    const clientNameVal = escapeHTML(currentUser.name || '');
-    const clientEmailVal = escapeHTML(currentUser.email || '');
+    // Restore draft if saved
+    let savedDraft = null;
+    try {
+        const rawDraft = sessionStorage.getItem('om_service_detail_enquiry_' + serviceSlug);
+        if (rawDraft) savedDraft = JSON.parse(rawDraft);
+    } catch (e) {}
+
+    const initialName = clientNameVal || (savedDraft ? escapeHTML(savedDraft.name || '') : '');
+    const initialEmail = clientEmailVal || (savedDraft ? escapeHTML(savedDraft.email || '') : '');
+    const initialPhone = savedDraft ? escapeHTML(savedDraft.phone || '') : '';
+    const initialMessage = savedDraft ? escapeHTML(savedDraft.message || '') : `I'm interested in ${escapeHTML(serviceName)}.`;
 
     box.innerHTML = `
         <div class="service-enquiry-header">
@@ -348,6 +292,7 @@ async function initServiceDetailPageEnquiry() {
             <h3 class="service-enquiry-title">Enquire About ${escapeHTML(serviceName)}</h3>
             <p class="service-enquiry-subtitle">Fill out the form below to receive a consultation and indicative estimate for your project.</p>
         </div>
+        ${currentUser ? `
         <div class="client-portal-status-bar" style="background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; margin-bottom: 20px;">
             <div class="client-portal-user-info" style="color: #0f172a;">
                 <span class="client-status-indicator"></span>
@@ -357,21 +302,22 @@ async function initServiceDetailPageEnquiry() {
                 Open Client Portal &rarr;
             </a>
         </div>
+        ` : ''}
         <form class="service-enquiry-form" id="form-service-detail-enquiry">
             <div class="service-enquiry-row">
                 <div class="service-enquiry-field">
                     <label for="sp-name">Your Name *</label>
-                    <input type="text" id="sp-name" name="name" required value="${clientNameVal}" placeholder="Full name" class="service-enquiry-input" autocomplete="name" />
+                    <input type="text" id="sp-name" name="name" required value="${initialName}" placeholder="Full name" class="service-enquiry-input" autocomplete="name" />
                 </div>
                 <div class="service-enquiry-field">
                     <label for="sp-email">Email Address *</label>
-                    <input type="email" id="sp-email" name="email" required value="${clientEmailVal}" placeholder="name@example.com" class="service-enquiry-input" autocomplete="email" />
+                    <input type="email" id="sp-email" name="email" required value="${initialEmail}" placeholder="name@example.com" class="service-enquiry-input" autocomplete="email" />
                 </div>
             </div>
             <div class="service-enquiry-row">
                 <div class="service-enquiry-field">
                     <label for="sp-phone">Phone Number (optional)</label>
-                    <input type="tel" id="sp-phone" name="phone" placeholder="+91 / Phone" class="service-enquiry-input" autocomplete="tel" />
+                    <input type="tel" id="sp-phone" name="phone" value="${initialPhone}" placeholder="+91 / Phone" class="service-enquiry-input" autocomplete="tel" />
                 </div>
                 <div class="service-enquiry-field">
                     <label for="sp-type">Service</label>
@@ -380,7 +326,7 @@ async function initServiceDetailPageEnquiry() {
             </div>
             <div class="service-enquiry-field">
                 <label for="sp-msg">Project Details / Requirements (optional)</label>
-                <textarea id="sp-msg" name="message" rows="3" placeholder="I'm interested in ${escapeHTML(serviceName)}." class="service-enquiry-textarea"></textarea>
+                <textarea id="sp-msg" name="message" rows="3" placeholder="I'm interested in ${escapeHTML(serviceName)}." class="service-enquiry-textarea">${initialMessage}</textarea>
             </div>
             <input type="text" name="honeypot" class="enquiry-honeypot" style="position:absolute; left:-9999px; opacity:0; pointer-events:none;" tabindex="-1" autocomplete="off" />
             <div class="service-enquiry-actions">
@@ -419,6 +365,16 @@ async function initServiceDetailPageEnquiry() {
             return;
         }
 
+        // If not logged in, save draft to sessionStorage and redirect to login
+        if (!currentUser) {
+            try {
+                sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
+            } catch (e) {}
+            const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
+            window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
+            return;
+        }
+
         const originalBtnText = submitBtn.innerHTML;
         submitBtn.disabled = true;
         submitBtn.innerHTML = 'Sending enquiry...';
@@ -433,12 +389,16 @@ async function initServiceDetailPageEnquiry() {
                 honeypot: honeypot || ''
             });
 
+            try {
+                sessionStorage.removeItem('om_service_detail_enquiry_' + serviceSlug);
+            } catch (e) {}
+
             form.style.display = 'none';
             successEl.style.display = 'block';
         } catch (err) {
             console.error('Service page enquiry error:', err);
             if (err.message && (err.message.includes('401') || err.message.includes('Not authenticated'))) {
-                window.location.href = `${loginPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}`;
+                window.location.href = `${loginPath}?redirect=${encodeURIComponent(window.location.pathname + '#enquire')}&reason=enquiry_submit`;
                 return;
             }
             errorEl.textContent = 'Failed to send your enquiry. Please check your connection or contact us directly.';
@@ -456,9 +416,14 @@ export async function initGlobalEnquiryForm() {
     if (!card) return;
 
     const authGate = card.querySelector('#global-enquiry-auth-gate');
+    if (authGate) authGate.style.display = 'none';
+
     const formWrapper = card.querySelector('#global-enquiry-form-wrapper');
+    if (formWrapper) formWrapper.style.display = 'block';
+
     const form = document.getElementById('global-enquiry-form');
     if (!form) return;
+    form.style.display = 'block';
 
     const successEl = card.querySelector('.global-enquiry-success');
     const errorEl = form.querySelector('.global-enquiry-error');
@@ -466,41 +431,43 @@ export async function initGlobalEnquiryForm() {
 
     const currentUser = await getCurrentUser().catch(() => null);
 
-    if (!currentUser) {
-        if (formWrapper) formWrapper.style.display = 'none';
-        if (authGate) {
-            authGate.style.display = 'block';
-            const loginBtn = authGate.querySelector('a[href*="login.html"]');
-            if (loginBtn) loginBtn.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}&reason=enquiry_access`;
-            const signupBtn = authGate.querySelector('a[href*="signup.html"]');
-            if (signupBtn) signupBtn.href = `./signup.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}&reason=enquiry_access`;
+    // Restore draft if present
+    let savedDraft = null;
+    try {
+        const rawDraft = sessionStorage.getItem('om_global_enquiry_draft');
+        if (rawDraft) savedDraft = JSON.parse(rawDraft);
+    } catch (e) {}
+
+    if (currentUser) {
+        if (form.elements.name) form.elements.name.value = currentUser.name || '';
+        if (form.elements.email) form.elements.email.value = currentUser.email || '';
+
+        // Show verified user executive status bar inside formWrapper
+        let statusBar = card.querySelector('.client-portal-status-bar');
+        if (!statusBar) {
+            statusBar = document.createElement('div');
+            statusBar.className = 'client-portal-status-bar';
+            statusBar.innerHTML = `
+                <div class="client-portal-user-info">
+                    <span class="client-status-indicator"></span>
+                    <span>Verified Client: <strong>${escapeHTML(currentUser.name)}</strong> <span style="color: rgba(255, 255, 255, 0.65);">(${escapeHTML(currentUser.email)})</span></span>
+                </div>
+                <a href="./my-requests.html" class="client-portal-link">
+                    Open Client Portal &rarr;
+                </a>
+            `;
+            form.parentNode.insertBefore(statusBar, form);
         }
-        return;
     }
 
-    // User is authenticated: ensure form wrapper is displayed and prefill verified user credentials
-    if (authGate) authGate.style.display = 'none';
-    if (formWrapper) formWrapper.style.display = 'block';
-    form.style.display = 'block';
-
-    if (form.elements.name) form.elements.name.value = currentUser.name || '';
-    if (form.elements.email) form.elements.email.value = currentUser.email || '';
-
-    // Show verified user executive status bar inside formWrapper
-    let statusBar = card.querySelector('.client-portal-status-bar');
-    if (!statusBar && formWrapper) {
-        statusBar = document.createElement('div');
-        statusBar.className = 'client-portal-status-bar';
-        statusBar.innerHTML = `
-            <div class="client-portal-user-info">
-                <span class="client-status-indicator"></span>
-                <span>Verified Client: <strong>${escapeHTML(currentUser.name)}</strong> <span style="color: rgba(255, 255, 255, 0.65);">(${escapeHTML(currentUser.email)})</span></span>
-            </div>
-            <a href="./my-requests.html" class="client-portal-link">
-                Open Client Portal &rarr;
-            </a>
-        `;
-        form.parentNode.insertBefore(statusBar, form);
+    if (savedDraft) {
+        if (!currentUser && form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
+        if (!currentUser && form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
+        if (form.elements.phone && savedDraft.phone) form.elements.phone.value = savedDraft.phone;
+        if (form.elements.service_slug && savedDraft.service_slug) form.elements.service_slug.value = savedDraft.service_slug;
+        if (form.elements.location && savedDraft.location) form.elements.location.value = savedDraft.location;
+        if (form.elements.area && savedDraft.area) form.elements.area.value = savedDraft.area;
+        if (form.elements.message && savedDraft.message) form.elements.message.value = savedDraft.message;
     }
 
     if (form.dataset.enquiryBound === 'true') return;
@@ -515,8 +482,8 @@ export async function initGlobalEnquiryForm() {
             errorEl.textContent = '';
         }
 
-        const name = form.elements.name ? form.elements.name.value.trim() : (currentUser.name || '');
-        const email = form.elements.email ? form.elements.email.value.trim() : (currentUser.email || '');
+        const name = form.elements.name ? form.elements.name.value.trim() : (currentUser ? currentUser.name || '' : '');
+        const email = form.elements.email ? form.elements.email.value.trim() : (currentUser ? currentUser.email || '' : '');
         const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
         const serviceSlug = form.elements.service_slug ? form.elements.service_slug.value : 'project-planning';
         const location = form.elements.location ? form.elements.location.value.trim() : '';
@@ -528,6 +495,24 @@ export async function initGlobalEnquiryForm() {
         if (honeypot) {
             form.style.display = 'none';
             if (successEl) successEl.style.display = 'block';
+            return;
+        }
+
+        // If not logged in, save draft to sessionStorage and redirect to login
+        if (!currentUser) {
+            try {
+                sessionStorage.setItem('om_global_enquiry_draft', JSON.stringify({
+                    name,
+                    email,
+                    phone,
+                    service_slug: serviceSlug,
+                    location,
+                    area,
+                    message: rawMessage
+                }));
+            } catch (e) {}
+            const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#cta');
+            window.location.href = `./login.html?redirect=${returnUrl}&reason=enquiry_submit`;
             return;
         }
 
@@ -557,12 +542,16 @@ export async function initGlobalEnquiryForm() {
                 honeypot: honeypot || ''
             });
 
+            try {
+                sessionStorage.removeItem('om_global_enquiry_draft');
+            } catch (e) {}
+
             form.style.display = 'none';
             if (successEl) successEl.style.display = 'block';
         } catch (err) {
             console.error('Global enquiry submission error:', err);
             if (err.message && (err.message.includes('401') || err.message.includes('Not authenticated'))) {
-                window.location.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}`;
+                window.location.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}&reason=enquiry_submit`;
                 return;
             }
             if (errorEl) {
@@ -578,6 +567,7 @@ export async function initGlobalEnquiryForm() {
 }
 
 function escapeHTML(str) {
+    if (!str) return '';
     return str.replace(/[&<>'"]/g, 
         tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
 }

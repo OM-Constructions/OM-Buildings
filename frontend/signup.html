@@ -104,7 +104,9 @@
             const header = document.querySelector(".auth-header");
             if (header) {
                 let noticeMsg = "<strong>Client Portal Access:</strong> Register to submit and track your engineering consultation.";
-                if (reason === "enquiry_access" || redirectUrl.includes("#cta")) {
+                if (reason === "enquiry_submit") {
+                    noticeMsg = "<strong>Register to Submit Enquiry:</strong> Create your client account to submit your enquiry and consult with our principal engineers. Your enquiry details have been preserved.";
+                } else if (reason === "enquiry_access" || redirectUrl.includes("#cta")) {
                     noticeMsg = "<strong>Register to Enquire:</strong> Create your client account to submit project specifications and consult with our principal engineers.";
                 } else if (reason === "pricing_access" || redirectUrl.includes("cost") || redirectUrl.includes("price")) {
                     noticeMsg = "<strong>Verified Pricing Access:</strong> Register your client account to view construction cost schedules.";
