@@ -1,0 +1,13 @@
+{
+  "name": "om-buildings-frontend",
+  "version": "1.0.0",
+  "description": "OM Buildings - Construction & Structural Engineering",
+  "type": "module",
+  "scripts": {
+    "install": "echo 'Dependencies installed'"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  },
+  "devDependencies": {}
+}
