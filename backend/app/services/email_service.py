@@ -26,7 +26,12 @@ def send_via_smtp(to, subject, html, reply_to=None):
     msg["Reply-To"] = reply_to or settings.EMAIL_TO
     msg.attach(MIMEText(html, "html"))
 
-    recipients = [to] if isinstance(to, str) else to
+    if isinstance(to, str):
+        recipients = [addr.strip() for addr in to.split(",") if addr.strip()]
+    elif isinstance(to, (list, tuple)):
+        recipients = list(to)
+    else:
+        recipients = [str(to)]
 
     try:
         if settings.SMTP_PORT == 465:
