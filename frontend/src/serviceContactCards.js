@@ -452,39 +452,43 @@ async function initServiceDetailPageEnquiry() {
 }
 
 export async function initGlobalEnquiryForm() {
+    const card = document.getElementById('global-enquiry-box');
+    if (!card) return;
+
+    const authGate = card.querySelector('#global-enquiry-auth-gate');
+    const formWrapper = card.querySelector('#global-enquiry-form-wrapper');
     const form = document.getElementById('global-enquiry-form');
     if (!form) return;
 
-    const card = document.getElementById('global-enquiry-box');
-    const authGate = card ? card.querySelector('#global-enquiry-auth-gate') : null;
-    const successEl = card ? card.querySelector('.global-enquiry-success') : null;
+    const successEl = card.querySelector('.global-enquiry-success');
     const errorEl = form.querySelector('.global-enquiry-error');
     const submitBtn = form.querySelector('.global-enquiry-submit-btn');
 
     const currentUser = await getCurrentUser().catch(() => null);
 
     if (!currentUser) {
-        form.style.display = 'none';
+        if (formWrapper) formWrapper.style.display = 'none';
         if (authGate) {
             authGate.style.display = 'block';
             const loginBtn = authGate.querySelector('a[href*="login.html"]');
-            if (loginBtn) loginBtn.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}`;
+            if (loginBtn) loginBtn.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}&reason=enquiry_access`;
             const signupBtn = authGate.querySelector('a[href*="signup.html"]');
-            if (signupBtn) signupBtn.href = `./signup.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}`;
+            if (signupBtn) signupBtn.href = `./signup.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}&reason=enquiry_access`;
         }
         return;
     }
 
-    // User is authenticated: ensure form is displayed and prefill verified user credentials
+    // User is authenticated: ensure form wrapper is displayed and prefill verified user credentials
     if (authGate) authGate.style.display = 'none';
+    if (formWrapper) formWrapper.style.display = 'block';
     form.style.display = 'block';
 
     if (form.elements.name) form.elements.name.value = currentUser.name || '';
     if (form.elements.email) form.elements.email.value = currentUser.email || '';
 
-    // Show verified user executive status bar
-    let statusBar = card ? card.querySelector('.client-portal-status-bar') : null;
-    if (!statusBar && card) {
+    // Show verified user executive status bar inside formWrapper
+    let statusBar = card.querySelector('.client-portal-status-bar');
+    if (!statusBar && formWrapper) {
         statusBar = document.createElement('div');
         statusBar.className = 'client-portal-status-bar';
         statusBar.innerHTML = `

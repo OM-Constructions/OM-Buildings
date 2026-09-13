@@ -1637,12 +1637,13 @@ CORPORATE CLIENT CONSULTATION ACCESS & PORTAL STYLES
 ================================================== 
 */
 .global-enquiry-auth-gate {
-    background: radial-gradient(circle at 50% 0%, rgba(23, 52, 95, 0.45) 0%, rgba(7, 21, 47, 0.95) 100%);
-    border: 1px solid rgba(201, 151, 34, 0.25);
-    border-radius: 10px;
-    padding: 42px 32px 36px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 10px 0 16px;
     text-align: center;
     box-sizing: border-box;
+    box-shadow: none;
 }
 
 .auth-gate-shield-wrapper {
@@ -1677,7 +1678,7 @@ CORPORATE CLIENT CONSULTATION ACCESS & PORTAL STYLES
 
 .auth-gate-headline {
     font-family: var(--font-heading);
-    font-size: 1.6rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: #ffffff;
     margin: 0 0 12px;
