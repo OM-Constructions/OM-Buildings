@@ -209,26 +209,20 @@ Would you like to schedule a site soil test or structural assessment?`,
     },
 
     estimator: {
-        title: "Interactive Construction Cost & Timeline Estimator",
-        content: `To help you plan your project, here are standard indicative metrics for turnkey architectural, structural, and construction execution:
+        title: "Construction Cost & Rate Schedules",
+        content: `To safeguard proprietary engineering schedules and competitive pricing models, itemized construction rates, BOQ cost breakdowns, and per-sqft price schedules are accessible exclusively to verified Client Accounts.
 
-🏢 **Residential Buildings (Villas & Apartments)**:
-- Planning & Structural Design: ~₹25 - ₹50 per sq. ft.
-- Standard Construction (Structure + Basic Finishes): ~₹1,700 - ₹2,100 per sq. ft.
-- Premium Luxury Construction: ~₹2,200 - ₹3,000+ per sq. ft.
-- Typical Timeline: 6 - 14 months depending on plot size & floors.
+📋 **Verified Clients Access**:
+- Comprehensive rate schedules for turnkey residential, commercial, and PEB construction
+- Material specifications (TMT steel, grade concrete, premium architectural finishes)
+- Project duration forecasting & milestone disbursement schedules
+- Direct consultation with our principal structural and cost estimation engineers
 
-🏭 **Commercial & Pre-Engineered Steel (PEB)**:
-- Turnkey Execution: ~₹1,400 - ₹2,200 per sq. ft.
-- Fast-track PEB Timeline: 4 - 8 months.
-
-*Note: Soil bearing capacity, structural loads, and custom finishes affect the exact estimate.*
-
-Would you like a customized, itemized BOQ estimate for your specific plot and built-up area?`,
+Please sign in to your verified Client Account or create an account to view full pricing schedules.`,
         actions: [
-            { text: "📞 Request Custom BOQ Quote", query: "contact" },
-            { text: "🔬 Soil Testing Cost & Process", query: "structural" },
-            { text: "🏗️ View Services", query: "services" }
+            { text: "🔑 Sign In to View Rates", action: "loginToViewPricing" },
+            { text: "📝 Register Client Account", action: "signupToViewPricing" },
+            { text: "📞 Inquire With Engineering Team", query: "contact" }
         ]
     },
 
@@ -509,6 +503,16 @@ Choose a topic below or type any question!`,
             if (cta) {
                 cta.scrollIntoView({ behavior: 'smooth' });
             }
+            return;
+        }
+
+        if (actionType === 'loginToViewPricing') {
+            window.location.href = './login.html?redirect=%2F%23services&reason=pricing_access';
+            return;
+        }
+
+        if (actionType === 'signupToViewPricing') {
+            window.location.href = './signup.html?redirect=%2F%23services&reason=pricing_access';
             return;
         }
 

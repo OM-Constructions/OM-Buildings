@@ -843,6 +843,36 @@ SERVICES SECTION
     color: var(--navy-primary);
 }
 
+.price-locked-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-heading);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--gold-accent);
+    letter-spacing: 0.5px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.price-locked-badge:hover {
+    color: #b37d14;
+    text-decoration: underline;
+}
+
+.price-locked-block {
+    background: rgba(201, 151, 34, 0.08);
+    border: 1px dashed rgba(201, 151, 34, 0.45);
+    cursor: pointer;
+}
+
+.price-locked-block:hover {
+    background: rgba(201, 151, 34, 0.12);
+    border-color: var(--gold-accent);
+}
+
 .service-desc {
     color: var(--text-muted);
     font-size: 0.95rem;

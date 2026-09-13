@@ -84,18 +84,27 @@
         const urlParams = new URLSearchParams(window.location.search);
         const redirectUrl = urlParams.get("redirect");
 
+        const reason = urlParams.get("reason");
+
         // If redirect URL is present, update signup link and show redirect banner
         if (redirectUrl) {
             const signupLink = document.querySelector(".auth-footer-text a");
             if (signupLink) {
-                signupLink.href = `./signup.html?redirect=${encodeURIComponent(redirectUrl)}`;
+                signupLink.href = `./signup.html?redirect=${encodeURIComponent(redirectUrl)}${reason ? `&reason=${encodeURIComponent(reason)}` : ''}`;
             }
             const header = document.querySelector(".auth-header");
             if (header) {
+                let noticeMsg = "<strong>Client Portal Access:</strong> Please sign in to submit and track your engineering consultation.";
+                if (reason === "pricing_access" || redirectUrl.includes("cost") || redirectUrl.includes("price")) {
+                    noticeMsg = "<strong>Verified Pricing Access:</strong> Please sign in to view itemized construction cost rates and rate schedules.";
+                } else if (reason === "service_access" || redirectUrl.includes("/services/")) {
+                    noticeMsg = "<strong>Service Scope & Specifications:</strong> Please sign in with your client account to view full blueprints, technical deliverables, and service scopes.";
+                }
+
                 const banner = document.createElement("div");
                 banner.className = "auth-redirect-notice";
                 banner.style.cssText = "background: rgba(201, 151, 34, 0.12); border: 1px solid rgba(201, 151, 34, 0.35); color: #B37D14; padding: 11px 16px; border-radius: 6px; font-size: 0.88rem; margin-top: 14px; text-align: center;";
-                banner.innerHTML = '<div style="display:inline-flex; align-items:center; gap:8px; line-height:1.4;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><span><strong>Client Portal Access:</strong> Please sign in to submit and track your engineering consultation.</span></div>';
+                banner.innerHTML = `<div style="display:inline-flex; align-items:center; gap:8px; line-height:1.4;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C99722" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg><span>${noticeMsg}</span></div>`;
                 header.appendChild(banner);
             }
         }
