@@ -61,9 +61,18 @@ def submit_enquiry(
         status="new",
         client_ack_status="pending"
     )
-    db.add(enquiry)
-    db.commit()
-    db.refresh(enquiry)
+    db_saved = False
+    try:
+        db.add(enquiry)
+        db.commit()
+        db.refresh(enquiry)
+        db_saved = True
+    except Exception as db_err:
+        print(f"[ENQUIRY DB ERROR] Could not save to DB, proceeding to email dispatch: {db_err}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
 
     # 3. Send company notification
     try:
@@ -83,13 +92,14 @@ def submit_enquiry(
         print(f"[ENQUIRY EMAIL ERROR] Client acknowledgement failed: {err}")
         enquiry.client_ack_status = "failed"
 
-    # Commit email dispatch status updates
-    try:
-        db.commit()
-    except Exception as err:
-        print(f"[ENQUIRY DB ERROR] Failed to update email dispatch status: {err}")
+    # Commit email dispatch status updates if saved
+    if db_saved:
+        try:
+            db.commit()
+        except Exception as err:
+            print(f"[ENQUIRY DB ERROR] Failed to update email dispatch status: {err}")
 
-    # 5. Always return success if step 2 succeeded
+    # 5. Return success
     return {
         "success": True,
         "id": str(enquiry.id),
