@@ -49,6 +49,31 @@ SERVICES = {
         "company_intro": "an estimation & costing enquiry",
         "client_line": "Our estimation team will review your project scope and follow up with a cost breakdown.",
     },
+    "total-station-survey": {
+        "name": "Total Station Survey",
+        "company_intro": "a Total Station survey enquiry",
+        "client_line": "Our surveying team will review your site coordinates and survey scope and reach out shortly.",
+    },
+    "interior-design-execution": {
+        "name": "Interior Design + Execution",
+        "company_intro": "an interior design and execution enquiry",
+        "client_line": "Our interior design and turnkey execution team will review your requirements and reach out with next steps.",
+    },
+    "complete-design-package": {
+        "name": "Complete Design Package",
+        "company_intro": "a Complete Design Package enquiry",
+        "client_line": "Our multidisciplinary engineering and architectural team will review your project scope and follow up promptly.",
+    },
+    "premium-complete-design-package": {
+        "name": "Premium Complete Design Package",
+        "company_intro": "a Premium Complete Design Package enquiry",
+        "client_line": "Our senior design and structural team will review your premium package requirements and follow up with you.",
+    },
+    "turnkey-home-construction": {
+        "name": "Turnkey Home Construction",
+        "company_intro": "a Turnkey Home Construction enquiry",
+        "client_line": "Our project management and construction execution team will review your project details and get in touch.",
+    },
 }
 
 def resolve_service(slug_or_name: str | None) -> tuple[str, dict]:

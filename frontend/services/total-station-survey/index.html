@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOTAL STATION SURVEY | OM Constructions</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../style.css?v=4">
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "gsap": "https://unpkg.com/gsap@3.12.2/index.js",
+                "gsap/ScrollTrigger": "https://unpkg.com/gsap@3.12.2/ScrollTrigger.js"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- NAV BAR -->
+    <nav id="navbar" class="scrolled">
+        <div class="container nav-container">
+            <a href="../../index.html" class="nav-brand">OM<span>Constructions</span></a>
+            <div class="nav-links">
+                <a href="../../index.html#hero">HOME</a>
+                <a href="../../index.html#services">SERVICES</a>
+            </div>
+            <div class="nav-actions">
+                <span id="nav-auth-container" class="nav-auth-group">
+                    <a href="../../login.html" class="nav-auth-link nav-auth-login">Log In</a>
+                    <a href="../../signup.html" class="nav-auth-link nav-auth-signup">Sign Up</a>
+                </span>
+                <a href="../../index.html#cta" class="btn-primary">Let's Talk</a>
+                <script type="module">
+                    import { getCurrentUser, logout } from "../../src/auth.js";
+                    const container = document.getElementById("nav-auth-container");
+                    if (container) {
+                        getCurrentUser().then(user => {
+                            if (user) {
+                                container.innerHTML = `
+                                    <a href="../../my-requests.html" class="nav-auth-link nav-auth-login" style="color: var(--gold-accent); font-weight: 600;">My Requests</a>
+                                    <a href="#" id="nav-logout-link" class="nav-auth-link nav-auth-signup">Log Out</a>
+                                `;
+                                document.getElementById("nav-logout-link")?.addEventListener("click", async (e) => {
+                                    e.preventDefault();
+                                    await logout().catch(() => {});
+                                    window.location.reload();
+                                });
+                            }
+                        });
+                    }
+                </script>
+            </div>
+            <button class="hamburger">☰</button>
+        </div>
+    </nav>
+
+    <main class="service-page-main">
+        <!-- HERO -->
+        <section class="service-page-hero">
+            <div class="container gsap-reveal">
+                <span class="eyebrow">LAND & SITE SURVEYING</span>
+                <h1>TOTAL STATION SURVEY</h1>
+                <div class="service-price-block" style="margin-bottom: 24px; max-width: 320px;">
+                    <span class="price-label">PRICE</span>
+                    <span class="price-value" style="font-size: 1.5rem; color: var(--gold-accent);">₹7,500 onwards</span>
+                </div>
+                <p>Professional site measurement and surveying using Total Station equipment for precise boundary, elevation, and contour documentation.</p>
+                <div class="service-hero-accent"></div>
+            </div>
+        </section>
+
+        <!-- 01 OVERVIEW -->
+        <section class="sp-section sp-overview">
+            <div class="container gsap-reveal">
+                <span class="sp-label">01 &mdash; OVERVIEW</span>
+                <p>At OM Constructions, we believe that exceptional engineering begins with a deep understanding of purpose. Our TOTAL STATION SURVEY services are designed to address both the aesthetic desires and functional necessities of your project. We leverage modern methodologies to ensure everything we design is resilient, sustainable, and built to the highest industry standards.</p>
+            </div>
+        </section>
+
+        <!-- 02 WHAT WE FOCUS ON -->
+        <section class="sp-section sp-section-gray">
+            <div class="container gsap-reveal">
+                <span class="sp-label" style="color: var(--navy-primary);">02 &mdash; WHAT WE FOCUS ON</span>
+                <h2 class="sp-title">Capabilities & Deliverables</h2>
+                <div class="sp-focus-grid">
+                    <div class="sp-focus-item">
+                        <h3>Site measurement</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                    <div class="sp-focus-item">
+                        <h3>Boundary measurement</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                    <div class="sp-focus-item">
+                        <h3>Existing structure measurement</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                    <div class="sp-focus-item">
+                        <h3>Ground-level survey</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                    <div class="sp-focus-item">
+                        <h3>Spot levels</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                    <div class="sp-focus-item">
+                        <h3>Site coordinates</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                    <div class="sp-focus-item">
+                        <h3>Existing features mapping</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                    <div class="sp-focus-item">
+                        <h3>Digital survey drawing</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                    <div class="sp-focus-item">
+                        <h3>Contour information where required</h3>
+                        <p>Providing exact, professional outcomes focused on practical value and precision.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 03 OUR APPROACH -->
+        <section class="sp-section sp-section-dark">
+            <div class="container gsap-reveal">
+                <span class="sp-label">03 &mdash; OUR APPROACH</span>
+                <h2 class="sp-title">How We Execute</h2>
+                
+                <div class="sp-approach-grid">
+                    <div class="sp-approach-step">
+                        <h4>UNDERSTAND</h4>
+                        <p>Understand the project requirements.</p>
+                    </div>
+                    <div class="sp-approach-step">
+                        <h4>PLAN</h4>
+                        <p>Establish the appropriate design or technical approach.</p>
+                    </div>
+                    <div class="sp-approach-step">
+                        <h4>DEVELOP</h4>
+                        <p>Develop the required design, documentation or visualization.</p>
+                    </div>
+                    <div class="sp-approach-step">
+                        <h4>COORDINATE</h4>
+                        <p>Coordinate the relevant project requirements.</p>
+                    </div>
+                    <div class="sp-approach-step">
+                        <h4>DELIVER</h4>
+                        <p>Prepare the final output for the next stage of the project.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VISUAL SECTION -->
+        <section class="sp-visual">
+            <img src="../../assets/services/total-station-survey.png" alt="TOTAL STATION SURVEY Visual" class="gsap-reveal">
+        </section>
+
+        <!-- 04 CTA & SERVICE ENQUIRY -->
+        <section class="sp-section sp-cta" id="enquire">
+            <div class="container gsap-reveal">
+                <span class="sp-label" style="color: var(--navy-primary);">04 &mdash; READY?</span>
+                <h2>HAVE A PROJECT IN MIND?</h2>
+                <p>Submit your requirements below to consult with our principal engineers and receive an indicative estimate for <strong>TOTAL STATION SURVEY</strong>.</p>
+
+                <div class="service-enquiry-box" id="service-detail-enquiry-box" data-service-slug="total-station-survey" data-service-name="TOTAL STATION SURVEY">
+                    <div class="service-enquiry-header">
+                        <div class="service-enquiry-badge">DIRECT SERVICE ENQUIRY</div>
+                        <h3 class="service-enquiry-title">Enquire About TOTAL STATION SURVEY</h3>
+                        <p class="service-enquiry-subtitle">Fill out the form below to receive an engineering consultation and cost estimate.</p>
+                    </div>
+
+                    <form class="service-enquiry-form" id="form-service-detail-enquiry" action="javascript:void(0);" method="POST">
+                        <div class="service-enquiry-row">
+                            <div class="service-enquiry-field">
+                                <label for="sp-name">Your Full Name *</label>
+                                <input type="text" id="sp-name" name="name" required placeholder="e.g. Rahul Sharma" class="service-enquiry-input" autocomplete="name" />
+                            </div>
+                            <div class="service-enquiry-field">
+                                <label for="sp-email">Email Address *</label>
+                                <input type="email" id="sp-email" name="email" required placeholder="name@example.com" class="service-enquiry-input" autocomplete="email" />
+                            </div>
+                        </div>
+                        <div class="service-enquiry-row">
+                            <div class="service-enquiry-field">
+                                <label for="sp-phone">Phone / WhatsApp (optional)</label>
+                                <input type="tel" id="sp-phone" name="phone" placeholder="+91 98765 43210" class="service-enquiry-input" autocomplete="tel" />
+                            </div>
+                            <div class="service-enquiry-field">
+                                <label for="sp-type">Service</label>
+                                <input type="text" id="sp-type" value="TOTAL STATION SURVEY" class="service-enquiry-input service-enquiry-readonly" readonly />
+                            </div>
+                        </div>
+                        <div class="service-enquiry-field">
+                            <label for="sp-msg">Project Details & Requirements *</label>
+                            <textarea id="sp-msg" name="message" rows="3" required placeholder="Describe what you want to build: location, built-up area, specific requirements, or questions for our engineers..." class="service-enquiry-textarea"></textarea>
+                        </div>
+                        <input type="text" name="honeypot" class="enquiry-honeypot" style="position:absolute; left:-9999px; opacity:0; pointer-events:none;" tabindex="-1" autocomplete="off" />
+                        <div class="service-enquiry-actions">
+                            <button type="submit" class="service-enquiry-submit-btn">Send Enquiry &rarr;</button>
+                        </div>
+                        <div class="service-enquiry-error" style="display: none;"></div>
+                    </form>
+                        <script>
+                        (function() {
+                            var form = document.getElementById('form-service-detail-enquiry');
+                            if (!form) return;
+                            var btn = form.querySelector('.service-enquiry-submit-btn');
+                            var box = document.getElementById('service-detail-enquiry-box');
+                            var slug = box ? box.getAttribute('data-service-slug') : 'project-planning';
+
+                            var isAuthed = false;
+                            fetch('/api/v1/auth/me', { credentials: 'include' })
+                                .then(function(r) { return r.ok ? r.json() : null; })
+                                .then(function(u) { isAuthed = !!u; })
+                                .catch(function() { isAuthed = false; });
+
+                            function handleUnauthenticated(e) {
+                                if (!isAuthed) {
+                                    if (e) {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                                    }
+                                    var name = form.elements.name ? form.elements.name.value.trim() : '';
+                                    var email = form.elements.email ? form.elements.email.value.trim() : '';
+                                    var phone = form.elements.phone ? form.elements.phone.value.trim() : '';
+                                    var message = form.elements.message ? form.elements.message.value.trim() : '';
+                                    try {
+                                        sessionStorage.setItem('om_service_detail_enquiry_' + slug, JSON.stringify({
+                                            name: name, email: email, phone: phone, message: message
+                                        }));
+                                    } catch (err) {}
+                                    var returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
+                                    window.location.href = '../../login.html?redirect=' + returnUrl + '&reason=enquiry_submit';
+                                    return false;
+                                }
+                            }
+
+                            if (btn) btn.addEventListener('click', handleUnauthenticated, true);
+                            form.addEventListener('submit', handleUnauthenticated, true);
+                        })();
+                        </script>
+                    <div class="service-enquiry-success" style="display: none;">
+                        <div class="service-enquiry-success-icon">&#10003;</div>
+                        <h4>Thank you!</h4>
+                        <p>Thanks &mdash; we have received your enquiry for <strong>TOTAL STATION SURVEY</strong> and sent you a confirmation email. Our engineers will review your scope and follow up shortly.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>OM CONSTRUCTIONS</h3>
+                    <p>& STRUCTURAL ENGINEERING CONSULTANTS</p>
+                </div>
+                <div class="footer-col">
+                    <h4>Navigation</h4>
+                    <ul>
+                        <li><a href="../../index.html#hero">Home</a></li>
+                        <li><a href="../../index.html#services">Services</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>&copy; 2026 OM Constructions. All rights reserved.</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- GSAP ANIMATIONS & CORE SCRIPTS -->
+    <script type="module" src="../../src/main.js?v=30"></script>
+    <script type="module" src="../../src/serviceEnquiry.js?v=30"></script>
+    <script type="module">
+        import gsap from 'gsap';
+        import ScrollTrigger from 'gsap/ScrollTrigger';
+        
+        // Use a short timeout to ensure main.js has finished removing the intro splash cover if it fails WebGL
+        setTimeout(() => {
+            const reveals = document.querySelectorAll('.gsap-reveal');
+            reveals.forEach((el) => {
+                gsap.fromTo(el, 
+                    { opacity: 0, y: 50, visibility: 'hidden' }, 
+                    {
+                        scrollTrigger: {
+                            trigger: el,
+                            start: "top 85%",
+                            toggleActions: "play none none none"
+                        },
+                        opacity: 1,
+                        y: 0,
+                        visibility: 'visible',
+                        duration: 1,
+                        ease: "power2.out"
+                    }
+                );
+            });
+        }, 100);
+    </script>
+</body>
+</html>

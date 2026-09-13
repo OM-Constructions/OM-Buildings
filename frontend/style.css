@@ -809,6 +809,35 @@ SERVICES SECTION
     transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+.service-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+    position: relative;
+    z-index: 20;
+}
+
+.service-card-header .service-number {
+    margin-bottom: 0;
+}
+
+.service-card-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: var(--gold-accent);
+    background: rgba(201, 151, 34, 0.1);
+    border: 1px solid rgba(201, 151, 34, 0.25);
+    padding: 3px 8px;
+    border-radius: 4px;
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .service-title {
     font-family: var(--font-heading);
     font-size: 1.25rem;
@@ -913,6 +942,11 @@ SERVICES SECTION
     transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), visibility 0s 0.7s;
 }
 
+.service-card.is-active .service-card-badge {
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
 @media (max-width: 992px) {
     p, .section-subtitle, .service-desc {
         text-align: left !important;
@@ -937,6 +971,11 @@ SERVICES SECTION
         transform: none;
         visibility: visible;
         transition: none;
+    }
+
+    .service-card.is-active .service-card-badge {
+        opacity: 1;
+        transform: none;
     }
 }
 

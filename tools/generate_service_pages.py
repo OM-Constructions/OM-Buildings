@@ -172,6 +172,91 @@ services_data: list[ServiceItem] = [
             "Project costing",
             "Cost documentation"
         ]
+    },
+    {
+        "slug": "total-station-survey",
+        "eyebrow": "LAND & SITE SURVEYING",
+        "title": "TOTAL STATION SURVEY",
+        "intro": "Professional site measurement and surveying using Total Station equipment for precise boundary, elevation, and contour documentation.",
+        "img": "total-station-survey.png",
+        "focus": [
+            "Site measurement",
+            "Boundary measurement",
+            "Existing structure measurement",
+            "Ground-level survey",
+            "Spot levels",
+            "Site coordinates",
+            "Existing features mapping",
+            "Digital survey drawing",
+            "Contour information where required"
+        ]
+    },
+    {
+        "slug": "interior-design-execution",
+        "eyebrow": "TURNKEY INTERIORS",
+        "title": "INTERIOR DESIGN + EXECUTION",
+        "intro": "Complete turnkey interior design and on-site execution, spanning 3D concepts, custom woodwork, lighting design, material procurement, and contractor supervision.",
+        "img": "interior-design-execution.png",
+        "focus": [
+            "Interior design",
+            "Space planning",
+            "3D visualization",
+            "Material selection",
+            "Furniture planning",
+            "Ceiling design",
+            "Lighting planning",
+            "Execution",
+            "Material procurement",
+            "Labour coordination"
+        ]
+    },
+    {
+        "slug": "complete-design-package",
+        "eyebrow": "MOST POPULAR • RECOMMENDED",
+        "title": "COMPLETE DESIGN PACKAGE",
+        "intro": "A complete design package combining architectural planning, 3D elevation, structural design, MEP design and BOQ/estimation for an integrated build experience.",
+        "img": "complete-design-package.png",
+        "focus": [
+            "2D Architectural Plan",
+            "3D Elevation Design",
+            "Structural Engineering Design",
+            "Integrated MEP Design",
+            "BOQ & Quantity Estimation",
+            "Integrated Project Coordination"
+        ]
+    },
+    {
+        "slug": "premium-complete-design-package",
+        "eyebrow": "PREMIUM ARCHITECTURAL SUITE",
+        "title": "PREMIUM COMPLETE DESIGN PACKAGE",
+        "intro": "Comprehensive luxury complete design package with advanced architectural layouts, bespoke 3D facade styling, high-integrity structural calculations, coordinated MEP, and detailed BOQ.",
+        "img": "premium-complete-design-package.png",
+        "focus": [
+            "Advanced 2D Architectural Layouts",
+            "Luxury 3D Facade & Elevation",
+            "High-Integrity Structural Calculations",
+            "Comprehensive MEP Systems",
+            "Itemized BOQ & Material Schedules",
+            "Dedicated Architectural Consultation"
+        ]
+    },
+    {
+        "slug": "turnkey-home-construction",
+        "eyebrow": "COMPLETE SOLUTION",
+        "title": "TURNKEY HOME CONSTRUCTION",
+        "intro": "Complete end-to-end residential home construction from architectural design and foundation engineering to material procurement, labor management, and final turnkey handover.",
+        "img": "turnkey-home-construction.png",
+        "focus": [
+            "Architectural & Structural Design",
+            "MEP Building Systems",
+            "BOQ & Cost Planning",
+            "Material Procurement",
+            "Labour Management",
+            "Construction Execution",
+            "Quality Supervision",
+            "Site Coordination",
+            "Project Management"
+        ]
     }
 ]
 
