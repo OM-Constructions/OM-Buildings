@@ -20,11 +20,11 @@ def rate_limit_handler(request, exc):
 
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
-# Configure CORS: with allow_credentials=True, allow_origin_regex allows any localhost/127.0.0.1 port
+# Configure CORS: with allow_credentials=True, allow localhost and any Vercel deployment domain
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$",
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$|^https://.*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,6 +36,16 @@ app.include_router(me.router, prefix="/api/v1/me", tags=["me"])
 app.include_router(contact.router, prefix="/api/v1/contact", tags=["contact"])
 app.include_router(contact.router, prefix="/api/v1/enquiries", tags=["enquiries"])
 app.include_router(assistant.router, prefix="/api/v1/assistant", tags=["assistant"])
+
+@app.get("/")
+def root():
+    return {
+        "status": "ok",
+        "service": "OM Buildings API",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "health": "/api/v1/health"
+    }
 
 @app.get("/api/v1/health")
 def health_check():
