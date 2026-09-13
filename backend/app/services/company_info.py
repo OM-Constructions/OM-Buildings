@@ -13,7 +13,12 @@ SERVICE_DESCRIPTIONS = {
     "mep-designs": "Integrated Mechanical, Electrical, and Plumbing (MEP) design, HVAC planning, power distribution, and firefighting systems compliant with building safety standards.",
     "3d-building-design": "Complete 3D spatial building design, BIM coordination, and digital volumetric modeling to align architectural, structural, and aesthetic requirements before construction.",
     "realistic-rendering": "Ultra-realistic 3D architectural renderings, exterior facade presentations, interior walk-throughs, and lighting visualizations.",
-    "estimation-costing": "Detailed Bill of Quantities (BOQ), material take-offs, itemized rate analysis, and transparent budgeting to forecast construction costs accurately."
+    "estimation-costing": "Detailed Bill of Quantities (BOQ), material take-offs, itemized rate analysis, and transparent budgeting to forecast construction costs accurately.",
+    "total-station-survey": "Professional site measurement, spot levels, boundary coordinates, existing feature mapping, digital survey drawings, and contour surveying using advanced Total Station instruments.",
+    "interior-design-execution": "Turnkey interior design combined with on-site execution, including 3D visualization, material procurement, bespoke furniture fabrication, lighting planning, and skilled labour coordination.",
+    "complete-design-package": "Most popular multidisciplinary engineering & design package combining 2D architectural plans, 3D exterior elevation, structural design, MEP engineering, and BOQ/cost estimation.",
+    "premium-complete-design-package": "Premium comprehensive design package with advanced architectural layouts, luxury 3D facade modeling, rigorous structural engineering, full MEP building systems, and itemized BOQ.",
+    "turnkey-home-construction": "Complete residential construction solution from architectural and structural designs through premium material procurement, labor management, rigorous quality supervision, and final turnkey handover."
 }
 
 def _build_company_info() -> str:

@@ -14,7 +14,13 @@ const SERVICE_SLUGS = {
   "Realistic Rendering": "realistic-rendering",
   "Estimation & Costing": "estimation-costing",
   "Construction Cost": "estimation-costing",
-  "Construction Cost Estimation": "estimation-costing"
+  "Construction Cost Estimation": "estimation-costing",
+  "Total Station Survey": "total-station-survey",
+  "Interior Design + Execution": "interior-design-execution",
+  "Interior Design & Execution": "interior-design-execution",
+  "Complete Design Package": "complete-design-package",
+  "Premium Complete Design Package": "premium-complete-design-package",
+  "Turnkey Home Construction": "turnkey-home-construction"
 };
 
 /**
