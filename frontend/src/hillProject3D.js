@@ -24,6 +24,11 @@ function initHillProject3D() {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    
+    // Improve color and lighting rendering
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -40,11 +45,11 @@ function initHillProject3D() {
     controls.addEventListener('end', () => container.style.cursor = 'grab');
 
     // Lighting setup for a professional architectural look
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5); // Stronger ambient to fill shadows
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
-    directionalLight.position.set(20, 30, 20);
+    const directionalLight = new THREE.DirectionalLight(0xfff5e6, 2.5); // Warm sun key light
+    directionalLight.position.set(20, 40, 20);
     directionalLight.castShadow = true;
     directionalLight.shadow.mapSize.width = 2048;
     directionalLight.shadow.mapSize.height = 2048;
@@ -55,11 +60,16 @@ function initHillProject3D() {
     directionalLight.shadow.camera.top = 20;
     directionalLight.shadow.camera.bottom = -20;
     directionalLight.shadow.bias = -0.001;
+    directionalLight.shadow.normalBias = 0.02; // Improve shadow edge artifacts
     scene.add(directionalLight);
     
-    const fillLight = new THREE.DirectionalLight(0xe0e8ff, 0.5);
-    fillLight.position.set(-20, 10, -20);
+    const fillLight = new THREE.DirectionalLight(0xe0e8ff, 1.5); // Cool fill light
+    fillLight.position.set(-20, 20, -20);
     scene.add(fillLight);
+    
+    const rimLight = new THREE.DirectionalLight(0xffffff, 1.0); // Rim light for better separation
+    rimLight.position.set(20, 10, -20);
+    scene.add(rimLight);
 
     // Load Model
     const loader = new GLTFLoader();
@@ -76,9 +86,14 @@ function initHillProject3D() {
                     
                     // Optional: adjust material slightly for better architectural look
                     if (node.material) {
-                        node.material.roughness = Math.max(0.4, node.material.roughness || 0);
-                        // Prevent too metallic look unless specified
-                        node.material.metalness = Math.min(0.5, node.material.metalness || 0);
+                        // Without an environment map (HDRI), highly metallic surfaces appear pitch black.
+                        // Cap metalness to prevent dark spots while keeping the architectural look.
+                        if (node.material.metalness !== undefined) {
+                            node.material.metalness = Math.min(0.2, node.material.metalness);
+                        }
+                        if (node.material.roughness !== undefined) {
+                            node.material.roughness = Math.max(0.5, node.material.roughness);
+                        }
                     }
                 }
             });
