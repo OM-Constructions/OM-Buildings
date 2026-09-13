@@ -76,39 +76,46 @@ def send_client_acknowledgement(enquiry):
         reply_to=settings.EMAIL_TO
     )
 
-def send_verification_email(to_email, name, verification_link):
-    """Sends account verification email with branded HTML template via SMTP."""
-    subject = "Verify your email — OM Constructions"
+def send_otp_email(to_email: str, name: str, otp: str):
+    """Sends 6-digit OTP verification email with branded HTML template via SMTP."""
+    subject = f"{otp} is your OM Constructions verification code"
     body_html = f"""
-    <p style="font-size:15px; color:#334155; line-height:1.6;">
+    <p style="font-size:15px; color:#334155; line-height:1.6; margin-bottom:16px;">
       Hello <strong>{name}</strong>,
     </p>
-    <p style="font-size:15px; color:#334155; line-height:1.6;">
-      Thank you for registering an account with OM Constructions. Please confirm your email address to activate your customer portal and access your project enquiries:
+    <p style="font-size:15px; color:#334155; line-height:1.6; margin-bottom:24px;">
+      Thank you for registering with OM Constructions. Use the verification code below to verify your email address and activate your client account:
     </p>
-    <div style="text-align:center; margin: 28px 0;">
-      <a href="{verification_link}" style="background-color:#0d1b2a; color:#ffffff !important; padding:12px 28px; text-decoration:none; border-radius:6px; font-weight:600; font-size:15px; display:inline-block;">Verify Email Address</a>
+    <div style="text-align:center; margin: 30px 0;">
+      <div style="display:inline-block; letter-spacing: 8px; font-size: 36px; font-weight: 800; color: #0d1b2a; background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 8px; padding: 14px 28px; font-family: 'Courier New', Courier, monospace;">
+        {otp}
+      </div>
     </div>
-    <p style="font-size:13px; color:#64748b;">This verification link will expire in 24 hours. If you did not create an account, you can safely ignore this message.</p>
-    <p style="font-size:12px; color:#94a3b8; word-break:break-all;">Direct link: <a href="{verification_link}">{verification_link}</a></p>
+    <p style="font-size:14px; color:#475569; text-align:center; font-weight: 600; margin-bottom: 24px;">
+      This verification code will expire in <strong>5 minutes</strong>.
+    </p>
+    <p style="font-size:13px; color:#64748b; line-height:1.5; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+      If you did not request this verification code, please disregard this email. Your email address remains secure.
+    </p>
     """
     html = render_email(
-        preheader="Confirm your OM Constructions account",
-        heading="Verify Your Email",
+        preheader=f"Your OM Constructions verification code is {otp}",
+        heading="Verify Your Account",
         body_html=body_html
     )
 
-    print(f"\n==================== VERIFICATION EMAIL ====================")
+    print(f"\n==================== OTP VERIFICATION EMAIL ====================")
     print(f"TO: {name} <{to_email}>")
     print(f"SUBJECT: {subject}")
-    print(f"VERIFICATION LINK: {verification_link}")
-    print(f"===========================================================\n")
+    print(f"OTP CODE: {otp} (Expires in 5 minutes)")
+    print(f"================================================================\n")
 
     try:
         if settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD:
             send_email(to=to_email, subject=subject, html=html)
     except Exception as err:
-        print(f"[EMAIL SERVICE] Verification email dispatch notice: {err}")
+        print(f"[EMAIL SERVICE] OTP email dispatch failed: {err}")
+        raise err
 
     return True
 

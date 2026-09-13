@@ -10,6 +10,9 @@ from app.services.token_service import create_verification_token
 
 client = TestClient(app, base_url="http://localhost:8000")
 
+from datetime import datetime, timezone, timedelta
+from app.services.auth_service import hash_otp
+
 def run_tests():
     # Setup tables
     Base.metadata.create_all(bind=engine)
@@ -38,20 +41,23 @@ def run_tests():
     assert "Please enter a valid email address" in res.json()["detail"]
     print("✓ Domain without MX records rejected with generic 400")
 
-    print("--- 2. Testing Successful Signup (Unverified & No Cookie) ---")
+    print("--- 2. Testing Successful Signup (OTP Stored, Unverified & No Cookie) ---")
     client.cookies.clear()
     res = client.post("/api/v1/auth/signup", json={"name": "Alice Wonderland", "email": "alice@gmail.com", "password": "password123"})
     assert res.status_code == 200, f"Signup failed: {res.text}"
     data = res.json()
     assert data["success"] is True
-    assert "Check your email" in data["message"]
-    assert "access_token" not in res.cookies, "Cookie should NOT be issued before email verification"
+    assert "Enter the code" in data["message"]
+    assert data["email"] == "alice@gmail.com"
+    assert "access_token" not in res.cookies, "Cookie should NOT be issued before OTP verification"
 
     alice_user = db.query(models.User).filter(models.User.email == "alice@gmail.com").first()
     assert alice_user is not None
     assert alice_user.is_verified is False
-    assert alice_user.verification_sent_at is not None
-    print("✓ Successful signup creates unverified user and issues NO session cookie")
+    assert alice_user.otp_hash is not None
+    assert alice_user.otp_expires_at is not None
+    assert alice_user.otp_attempts == 0
+    print("✓ Successful signup creates unverified user with hashed OTP and issues NO session cookie")
 
     print("--- 3. Testing Duplicate Signup Rejection ---")
     res = client.post("/api/v1/auth/signup", json={"name": "Alice 2", "email": "alice@gmail.com", "password": "password123"})
@@ -67,54 +73,96 @@ def run_tests():
     assert "access_token" not in res.cookies
     print("✓ Unverified user login blocked with 403 email_not_verified")
 
-    print("--- 5. Testing Email Verification ---")
-    # Invalid token
-    res = client.get("/api/v1/auth/verify-email?token=invalid.tampered.token")
+    print("--- 5. Testing OTP Verification: Wrong Code, Attempt Limiting, and Expiration ---")
+    # Nonexistent user or wrong OTP
+    res = client.post("/api/v1/auth/verify-otp", json={"email": "nonexistent@gmail.com", "otp": "123456"})
     assert res.status_code == 400
     assert "Invalid or expired" in res.json()["detail"]
-    print("✓ Invalid token rejected with 400")
+    print("✓ Non-existent account returns generic 400 anti-enumeration")
 
-    # Valid token
-    verify_token = create_verification_token(alice_user.id)
-    res = client.get(f"/api/v1/auth/verify-email?token={verify_token}")
+    # Set known test OTP on Alice
+    known_otp = "654321"
+    alice_user.otp_hash = hash_otp(known_otp)
+    alice_user.otp_attempts = 0
+    alice_user.otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+    db.commit()
+
+    # Wrong OTP increments attempt count
+    res = client.post("/api/v1/auth/verify-otp", json={"email": "alice@gmail.com", "otp": "999999"})
+    assert res.status_code == 400
+    assert "Invalid or expired" in res.json()["detail"]
+    db.refresh(alice_user)
+    assert alice_user.otp_attempts == 1
+    print("✓ Wrong OTP rejected with generic 400 and increments otp_attempts")
+
+    # Simulate 5 failed attempts (lockout with 429)
+    alice_user.otp_attempts = 5
+    db.commit()
+    res = client.post("/api/v1/auth/verify-otp", json={"email": "alice@gmail.com", "otp": known_otp})
+    assert res.status_code == 429
+    assert "Too many attempts" in res.json()["detail"]
+    print("✓ 5+ failed attempts triggers 429 Too Many Attempts")
+
+    # Simulate expired OTP
+    alice_user.otp_attempts = 0
+    alice_user.otp_expires_at = datetime.now(timezone.utc) - timedelta(seconds=10)
+    db.commit()
+    res = client.post("/api/v1/auth/verify-otp", json={"email": "alice@gmail.com", "otp": known_otp})
+    assert res.status_code == 400
+    assert "Code expired" in res.json()["detail"]
+    print("✓ Expired code rejected with 400 Code expired")
+
+    print("--- 6. Testing Successful OTP Verification & Immediate Session Login ---")
+    alice_user.otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+    alice_user.otp_attempts = 0
+    db.commit()
+
+    client.cookies.clear()
+    res = client.post("/api/v1/auth/verify-otp", json={"email": "alice@gmail.com", "otp": known_otp})
     assert res.status_code == 200
     assert res.json()["success"] is True
+    assert "access_token" in res.cookies, "Correct OTP verification must set the session cookie"
+    session_cookie = res.cookies["access_token"]
 
     db.refresh(alice_user)
     assert alice_user.is_verified is True
-    print("✓ Valid token verifies user and sets is_verified=True in database")
+    assert alice_user.otp_hash is None
+    assert alice_user.otp_expires_at is None
+    assert alice_user.otp_attempts == 0
+    print("✓ Correct OTP verifies user, sets session cookie, and clears OTP fields")
 
-    print("--- 6. Testing Login After Verification ---")
+    print("--- 7. Testing /auth/me with Verified Session ---")
+    res = client.get("/api/v1/auth/me", cookies={"access_token": session_cookie})
+    assert res.status_code == 200
+    assert res.json()["name"] == "Alice Wonderland"
+    print("✓ /auth/me returns authenticated user profile via session cookie")
+
+    print("--- 8. Testing Normal Password Login for Verified User ---")
     client.cookies.clear()
     res = client.post("/api/v1/auth/login", json={"email": "alice@gmail.com", "password": "password123"})
     assert res.status_code == 200
     assert "access_token" in res.cookies
-    alice_cookie = res.cookies["access_token"]
-    print("✓ Verified user can now log in successfully and receives session cookie")
+    print("✓ Verified user logs in with password normally without needing another OTP")
 
-    print("--- 7. Testing /auth/me with Verified Session ---")
-    res = client.get("/api/v1/auth/me", cookies={"access_token": alice_cookie})
-    assert res.status_code == 200
-    assert res.json()["name"] == "Alice Wonderland"
-    print("✓ /auth/me returns authenticated user profile")
-
-    print("--- 8. Testing Resend Verification ---")
+    print("--- 9. Testing Resend OTP ---")
     # Unverified user resend
     bob = models.User(name="Bob", email="bob@gmail.com", password_hash="hash", is_verified=False)
     db.add(bob)
     db.commit()
 
-    res = client.post("/api/v1/auth/resend-verification", json={"email": "bob@gmail.com"})
+    res = client.post("/api/v1/auth/resend-otp", json={"email": "bob@gmail.com"})
     assert res.status_code == 200
     assert "If that account exists" in res.json()["message"]
+    db.refresh(bob)
+    assert bob.otp_hash is not None
+    assert bob.otp_attempts == 0
 
-    # Non-existent user resend (same generic response)
-    res = client.post("/api/v1/auth/resend-verification", json={"email": "nonexistent@gmail.com"})
-    assert res.status_code == 200
-    assert "If that account exists" in res.json()["message"]
-    print("✓ Resend verification endpoint returns generic 200 for existing and non-existing accounts")
+    # Second immediate call from same client should trigger rate limiter (1/minute)
+    res = client.post("/api/v1/auth/resend-otp", json={"email": "nonexistent@gmail.com"})
+    assert res.status_code == 429
+    print("✓ Resend OTP endpoint is strictly rate-limited (1 request per minute per IP triggers 429)")
 
-    print("--- 9. Testing Submissions with Verified Account ---")
+    print("--- 10. Testing Submissions with Verified Account ---")
     res = client.post(
         "/api/v1/contact/",
         json={
@@ -124,19 +172,19 @@ def run_tests():
             "project_type": "Structural Engineering",
             "message": "Consultation request for residential project."
         },
-        cookies={"access_token": alice_cookie}
+        cookies={"access_token": session_cookie}
     )
     assert res.status_code == 200
     sub_id = res.json()["id"]
 
-    res = client.get("/api/v1/me/submissions", cookies={"access_token": alice_cookie})
+    res = client.get("/api/v1/me/submissions", cookies={"access_token": session_cookie})
     assert res.status_code == 200
     subs = res.json()
     assert len(subs) == 1
     assert subs[0]["id"] == sub_id
     print("✓ Verified user submissions correctly linked and retrieved")
 
-    print("\nALL EMAIL VERIFICATION TESTS PASSED SUCCESSFULLY!")
+    print("\nALL 5-MINUTE OTP VERIFICATION TESTS PASSED SUCCESSFULLY!")
     db.close()
 
 if __name__ == "__main__":

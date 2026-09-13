@@ -1,8 +1,19 @@
+import secrets
+import hashlib
 from email_validator import validate_email, EmailNotValidError
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def generate_otp() -> str:
+    return f"{secrets.randbelow(900000) + 100000}"  # 6-digit, 100000-999999
+
+def hash_otp(otp: str) -> str:
+    return hashlib.sha256(otp.encode()).hexdigest()  # OTP is short-lived + attempt-limited, sha256 is fine here
+
+def verify_otp_hash(otp: str, otp_hash: str) -> bool:
+    return hashlib.sha256(otp.encode()).hexdigest() == otp_hash
 
 DISPOSABLE_DOMAINS = {
     "mailinator.com",

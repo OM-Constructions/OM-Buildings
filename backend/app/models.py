@@ -18,7 +18,9 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     phone: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False, server_default=false(), nullable=False)
-    verification_sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    otp_hash: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    otp_expires_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    otp_attempts: Mapped[int] = mapped_column(Integer, default=0, server_default="0", nullable=False)
     last_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)
