@@ -135,6 +135,26 @@ export async function initServiceDetailPageEnquiry() {
         if (form.elements.message && savedDraft.message) form.elements.message.value = savedDraft.message;
     }
 
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async (e) => {
+            const user = await getCurrentUser().catch(() => null);
+            if (!user) {
+                e.preventDefault();
+                e.stopPropagation();
+                const name = form.elements.name ? form.elements.name.value.trim() : '';
+                const email = form.elements.email ? form.elements.email.value.trim() : '';
+                const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
+                const message = form.elements.message ? form.elements.message.value.trim() : '';
+                try {
+                    sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
+                } catch (err) {}
+                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
+                window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
+                return;
+            }
+        });
+    }
+
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -268,8 +288,30 @@ export async function initGlobalEnquiryForm() {
         if (form.elements.message && savedDraft.message) form.elements.message.value = savedDraft.message;
     }
 
-    if (form.dataset.enquiryBound === 'true') return;
-    form.dataset.enquiryBound = 'true';
+    if (submitBtn) {
+        submitBtn.addEventListener('click', async (e) => {
+            const user = await getCurrentUser().catch(() => null);
+            if (!user) {
+                e.preventDefault();
+                e.stopPropagation();
+                const name = form.elements.name ? form.elements.name.value.trim() : '';
+                const email = form.elements.email ? form.elements.email.value.trim() : '';
+                const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
+                const serviceSlug = form.elements.service_slug ? form.elements.service_slug.value : 'project-planning';
+                const location = form.elements.location ? form.elements.location.value.trim() : '';
+                const area = form.elements.area ? form.elements.area.value.trim() : '';
+                const rawMessage = form.elements.message ? form.elements.message.value.trim() : '';
+                try {
+                    sessionStorage.setItem('om_global_enquiry_draft', JSON.stringify({
+                        name, email, phone, service_slug: serviceSlug, location, area, message: rawMessage
+                    }));
+                } catch (err) {}
+                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#cta');
+                window.location.href = `./login.html?redirect=${returnUrl}&reason=enquiry_submit`;
+                return;
+            }
+        });
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
