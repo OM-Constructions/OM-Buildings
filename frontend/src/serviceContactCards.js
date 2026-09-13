@@ -34,31 +34,18 @@ function resolveServiceSlug(rawTitle) {
 }
 
 export function initServiceContactCards() {
-    // Target every .service-card element inside #services
+    // 1. Target every .service-card element inside #services (Homepage)
     const homepageCards = Array.from(document.querySelectorAll('#services .service-card'));
-    // Also support any detail page element with [data-service-name] or .service-page-enquiry-card
-    const detailTargets = Array.from(document.querySelectorAll('.service-page-enquiry-card, [data-service-name]'));
-    const targets = Array.from(new Set([...homepageCards, ...detailTargets]));
 
-    targets.forEach((cardEl, index) => {
-        // Skip headings if data-service-name was on h1/h2
-        if (cardEl.tagName === 'H1' || cardEl.tagName === 'H2') {
-            return;
-        }
-
+    homepageCards.forEach((cardEl, index) => {
         // Prevent double injection
         if (cardEl.dataset.enquiryInjected === 'true' || cardEl.querySelector('.enquiry-card-wrapper')) {
             return;
         }
 
-        // Read service name from [data-service-name] or child .service-title
-        let rawTitle = cardEl.getAttribute('data-service-name') || '';
-        if (!rawTitle) {
-            const titleEl = cardEl.querySelector('.service-title');
-            if (titleEl) {
-                rawTitle = titleEl.textContent.trim();
-            }
-        }
+        // Read service name from child .service-title
+        const titleEl = cardEl.querySelector('.service-title');
+        const rawTitle = titleEl ? titleEl.textContent.trim() : '';
 
         // Defensive: skip any element that doesn't match an entry in SERVICE_SLUGS
         const serviceEntry = resolveServiceSlug(rawTitle);
@@ -194,6 +181,136 @@ export function initServiceContactCards() {
         wrapper.appendChild(successDiv);
         cardEl.appendChild(wrapper);
     });
+
+    // 2. Target Service Detail Pages (Dedicated Enquiry Box)
+    initServiceDetailPageEnquiry();
+}
+
+function initServiceDetailPageEnquiry() {
+    // Look for explicit placeholder or the CTA container on service pages
+    const explicitTarget = document.querySelector('.service-page-enquiry-card, [data-service-name]');
+    const ctaContainer = document.querySelector('.sp-cta .container');
+
+    const targetEl = explicitTarget || ctaContainer;
+    if (!targetEl) return;
+
+    if (targetEl.dataset.detailEnquiryInjected === 'true' || targetEl.querySelector('.service-enquiry-box')) {
+        return;
+    }
+
+    // Determine service name from hero or attribute
+    let rawTitle = explicitTarget ? explicitTarget.getAttribute('data-service-name') : '';
+    if (!rawTitle) {
+        const heroTitle = document.querySelector('.service-page-hero h1, h1');
+        if (heroTitle) {
+            rawTitle = heroTitle.textContent.trim();
+        }
+    }
+
+    const serviceEntry = resolveServiceSlug(rawTitle);
+    if (!serviceEntry) return;
+
+    targetEl.dataset.detailEnquiryInjected = 'true';
+    const { name: serviceName, slug: serviceSlug } = serviceEntry;
+
+    const box = document.createElement('div');
+    box.className = 'service-enquiry-box';
+    box.id = 'service-detail-enquiry-box';
+
+    box.innerHTML = `
+        <div class="service-enquiry-header">
+            <div class="service-enquiry-badge">DIRECT SERVICE ENQUIRY</div>
+            <h3 class="service-enquiry-title">Enquire About ${escapeHTML(serviceName)}</h3>
+            <p class="service-enquiry-subtitle">Fill out the form below to receive a consultation and indicative estimate for your project.</p>
+        </div>
+        <form class="service-enquiry-form" id="form-service-detail-enquiry">
+            <div class="service-enquiry-row">
+                <div class="service-enquiry-field">
+                    <label for="sp-name">Your Name *</label>
+                    <input type="text" id="sp-name" name="name" required placeholder="Full name" class="service-enquiry-input" autocomplete="name" />
+                </div>
+                <div class="service-enquiry-field">
+                    <label for="sp-email">Email Address *</label>
+                    <input type="email" id="sp-email" name="email" required placeholder="name@example.com" class="service-enquiry-input" autocomplete="email" />
+                </div>
+            </div>
+            <div class="service-enquiry-row">
+                <div class="service-enquiry-field">
+                    <label for="sp-phone">Phone Number (optional)</label>
+                    <input type="tel" id="sp-phone" name="phone" placeholder="+91 / Phone" class="service-enquiry-input" autocomplete="tel" />
+                </div>
+                <div class="service-enquiry-field">
+                    <label for="sp-type">Service</label>
+                    <input type="text" id="sp-type" value="${escapeHTML(serviceName)}" class="service-enquiry-input service-enquiry-readonly" readonly />
+                </div>
+            </div>
+            <div class="service-enquiry-field">
+                <label for="sp-msg">Project Details / Requirements (optional)</label>
+                <textarea id="sp-msg" name="message" rows="3" placeholder="I'm interested in ${escapeHTML(serviceName)}." class="service-enquiry-textarea"></textarea>
+            </div>
+            <input type="text" name="honeypot" class="enquiry-honeypot" style="position:absolute; left:-9999px; opacity:0; pointer-events:none;" tabindex="-1" autocomplete="off" />
+            <div class="service-enquiry-actions">
+                <button type="submit" class="service-enquiry-submit-btn">Send Enquiry &rarr;</button>
+            </div>
+            <div class="service-enquiry-error" style="display: none;"></div>
+        </form>
+        <div class="service-enquiry-success" style="display: none;">
+            <div class="service-enquiry-success-icon">&#10003;</div>
+            <h4>Thank you!</h4>
+            <p>Thanks &mdash; we've received your enquiry for <strong>${escapeHTML(serviceName)}</strong> and sent you a confirmation email.</p>
+        </div>
+    `;
+
+    const form = box.querySelector('form');
+    const successEl = box.querySelector('.service-enquiry-success');
+    const errorEl = box.querySelector('.service-enquiry-error');
+    const submitBtn = box.querySelector('.service-enquiry-submit-btn');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        errorEl.style.display = 'none';
+        errorEl.textContent = '';
+
+        const name = form.elements.name.value.trim();
+        const email = form.elements.email.value.trim();
+        const phone = form.elements.phone.value.trim();
+        const message = form.elements.message.value.trim() || `I'm interested in ${serviceName}.`;
+        const honeypot = form.elements.honeypot.value;
+
+        if (honeypot) {
+            form.style.display = 'none';
+            successEl.style.display = 'block';
+            return;
+        }
+
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = 'Sending enquiry...';
+
+        try {
+            await submitEnquiry({
+                name,
+                email,
+                phone: phone || null,
+                serviceSlug: serviceSlug,
+                message,
+                honeypot: honeypot || ''
+            });
+
+            form.style.display = 'none';
+            successEl.style.display = 'block';
+        } catch (err) {
+            console.error('Service page enquiry error:', err);
+            errorEl.textContent = 'Failed to send your enquiry. Please check your connection or contact us directly.';
+            errorEl.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
+    });
+
+    targetEl.appendChild(box);
 }
 
 function escapeHTML(str) {

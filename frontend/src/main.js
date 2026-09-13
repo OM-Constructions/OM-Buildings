@@ -7,12 +7,16 @@ import { LogoInteraction } from './interaction.js';
 import { initHeroVisual } from './heroVisual.js';
 import { initServicesHover } from './servicesHover.js';
 import { initAIAssistant } from './aiAssistant.js';
+import { initServiceContactCards } from './serviceContactCards.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
 let scene, camera, renderer, logoSystem, interaction;
 
 async function init() {
+    // Initialize Per-Service Enquiry Cards
+    initServiceContactCards();
+
     // Initialize OM Engineering AI Consultant Box early
     initAIAssistant();
 

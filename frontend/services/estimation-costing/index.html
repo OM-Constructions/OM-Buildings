@@ -66,6 +66,7 @@
                 <h1>ESTIMATION & COSTING</h1>
                 
                 <p>Structured construction estimation and costing to support informed project planning, budgeting and decision-making.</p>
+                <a href="#enquire" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary); font-size: 0.85rem; padding: 10px 22px; margin-top: 15px; display: inline-block;">Enquire About This Service &rarr;</a>
                 <div class="service-hero-accent"></div>
             </div>
         </section>
@@ -149,13 +150,16 @@
             <img src="../../assets/services/estimation-costing.png" alt="ESTIMATION & COSTING Visual" class="gsap-reveal">
         </section>
 
-        <!-- 04 CTA -->
-        <section class="sp-section sp-cta">
+        <!-- 04 ENQUIRY & CTA -->
+        <section class="sp-section sp-cta" id="enquire">
             <div class="container gsap-reveal">
                 <span class="sp-label" style="color: var(--navy-primary);">04 &mdash; READY?</span>
                 <h2>HAVE A PROJECT IN MIND?</h2>
                 <p>Let's discuss your requirements.</p>
-                <a href="../../index.html#cta" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary);">START A PROJECT &rarr;</a>
+                <div class="service-page-enquiry-card"></div>
+                <div style="margin-top: 24px;">
+                    <a href="../../index.html#cta" class="btn-primary" style="background-color: var(--gold-accent); color: var(--navy-primary);">START A PROJECT &rarr;</a>
+                </div>
             </div>
         </section>
     </main>
@@ -184,6 +188,7 @@
 
     <!-- GSAP ANIMATIONS & CORE SCRIPTS -->
     <script type="module" src="../../src/main.js"></script>
+    <script type="module" src="../../src/serviceContactCards.js"></script>
     <script type="module">
         import gsap from 'gsap';
         import ScrollTrigger from 'gsap/ScrollTrigger';
