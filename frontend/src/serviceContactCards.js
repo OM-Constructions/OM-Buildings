@@ -320,13 +320,60 @@ export function initGlobalEnquiryForm() {
     const form = document.getElementById('global-enquiry-form');
     if (!form) return;
 
-    if (form.dataset.enquiryBound === 'true') return;
-    form.dataset.enquiryBound = 'true';
-
     const card = document.getElementById('global-enquiry-box');
     const successEl = card ? card.querySelector('.global-enquiry-success') : null;
     const errorEl = form.querySelector('.global-enquiry-error');
     const submitBtn = form.querySelector('.global-enquiry-submit-btn');
+
+    // Auto-recovery: if page was loaded with GET form parameters, submit immediately
+    if (typeof window !== 'undefined' && window.location.search) {
+        const params = new URLSearchParams(window.location.search);
+        const qName = params.get('name');
+        const qEmail = params.get('email');
+        const qMessage = params.get('message');
+        if (qName && qEmail && qMessage) {
+            const qPhone = params.get('phone') || '';
+            const qService = params.get('service_slug') || 'project-planning';
+            const qLocation = params.get('location') || '';
+            const qArea = params.get('area') || '';
+            const qHoneypot = params.get('honeypot') || '';
+
+            const meta = [];
+            if (qLocation) meta.push(`Location: ${qLocation}`);
+            if (qArea) meta.push(`Approx. Area / Type: ${qArea}`);
+            const fullMsg = meta.length ? `[${meta.join(' | ')}]\n\n${qMessage}` : qMessage;
+
+            // Clean address bar
+            window.history.replaceState({}, document.title, window.location.pathname + '#cta');
+
+            form.style.display = 'none';
+            if (successEl) {
+                successEl.style.display = 'block';
+                successEl.innerHTML = `
+                    <div class="service-enquiry-success-icon">&#10003;</div>
+                    <h4>Enquiry Received Successfully!</h4>
+                    <p>Thanks <strong>${escapeHTML(qName)}</strong> &mdash; we've received your project details and sent a confirmation email to <strong>${escapeHTML(qEmail)}</strong> and to our engineering team.</p>
+                `;
+            }
+
+            submitEnquiry({
+                name: qName,
+                email: qEmail,
+                phone: qPhone || null,
+                serviceSlug: qService,
+                message: fullMsg,
+                honeypot: qHoneypot
+            }).then(() => {
+                console.log('[AUTO-RECOVERY SUCCESS] Enquiry submitted and dual emails triggered.');
+            }).catch(err => {
+                console.error('[AUTO-RECOVERY ERROR]', err);
+            });
+            return;
+        }
+    }
+
+    if (form.dataset.enquiryBound === 'true') return;
+    form.dataset.enquiryBound = 'true';
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
