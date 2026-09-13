@@ -759,28 +759,23 @@
     </footer>
 
     <!-- ENTRY POINT -->
-<<<<<<< Updated upstream
     <script type="module" src="./src/main.js?v=30"></script>
     <script type="module" src="./src/serviceEnquiry.js?v=30"></script>
+    <script type="module" src="./src/serviceContactCards.js?v=8"></script>
+    <script type="module" src="./src/hillProject3D.js?v=1"></script>
     <script id="om-splash-safety-fallback">
         setTimeout(() => {
             const hp = document.getElementById("homepage-content");
             if (hp && (getComputedStyle(hp).opacity === "0" || getComputedStyle(hp).visibility === "hidden")) {
                 hp.style.opacity = "1";
                 hp.style.visibility = "visible";
-                const splash = document.getElementById("intro-splash");
-                if (splash) splash.style.display = "none";
+                // Intentionally keeping splash visible
                 const nav = document.getElementById("navbar");
                 if (nav) { nav.style.opacity = "1"; nav.style.visibility = "visible"; }
                 document.body.style.overflowY = "auto";
             }
         }, 2200);
     </script>
-=======
-    <script type="module" src="./src/main.js?v=8"></script>
-    <script type="module" src="./src/serviceContactCards.js?v=8"></script>
-    <script type="module" src="./src/hillProject3D.js?v=1"></script>
->>>>>>> Stashed changes
 </body>
 
 </html>
