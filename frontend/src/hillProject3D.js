@@ -159,14 +159,6 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
             // Center model at origin
             model.position.sub(scaledCenter);
 
-            // Add soft shadow plane at the bottom of the model
-            const planeGeo = new THREE.PlaneGeometry(targetSize * 5, targetSize * 5);
-            const planeMat = new THREE.ShadowMaterial({ opacity: 0.15 });
-            const plane = new THREE.Mesh(planeGeo, planeMat);
-            plane.rotation.x = -Math.PI / 2;
-            plane.position.y = model.position.y + scaledBox.min.y;
-            plane.receiveShadow = true;
-            scene.add(plane);
 
             scene.add(model);
 
@@ -245,6 +237,7 @@ function initAllProjects() {
                         initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
                         initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
                         initProject3D('industrial-project-container', 'industrial-project-fallback', './assets/models/industrial-project.glb', { exposure: 1.0 });
+                        initProject3D('residential-project-container', 'residential-project-fallback', './assets/models/residential-project.glb', { exposure: 1.0 });
                         observer.disconnect();
                     }
                 });
@@ -255,6 +248,7 @@ function initAllProjects() {
             initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
             initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
             initProject3D('industrial-project-container', 'industrial-project-fallback', './assets/models/industrial-project.glb', { exposure: 1.0 });
+            initProject3D('residential-project-container', 'residential-project-fallback', './assets/models/residential-project.glb', { exposure: 1.0 });
         }
     }
 
