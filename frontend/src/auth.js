@@ -4,6 +4,33 @@ export const API_BASE_URL =
     ? (window.location.port === "8000" ? "" : "http://localhost:8000")
     : "https://om-buildings.onrender.com");
 
+export function getStoredToken() {
+  try {
+    return localStorage.getItem("om_auth_token") || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function setStoredToken(token) {
+  try {
+    if (token) {
+      localStorage.setItem("om_auth_token", token);
+    } else {
+      localStorage.removeItem("om_auth_token");
+    }
+  } catch (e) {}
+}
+
+export function getAuthHeaders(extraHeaders = {}) {
+  const token = getStoredToken();
+  const headers = { ...extraHeaders };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 /**
  * Register a new customer account
  * @param {{ name: string, email: string, password: string }}
@@ -26,7 +53,7 @@ export async function signup({ name, email, password }) {
 /**
  * Log in with email and password
  * @param {{ email: string, password: string }}
- * @returns {Promise<{ success: boolean, name: string }>}
+ * @returns {Promise<{ success: boolean, name: string, token?: string }>}
  */
 export async function login({ email, password }) {
   const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
@@ -45,6 +72,7 @@ export async function login({ email, password }) {
   try {
     localStorage.setItem("om_logged_in", "true");
     if (data.name) localStorage.setItem("om_user_name", data.name);
+    if (data.token) setStoredToken(data.token);
   } catch (e) {}
   return data;
 }
@@ -78,6 +106,7 @@ export async function verifyOtp(arg1, arg2) {
   try {
     localStorage.setItem("om_logged_in", "true");
     if (data.name) localStorage.setItem("om_user_name", data.name);
+    if (data.token) setStoredToken(data.token);
   } catch (e) {}
   return data;
 }
@@ -103,16 +132,19 @@ export async function resendOtp(email) {
 }
 
 /**
- * Log out and clear session cookie
+ * Log out and clear session cookie & stored auth tokens
  * @returns {Promise<{ success: boolean, message: string }>}
  */
 export async function logout() {
+  const headers = getAuthHeaders();
   try {
     localStorage.removeItem("om_logged_in");
     localStorage.removeItem("om_user_name");
+    setStoredToken(null);
   } catch (e) {}
   const res = await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
     method: "POST",
+    headers,
     credentials: "include",
   });
   const data = await res.json().catch(() => ({}));
@@ -128,7 +160,7 @@ export async function logout() {
  */
 export function isStoredUserLoggedIn() {
   try {
-    return localStorage.getItem("om_logged_in") === "true";
+    return localStorage.getItem("om_logged_in") === "true" || !!getStoredToken();
   } catch (e) {
     return false;
   }
@@ -142,12 +174,14 @@ export async function getCurrentUser() {
   try {
     const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
       method: "GET",
+      headers: getAuthHeaders(),
       credentials: "include",
     });
     if (!res.ok) {
       try {
         localStorage.removeItem("om_logged_in");
         localStorage.removeItem("om_user_name");
+        setStoredToken(null);
       } catch (e) {}
       return null;
     }
@@ -169,6 +203,7 @@ export async function getCurrentUser() {
 export async function getMySubmissions() {
   const res = await fetch(`${API_BASE_URL}/api/v1/me/submissions`, {
     method: "GET",
+    headers: getAuthHeaders(),
     credentials: "include",
   });
   const data = await res.json().catch(() => ({}));

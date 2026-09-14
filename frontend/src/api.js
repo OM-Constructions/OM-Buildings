@@ -6,9 +6,14 @@ export const API_BASE_URL =
 
 export async function submitEnquiry({ name, email, phone, serviceSlug, projectType, message, honeypot }) {
   const slug = serviceSlug || projectType;
+  const headers = { "Content-Type": "application/json" };
+  try {
+    const token = localStorage.getItem("om_auth_token");
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  } catch (e) {}
   const res = await fetch(`${API_BASE_URL}/api/v1/enquiries/`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     credentials: "include",
     body: JSON.stringify({
       name,

@@ -58,6 +58,7 @@ class UserResponse(BaseModel):
 class AuthSuccessResponse(BaseModel):
     success: bool = True
     name: str
+    token: Optional[str] = None
 
 class GenericMessageResponse(BaseModel):
     success: bool = True

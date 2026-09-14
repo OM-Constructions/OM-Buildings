@@ -123,7 +123,7 @@
                 const user = await getCurrentUser();
                 if (!user) {
                     // Redirect to login if not authenticated
-                    window.location.href = "./login.html";
+                    window.location.href = "./login.html?redirect=" + encodeURIComponent("./my-requests.html");
                     return;
                 }
 

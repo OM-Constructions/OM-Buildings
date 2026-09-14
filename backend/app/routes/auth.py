@@ -32,9 +32,14 @@ COOKIE_MAX_AGE = settings.ACCESS_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> models.User:
-    """Dependency that extracts the logged-in user from the httpOnly session cookie.
-    Raises 401 if unauthenticated or session is invalid."""
+    """Dependency that extracts the logged-in user from the httpOnly session cookie
+    OR Authorization Bearer header. Raises 401 if unauthenticated or session is invalid."""
     token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        auth_header = request.headers.get("Authorization") or request.headers.get("authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
+
     if not token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -67,8 +72,13 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> models.
 
 
 def get_optional_current_user(request: Request, db: Session = Depends(get_db)) -> Optional[models.User]:
-    """Dependency that returns the current user if a valid session cookie exists, or None."""
+    """Dependency that returns the current user if a valid session cookie exists or Bearer token is provided, or None."""
     token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        auth_header = request.headers.get("Authorization") or request.headers.get("authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
+
     if not token:
         return None
     
@@ -90,18 +100,30 @@ def is_expired(expires_at: Optional[datetime]) -> bool:
     return expires_at < now
 
 
-def set_auth_cookie(response: Response, user_id: Any) -> None:
-    """Helper to issue a signed JWT access token in an httpOnly cookie."""
+def set_auth_cookie(response: Response, user_id: Any, request: Optional[Request] = None) -> str:
+    """Helper to issue a signed JWT access token in an httpOnly cookie and return the token string."""
     token = create_access_token(user_id)
+    # Check if request is HTTPS or running in production behind a proxy (like Render)
+    is_secure = False
+    if request:
+        proto = request.headers.get("x-forwarded-proto", "")
+        scheme = getattr(request.url, "scheme", "")
+        is_secure = scheme == "https" or proto == "https"
+    else:
+        is_secure = settings.FRONTEND_URL.startswith("https://")
+
+    # In modern browsers, cross-site cookies between Vercel and Render require SameSite=None and Secure=True
+    samesite_val = "none" if is_secure else "lax"
     response.set_cookie(
         key=COOKIE_NAME,
         value=token,
         max_age=COOKIE_MAX_AGE,
         httponly=True,
-        samesite="lax",
-        secure=False,  # Set to True in production with HTTPS
+        samesite=samesite_val,
+        secure=is_secure,
         path="/"
     )
+    return token
 
 
 @router.post("/signup", response_model=schemas.SignupResponse)
@@ -208,10 +230,10 @@ def verify_otp(
     user.last_login_at = datetime.utcnow()
     db.commit()
 
-    # Set session cookie (log them in)
-    set_auth_cookie(response, user.id)
+    # Set session cookie (log them in) and obtain token
+    token = set_auth_cookie(response, user.id, request)
 
-    return {"success": True, "name": user.name}
+    return {"success": True, "name": user.name, "token": token}
 
 
 @router.post("/resend-otp", response_model=schemas.GenericMessageResponse)
@@ -273,20 +295,25 @@ def login(
     user.last_login_at = datetime.utcnow()
     db.commit()
 
-    # Set session cookie
-    set_auth_cookie(response, user.id)
+    # Set session cookie and obtain token
+    token = set_auth_cookie(response, user.id, request)
 
-    return {"success": True, "name": user.name}
+    return {"success": True, "name": user.name, "token": token}
 
 
 @router.post("/logout")
-def logout(response: Response):
+def logout(request: Request, response: Response):
     """Clear session cookie."""
+    proto = request.headers.get("x-forwarded-proto", "")
+    scheme = getattr(request.url, "scheme", "")
+    is_secure = scheme == "https" or proto == "https" or settings.FRONTEND_URL.startswith("https://")
+    samesite_val = "none" if is_secure else "lax"
     response.delete_cookie(
         key=COOKIE_NAME,
         path="/",
         httponly=True,
-        samesite="lax"
+        samesite=samesite_val,
+        secure=is_secure
     )
     return {"success": True, "message": "Logged out successfully"}
 
