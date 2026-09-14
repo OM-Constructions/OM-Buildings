@@ -52,12 +52,16 @@ async function init() {
         return;
     }
 
-    // 4. On Homepage: initialize homepage-specific components
-    initHeroVisual();
-    initScrollAnimations();
-    initNavbarScroll();
-    initMobileNav();
-    initServicesHover();
+    // 4. On Homepage: initialize homepage-specific components safely
+    try {
+        initHeroVisual();
+        initScrollAnimations();
+        initNavbarScroll();
+        initMobileNav();
+        initServicesHover();
+    } catch (e) {
+        console.warn('Component initialization warning:', e);
+    }
 
     try {
         scene = new THREE.Scene();
@@ -74,14 +78,23 @@ async function init() {
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
         logoSystem = new LogoSystem(scene);
-        await logoSystem.loadAssets();
+        
+        // Timeout race: if textures take longer than 4s on slow networks, fail gracefully to reveal page
+        const loadTimeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Logo texture loading timed out")), 4000)
+        );
+        await Promise.race([logoSystem.loadAssets(), loadTimeout]);
         logoSystem.updateScale(w, h);
 
         interaction = new LogoInteraction(camera, logoSystem, renderer);
 
         window.addEventListener('resize', onWindowResize);
+        
+        // Immediately start render loop so canvas draws frame 1
+        renderer.setAnimationLoop(render);
+
         // Pause WebGL rendering when intro-splash is scrolled out of view
-        if (splashSection) {
+        if (splashSection && window.IntersectionObserver) {
             const observer = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting) {
                     renderer.setAnimationLoop(render);
@@ -90,8 +103,6 @@ async function init() {
                 }
             });
             observer.observe(splashSection);
-        } else {
-            renderer.setAnimationLoop(render);
         }
 
         playLogoAnimation(logoSystem, interaction, renderer);

@@ -48,7 +48,7 @@ export async function initServiceContactCards() {
 }
 
 /**
- * Initializes the enquiry form on Service Detail Pages (/services/*/index.html)
+ * Initializes the enquiry form on Service Detail Pages (/services/[slug]/index.html)
  */
 export function initServiceDetailPageEnquiry() {
     // Deduplicate any duplicate enquiry boxes if present
