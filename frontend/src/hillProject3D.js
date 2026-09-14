@@ -234,26 +234,49 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
 // Initialize lazily when user scrolls near the work section
 function initAllProjects() {
     const workSection = document.getElementById('work');
-    if (!workSection) return;
+    if (workSection) {
+        let workInitialized = false;
+        if (window.IntersectionObserver) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !workInitialized) {
+                        workInitialized = true;
+                        // Lazy initialize models only when the section approaches
+                        initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
+                        initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
+                        initProject3D('industrial-project-container', 'industrial-project-fallback', './assets/models/industrial-project.glb', { exposure: 1.0 });
+                        observer.disconnect();
+                    }
+                });
+            }, { rootMargin: '400px 0px' });
+            observer.observe(workSection);
+        } else {
+            // Fallback for very old browsers
+            initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
+            initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
+            initProject3D('industrial-project-container', 'industrial-project-fallback', './assets/models/industrial-project.glb', { exposure: 1.0 });
+        }
+    }
 
-    let initialized = false;
-    if (window.IntersectionObserver) {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting && !initialized) {
-                    initialized = true;
-                    // Lazy initialize models only when the section approaches
-                    initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
-                    initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
-                    observer.disconnect();
-                }
-            });
-        }, { rootMargin: '400px 0px' });
-        observer.observe(workSection);
-    } else {
-        // Fallback for very old browsers
-        initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
-        initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
+    const interiorSection = document.getElementById('interior-projects');
+    if (interiorSection) {
+        let interiorInitialized = false;
+        if (window.IntersectionObserver) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !interiorInitialized) {
+                        interiorInitialized = true;
+                        initProject3D('interior-living-room-container', 'interior-living-room-fallback', './assets/models/interior-living-room.glb', { exposure: 1.2 });
+                        initProject3D('interior-office-container', 'interior-office-fallback', './assets/models/interior-office.glb', { exposure: 1.2 });
+                        observer.disconnect();
+                    }
+                });
+            }, { rootMargin: '400px 0px' });
+            observer.observe(interiorSection);
+        } else {
+            initProject3D('interior-living-room-container', 'interior-living-room-fallback', './assets/models/interior-living-room.glb', { exposure: 1.2 });
+            initProject3D('interior-office-container', 'interior-office-fallback', './assets/models/interior-office.glb', { exposure: 1.2 });
+        }
     }
 }
 
