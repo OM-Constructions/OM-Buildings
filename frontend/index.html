@@ -60,22 +60,35 @@
                     </span>
                     <a href="#cta" class="btn-primary">Let's Talk</a>
                     <script type="module">
-                        import { getCurrentUser, logout } from "./src/auth.js";
+                        import { getCurrentUser, logout, isStoredUserLoggedIn } from "./src/auth.js";
                         const container = document.getElementById("nav-auth-container");
                         if (container) {
+                            function renderLoggedInNav() {
+                                container.innerHTML = `
+                                    <a href="./my-requests.html" class="nav-auth-link nav-auth-login" style="color: var(--gold-accent); font-weight: 600;">My Requests</a>
+                                    <a href="#" id="nav-logout-link" class="nav-auth-link nav-auth-signup">Log Out</a>
+                                `;
+                                document.getElementById("nav-logout-link")?.addEventListener("click", async (e) => {
+                                    e.preventDefault();
+                                    await logout().catch(() => { });
+                                    window.location.reload();
+                                });
+                            }
+
+                            if (isStoredUserLoggedIn()) {
+                                renderLoggedInNav();
+                            }
+
                             getCurrentUser().then(user => {
                                 if (user) {
+                                    renderLoggedInNav();
+                                } else if (!isStoredUserLoggedIn()) {
                                     container.innerHTML = `
-                                        <a href="./my-requests.html" class="nav-auth-link nav-auth-login" style="color: var(--gold-accent); font-weight: 600;">My Requests</a>
-                                        <a href="#" id="nav-logout-link" class="nav-auth-link nav-auth-signup">Log Out</a>
+                                        <a href="./login.html" class="nav-auth-link nav-auth-login">Log In</a>
+                                        <a href="./signup.html" class="nav-auth-link nav-auth-signup">Sign Up</a>
                                     `;
-                                    document.getElementById("nav-logout-link")?.addEventListener("click", async (e) => {
-                                        e.preventDefault();
-                                        await logout().catch(() => { });
-                                        window.location.reload();
-                                    });
                                 }
-                            });
+                            }).catch(() => {});
                         }
                     </script>
                 </div>

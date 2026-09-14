@@ -182,10 +182,17 @@
         if (savedDraftName && nameInput && !nameInput.value) nameInput.value = savedDraftName;
         if (savedDraftEmail && emailInput && !emailInput.value) emailInput.value = savedDraftEmail;
 
-        // If already logged in, redirect straight to target page or my-requests
+        function getRedirectTarget() {
+            if (redirectUrl && !redirectUrl.includes("my-requests.html")) {
+                return redirectUrl;
+            }
+            return "./index.html";
+        }
+
+        // If already logged in, redirect straight to target page or home page
         getCurrentUser().then(user => {
-            if (user) window.location.href = redirectUrl || "./my-requests.html";
-        });
+            if (user) window.location.href = getRedirectTarget();
+        }).catch(() => {});
 
         const form = document.getElementById("signupForm");
         const otpForm = document.getElementById("otpForm");
@@ -387,7 +394,7 @@
                 verifyOtpBtn.innerHTML = "<span>Verified! Redirecting...</span>";
                 if (countdownTimer) clearInterval(countdownTimer);
                 if (resendTimer) clearInterval(resendTimer);
-                window.location.href = redirectUrl || "./my-requests.html";
+                window.location.href = getRedirectTarget();
             } catch (err) {
                 showError(err.message || "Invalid or expired code. Please try again.");
                 verifyOtpBtn.disabled = false;
