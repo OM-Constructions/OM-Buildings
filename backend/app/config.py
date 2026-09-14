@@ -52,7 +52,7 @@ class Settings(BaseSettings):
     ]
 
     class Config:
-        env_file = ".env"
+        env_file = (os.path.join(BACKEND_DIR, ".env"), ".env")
         extra = "ignore"
 
 settings = Settings()

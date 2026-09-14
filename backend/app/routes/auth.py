@@ -167,8 +167,7 @@ def signup(
             return {
                 "success": True,
                 "message": "Enter the code sent to your email",
-                "email": clean_email,
-                "otp_hint": None if delivered else otp
+                "email": clean_email
             }
         else:
             raise HTTPException(
@@ -204,8 +203,7 @@ def signup(
     return {
         "success": True,
         "message": "Enter the code sent to your email",
-        "email": clean_email,
-        "otp_hint": None if delivered else otp
+        "email": clean_email
     }
 
 
@@ -294,8 +292,7 @@ def resend_otp(
 
     return {
         "success": True,
-        "message": "If that account exists, a new code has been sent",
-        "otp_hint": None if delivered else otp_val
+        "message": "If that account exists, a new code has been sent"
     }
 
 

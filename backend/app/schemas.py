@@ -63,7 +63,6 @@ class AuthSuccessResponse(BaseModel):
 class GenericMessageResponse(BaseModel):
     success: bool = True
     message: str
-    otp_hint: Optional[str] = None
 
 class VerifyOtpRequest(BaseModel):
     email: EmailStr
@@ -76,7 +75,6 @@ class SignupResponse(BaseModel):
     success: bool = True
     message: str = "Enter the code sent to your email"
     email: str
-    otp_hint: Optional[str] = None
 
 class SubmissionItem(BaseModel):
     id: Any
