@@ -1,0 +1,29 @@
+# Python environments
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+backend/venv/
+env/
+.env
+.env.*
+.venv/
+.python-version
+*.db
+*.sqlite
+*.sqlite3
+
+# Node
+node_modules/
+npm-debug.log*
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+
