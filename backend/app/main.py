@@ -49,7 +49,26 @@ def root():
 
 @app.get("/api/v1/health")
 def health_check():
-    return {"status": "ok", "message": "OM Buildings API is running"}
+    db_status = "ok"
+    db_error = None
+    try:
+        from app.database import engine
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = "error"
+        db_error = str(e)
+    return {
+        "status": "ok" if db_status == "ok" else "degraded",
+        "message": "OM Buildings API is running",
+        "db": {
+            "status": db_status,
+            "error": db_error,
+            "is_sqlite": is_sqlite,
+            "configured_url_type": "postgresql" if "postgres" in settings.DATABASE_URL else "sqlite"
+        }
+    }
 
 @app.get("/api/v1/health/test-smtp")
 def test_smtp_diagnostic():
