@@ -193,7 +193,7 @@ export async function getCurrentUser() {
       method: "GET",
       headers: getAuthHeaders(),
       credentials: "include",
-    }, 10000);
+    }, 20000);
     
     if (!res.ok) {
       // Only clear storage if explicitly rejected as unauthenticated
@@ -203,8 +203,9 @@ export async function getCurrentUser() {
           localStorage.removeItem("om_user_name");
           setStoredToken(null);
         } catch (e) {}
+        return null;
       }
-      return null;
+      throw new Error(`Server returned HTTP ${res.status}`);
     }
     const data = await res.json();
     try {
@@ -213,8 +214,10 @@ export async function getCurrentUser() {
     } catch (e) {}
     return data;
   } catch (err) {
-    console.warn("getCurrentUser check failed or timed out:", err.message);
-    return null;
+    console.warn("getCurrentUser check encountered network or server error:", err.message);
+    const networkErr = new Error(err.message || "Connection timeout");
+    networkErr.isNetworkError = true;
+    throw networkErr;
   }
 }
 
@@ -227,7 +230,7 @@ export async function getMySubmissions() {
     method: "GET",
     headers: getAuthHeaders(),
     credentials: "include",
-  }, 12000);
+  }, 20000);
   
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {

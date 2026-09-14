@@ -72,7 +72,7 @@
     </footer>
 
     <script type="module">
-        import { getCurrentUser, getMySubmissions, logout } from "./src/auth.js?v=33";
+        import { getCurrentUser, getMySubmissions, logout } from "./src/auth.js?v=34";
 
         const userGreeting = document.getElementById("userGreeting");
         const userEmailBadge = document.getElementById("userEmailBadge");
@@ -126,10 +126,12 @@
         }
 
         async function initPortal() {
+            let user = null;
             try {
                 // 1. Authenticate user session
-                const user = await getCurrentUser();
+                user = await getCurrentUser();
                 if (!user) {
+                    // Explicitly unauthenticated (401/403)
                     userEmailBadge.textContent = "Session expired";
                     submissionsContainer.innerHTML = `
                         <div style="padding: 40px; text-align: center; color: var(--text-muted);">
@@ -139,70 +141,82 @@
                     `;
                     setTimeout(() => {
                         window.location.href = "./login.html?redirect=" + encodeURIComponent("./my-requests.html");
-                    }, 1200);
+                    }, 1400);
+                    return;
+                }
+            } catch (connErr) {
+                console.warn("Auth check encountered network/cold-start issue:", connErr);
+                // Check if user previously logged in
+                const hasLocalToken = localStorage.getItem("om_logged_in") === "true" || !!localStorage.getItem("om_auth_token");
+                if (hasLocalToken) {
+                    userEmailBadge.textContent = "Connecting to backend...";
+                    submissionsContainer.innerHTML = `
+                        <div style="padding: 30px; text-align: center; color: var(--navy-primary);">
+                            <p style="margin-bottom: 8px; font-weight: 600;">Waking up secure server...</p>
+                            <p style="margin-bottom: 16px; font-size: 0.9rem; color: var(--text-muted);">
+                                The backend service is warming up. This may take 15–20 seconds.
+                            </p>
+                            <button onclick="location.reload()" class="btn-sm-primary" style="cursor: pointer; padding: 8px 20px;">Retry Now</button>
+                        </div>
+                    `;
+                    return;
+                } else {
+                    window.location.href = "./login.html?redirect=" + encodeURIComponent("./my-requests.html");
+                    return;
+                }
+            }
+
+            // Confirmed authenticated
+            userGreeting.textContent = `Welcome, ${user.name}`;
+            userEmailBadge.textContent = user.email;
+
+            // 2. Fetch customer submissions
+            try {
+                const submissions = await getMySubmissions();
+                const count = Array.isArray(submissions) ? submissions.length : 0;
+                submissionCountBadge.textContent = count;
+
+                if (!submissions || count === 0) {
+                    submissionsContainer.innerHTML = `
+                        <div class="portal-empty-state">
+                            <div class="portal-empty-icon">📁</div>
+                            <h3>No Enquiries Yet</h3>
+                            <p>You haven't submitted any construction or engineering enquiries with this account yet. Ready to start your project?</p>
+                            <a href="./index.html#cta" class="btn-primary" style="padding: 10px 20px;">Submit an Enquiry</a>
+                        </div>
+                    `;
                     return;
                 }
 
-                // Confirmed authenticated
-                userGreeting.textContent = `Welcome, ${user.name}`;
-                userEmailBadge.textContent = user.email;
-
-                // 2. Fetch customer submissions
-                try {
-                    const submissions = await getMySubmissions();
-                    const count = Array.isArray(submissions) ? submissions.length : 0;
-                    submissionCountBadge.textContent = count;
-
-                    if (!submissions || count === 0) {
-                        submissionsContainer.innerHTML = `
-                            <div class="portal-empty-state">
-                                <div class="portal-empty-icon">📁</div>
-                                <h3>No Enquiries Yet</h3>
-                                <p>You haven't submitted any construction or engineering enquiries with this account yet. Ready to start your project?</p>
-                                <a href="./index.html#cta" class="btn-primary" style="padding: 10px 20px;">Submit an Enquiry</a>
+                // Render submissions
+                let html = `<div class="submissions-list">`;
+                submissions.forEach((item) => {
+                    const refId = item.id ? String(item.id).substring(0, 8).toUpperCase() : "REQ";
+                    const serviceDisplay = item.project_type || item.service_slug || "General Consultation";
+                    html += `
+                        <article class="submission-item">
+                            <div class="submission-top">
+                                <div class="submission-meta-left">
+                                    <span class="submission-ref">#REQ-${refId}</span>
+                                    <span class="submission-project-type">${serviceDisplay}</span>
+                                    ${getStatusBadgeHtml(item.status)}
+                                </div>
+                                <span class="submission-date">${formatDate(item.created_at)}</span>
                             </div>
-                        `;
-                        return;
-                    }
-
-                    // Render submissions
-                    let html = `<div class="submissions-list">`;
-                    submissions.forEach((item) => {
-                        html += `
-                            <article class="submission-item">
-                                <div class="submission-top">
-                                    <div class="submission-meta-left">
-                                        <span class="submission-ref">#REQ-${item.id}</span>
-                                        <span class="submission-project-type">${item.project_type || "General Inquiry"}</span>
-                                        ${getStatusBadgeHtml(item.status)}
-                                    </div>
-                                    <span class="submission-date">${formatDate(item.created_at)}</span>
-                                </div>
-                                <div class="submission-body">
-                                    <p>${item.message}</p>
-                                </div>
-                            </article>
-                        `;
-                    });
-                    html += `</div>`;
-                    submissionsContainer.innerHTML = html;
-                } catch (subErr) {
-                    console.error("Failed to fetch enquiries:", subErr);
-                    submissionCountBadge.textContent = "—";
-                    submissionsContainer.innerHTML = `
-                        <div style="padding: 30px; text-align: center; color: #DC2626;">
-                            <p style="margin-bottom: 8px;"><strong>Unable to load your requests:</strong> ${subErr.message || "Request timed out"}</p>
-                            <button onclick="location.reload()" class="btn-sm-outline" style="cursor: pointer; padding: 6px 16px; margin-top: 8px;">Retry</button>
-                        </div>
+                            <div class="submission-body">
+                                <p>${item.message}</p>
+                            </div>
+                        </article>
                     `;
-                }
-
-            } catch (err) {
-                console.error("Failed to load portal data", err);
-                if (userEmailBadge) userEmailBadge.textContent = "Offline / Error";
+                });
+                html += `</div>`;
+                submissionsContainer.innerHTML = html;
+            } catch (subErr) {
+                console.error("Failed to fetch enquiries:", subErr);
+                submissionCountBadge.textContent = "—";
                 submissionsContainer.innerHTML = `
                     <div style="padding: 30px; text-align: center; color: #DC2626;">
-                        <p style="margin-bottom: 8px;">Error loading your requests: ${err.message || 'Connection lost'}</p>
+                        <p style="margin-bottom: 8px;"><strong>Unable to load your requests:</strong> ${subErr.message || "Request timed out"}</p>
                         <button onclick="location.reload()" class="btn-sm-outline" style="cursor: pointer; padding: 6px 16px; margin-top: 8px;">Retry</button>
                     </div>
                 `;
