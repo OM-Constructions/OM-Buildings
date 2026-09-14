@@ -31,10 +31,12 @@ class Settings(BaseSettings):
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "465"))
     SMTP_USER: str = os.getenv("SMTP_USER", os.getenv("EMAIL_FROM", "omengineeringconsultants06@gmail.com"))
-    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD", os.getenv("GMAIL_APP_PASSWORD", None))
+    SMTP_PASSWORD: Optional[str] = os.getenv("SMTP_PASSWORD", os.getenv("SMTP_PASS", os.getenv("GMAIL_APP_PASSWORD", None)))
+    SMTP_PASS: Optional[str] = SMTP_PASSWORD
     EMAIL_FROM: str = os.getenv("EMAIL_FROM", "omengineeringconsultants06@gmail.com")
-    COMPANY_NOTIFICATION_EMAIL: str = os.getenv("COMPANY_NOTIFICATION_EMAIL", os.getenv("EMAIL_TO", "omengineeringconsultants06@gmail.com"))
-    EMAIL_TO: str = COMPANY_NOTIFICATION_EMAIL
+    ENQUIRY_RECEIVER_EMAIL: str = os.getenv("ENQUIRY_RECEIVER_EMAIL", os.getenv("COMPANY_NOTIFICATION_EMAIL", os.getenv("EMAIL_TO", "omengineeringconsultants06@gmail.com")))
+    COMPANY_NOTIFICATION_EMAIL: str = ENQUIRY_RECEIVER_EMAIL
+    EMAIL_TO: str = ENQUIRY_RECEIVER_EMAIL
     GMAIL_APP_PASSWORD: Optional[str] = SMTP_PASSWORD
     RESEND_API_KEY: Optional[str] = os.getenv("RESEND_API_KEY", None)
     ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY", None)

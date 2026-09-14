@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
+from typing import Any
+
 from app.config import settings
 from app.routes import contact, auth, me, assistant
 
@@ -74,10 +76,12 @@ def health_check():
 def test_smtp_diagnostic():
     import smtplib
     import socket
-    results = {
+    password = (settings.SMTP_PASSWORD or settings.SMTP_PASS or settings.GMAIL_APP_PASSWORD or "").replace(" ", "")
+    user = settings.SMTP_USER or settings.EMAIL_FROM
+    results: dict[str, Any] = {
         "smtp_host": settings.SMTP_HOST,
-        "smtp_user": settings.SMTP_USER or settings.EMAIL_FROM,
-        "password_length": len((settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD or "").replace(" ", ""))
+        "smtp_user": user,
+        "password_length": len(password)
     }
 
     # 1. DNS check
@@ -89,9 +93,7 @@ def test_smtp_diagnostic():
 
     # 2. Port 465 check
     try:
-        with smtplib.SMTP_SSL(settings.SMTP_HOST, 465, timeout=7) as server:
-            password = (settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD or "").replace(" ", "")
-            user = settings.SMTP_USER or settings.EMAIL_FROM
+        with smtplib.SMTP_SSL(settings.SMTP_HOST, 465, timeout=10) as server:
             server.login(user, password)
             results["port_465"] = {"success": True, "message": "SSL connection & auth succeeded"}
     except Exception as e:
@@ -99,10 +101,8 @@ def test_smtp_diagnostic():
 
     # 3. Port 587 check
     try:
-        with smtplib.SMTP(settings.SMTP_HOST, 587, timeout=7) as server:
+        with smtplib.SMTP(settings.SMTP_HOST, 587, timeout=10) as server:
             server.starttls()
-            password = (settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD or "").replace(" ", "")
-            user = settings.SMTP_USER or settings.EMAIL_FROM
             server.login(user, password)
             results["port_587"] = {"success": True, "message": "STARTTLS connection & auth succeeded"}
     except Exception as e:

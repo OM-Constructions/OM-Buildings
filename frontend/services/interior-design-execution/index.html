@@ -212,46 +212,6 @@
                         </div>
                         <div class="service-enquiry-error" style="display: none;"></div>
                     </form>
-                        <script>
-                        (function() {
-                            var form = document.getElementById('form-service-detail-enquiry');
-                            if (!form) return;
-                            var btn = form.querySelector('.service-enquiry-submit-btn');
-                            var box = document.getElementById('service-detail-enquiry-box');
-                            var slug = box ? box.getAttribute('data-service-slug') : 'project-planning';
-
-                            var isAuthed = false;
-                            fetch('/api/v1/auth/me', { credentials: 'include' })
-                                .then(function(r) { return r.ok ? r.json() : null; })
-                                .then(function(u) { isAuthed = !!u; })
-                                .catch(function() { isAuthed = false; });
-
-                            function handleUnauthenticated(e) {
-                                if (!isAuthed) {
-                                    if (e) {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-                                    }
-                                    var name = form.elements.name ? form.elements.name.value.trim() : '';
-                                    var email = form.elements.email ? form.elements.email.value.trim() : '';
-                                    var phone = form.elements.phone ? form.elements.phone.value.trim() : '';
-                                    var message = form.elements.message ? form.elements.message.value.trim() : '';
-                                    try {
-                                        sessionStorage.setItem('om_service_detail_enquiry_' + slug, JSON.stringify({
-                                            name: name, email: email, phone: phone, message: message
-                                        }));
-                                    } catch (err) {}
-                                    var returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
-                                    window.location.href = '../../login.html?redirect=' + returnUrl + '&reason=enquiry_submit';
-                                    return false;
-                                }
-                            }
-
-                            if (btn) btn.addEventListener('click', handleUnauthenticated, true);
-                            form.addEventListener('submit', handleUnauthenticated, true);
-                        })();
-                        </script>
                     <div class="service-enquiry-success" style="display: none;">
                         <div class="service-enquiry-success-icon">&#10003;</div>
                         <h4>Thank you!</h4>

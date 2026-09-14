@@ -9,15 +9,43 @@ from .email_templates import (
     build_client_acknowledgement_html,
 )
 
+def verify_smtp_connection():
+    """Diagnostic helper that verifies SMTP server connection and authentication."""
+    password = (settings.SMTP_PASSWORD or settings.SMTP_PASS or settings.GMAIL_APP_PASSWORD or "").replace(" ", "")
+    user = settings.SMTP_USER or settings.EMAIL_FROM
+    if not password:
+        raise ValueError("SMTP_PASS / SMTP_PASSWORD is not configured.")
+
+    ports_to_try = [settings.SMTP_PORT]
+    if settings.SMTP_PORT == 465 and 587 not in ports_to_try:
+        ports_to_try.append(587)
+    elif settings.SMTP_PORT == 587 and 465 not in ports_to_try:
+        ports_to_try.append(465)
+
+    last_err = None
+    for port in ports_to_try:
+        try:
+            if port == 465:
+                with smtplib.SMTP_SSL(settings.SMTP_HOST, port, timeout=10) as server:
+                    server.login(user, password)
+            else:
+                with smtplib.SMTP(settings.SMTP_HOST, port, timeout=10) as server:
+                    server.starttls()
+                    server.login(user, password)
+            return {"success": True, "port": port}
+        except Exception as err:
+            last_err = err
+    raise last_err
+
 def send_via_smtp(to, subject, html, reply_to=None):
-    """Sends email directly via SMTP (e.g. Gmail SSL port 465 or STARTTLS 587)."""
-    password = (settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD or "").replace(" ", "")
+    """Sends email directly via SMTP (port 465 SSL or port 587 STARTTLS)."""
+    password = (settings.SMTP_PASSWORD or settings.SMTP_PASS or settings.GMAIL_APP_PASSWORD or "").replace(" ", "")
     user = settings.SMTP_USER or settings.EMAIL_FROM
 
     if not password:
-        print(f"\n[EMAIL NOTICE - SMTP LOCAL] To: {to} | Subject: {subject}")
-        print(f"SMTP_PASSWORD is not set yet in backend/.env. Email content logged locally.\n")
-        return "mock_smtp_id_local"
+        err_msg = "SMTP_PASS / SMTP_PASSWORD is not configured on the server."
+        print(f"[SMTP ERROR] {err_msg}")
+        raise ValueError(err_msg)
 
     msg = MIMEMultipart("alternative")
     msg["From"] = f"OM Constructions <{settings.EMAIL_FROM}>"
@@ -33,7 +61,7 @@ def send_via_smtp(to, subject, html, reply_to=None):
     else:
         recipients = [str(to)]
 
-    # Try configured port first with 4s timeout, then try fallback port (465 <-> 587)
+    # Try configured port first with 15s timeout, then fallback port (465 <-> 587)
     ports_to_try = [settings.SMTP_PORT]
     if settings.SMTP_PORT == 465 and 587 not in ports_to_try:
         ports_to_try.append(587)
@@ -44,11 +72,11 @@ def send_via_smtp(to, subject, html, reply_to=None):
     for port in ports_to_try:
         try:
             if port == 465:
-                with smtplib.SMTP_SSL(settings.SMTP_HOST, port, timeout=4) as server:
+                with smtplib.SMTP_SSL(settings.SMTP_HOST, port, timeout=15) as server:
                     server.login(user, password)
                     server.sendmail(settings.EMAIL_FROM, recipients, msg.as_string())
             else:
-                with smtplib.SMTP(settings.SMTP_HOST, port, timeout=4) as server:
+                with smtplib.SMTP(settings.SMTP_HOST, port, timeout=15) as server:
                     server.starttls()
                     server.login(user, password)
                     server.sendmail(settings.EMAIL_FROM, recipients, msg.as_string())
@@ -149,25 +177,7 @@ def send_via_brevo(to, subject, html, reply_to=None):
         raise err
 
 def send_email(to, subject, html, reply_to=None):
-    """Primary email dispatcher.
-    Prefers HTTPS REST APIs (Resend, Brevo) to bypass cloud host SMTP restrictions,
-    falling back to standard SMTP."""
-    # 1. Try Resend if configured
-    if settings.RESEND_API_KEY:
-        try:
-            return send_via_resend(to, subject, html, reply_to)
-        except Exception as err:
-            print(f"[EMAIL SERVICE] Resend failed, trying fallback: {err}")
-
-    # 2. Try Brevo if configured
-    import os
-    if os.getenv("BREVO_API_KEY"):
-        try:
-            return send_via_brevo(to, subject, html, reply_to)
-        except Exception as err:
-            print(f"[EMAIL SERVICE] Brevo failed, trying fallback: {err}")
-
-    # 3. Fall back to SMTP
+    """Primary email dispatcher using direct SMTP (SSL/TLS)."""
     return send_via_smtp(to, subject, html, reply_to)
 
 def send_company_notification(enquiry):

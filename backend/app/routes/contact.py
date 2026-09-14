@@ -77,19 +77,23 @@ def submit_enquiry(
             pass
 
     # 3. Send company notification
+    company_notified = False
     try:
         company_email_id = send_company_notification(enquiry)
         enquiry.status = "company_notified"
         enquiry.company_email_id = str(company_email_id) if company_email_id else None
+        company_notified = True
     except Exception as err:
         print(f"[ENQUIRY EMAIL ERROR] Company notification failed: {err}")
         enquiry.status = "company_notify_failed"
 
     # 4. Send client acknowledgement
+    client_ack_sent = False
     try:
         client_email_id = send_client_acknowledgement(enquiry)
         enquiry.client_ack_status = "sent"
         enquiry.client_email_id = str(client_email_id) if client_email_id else None
+        client_ack_sent = True
     except Exception as err:
         print(f"[ENQUIRY EMAIL ERROR] Client acknowledgement failed: {err}")
         enquiry.client_ack_status = "failed"
@@ -100,6 +104,13 @@ def submit_enquiry(
             db.commit()
         except Exception as err:
             print(f"[ENQUIRY DB ERROR] Failed to update email dispatch status: {err}")
+
+    # If neither email could be delivered, do not pretend it succeeded
+    if not company_notified and not client_ack_sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Unable to send enquiry email. Please try again or contact us directly."
+        )
 
     # 5. Return success
     return {

@@ -1,5 +1,13 @@
 import { submitEnquiry } from './api.js';
-import { getCurrentUser, isStoredUserLoggedIn } from './auth.js';
+import { 
+    getCurrentUser, 
+    isStoredUserLoggedIn, 
+    getStoredToken,
+    initAuth,
+    waitForAuth,
+    isAuthLoading,
+    getCachedUser
+} from './auth.js';
 
 // This map must stay in sync with backend/app/services/service_catalog.py
 const SERVICE_SLUGS = {
@@ -36,10 +44,20 @@ function resolveServiceSlug(rawTitle) {
 }
 
 /**
+ * Helper to check whether user is authenticated based on local storage credentials or cached user.
+ */
+function isUserAuthenticated() {
+    return isStoredUserLoggedIn() || !!getStoredToken() || !!getCachedUser();
+}
+
+/**
  * Main initialization entry point.
  * Note: Homepage service cards remain clean navigation links without enquiry tags.
  */
 export async function initServiceContactCards() {
+    // Start auth verification immediately in background
+    initAuth();
+
     // 1. Target Service Detail Pages (Dedicated Enquiry Box)
     initServiceDetailPageEnquiry();
 
@@ -85,8 +103,6 @@ export function initServiceDetailPageEnquiry() {
     }
 
     const serviceSlug = box.getAttribute('data-service-slug') || 'project-planning';
-    const serviceName = box.getAttribute('data-service-name') || 'Project Consultation';
-
     const form = box.querySelector('#form-service-detail-enquiry');
     if (!form) return;
 
@@ -97,8 +113,36 @@ export function initServiceDetailPageEnquiry() {
     const isServicePage = typeof window !== 'undefined' && window.location.pathname.includes('/services/');
     const loginPath = isServicePage ? '../../login.html' : './login.html';
 
-    // Track authentication state synchronously
-    let isUserLoggedIn = isStoredUserLoggedIn();
+    // Helper to render verified client badge
+    function renderStatusBar(user) {
+        let statusBar = box.querySelector('.client-portal-status-bar');
+        if (!statusBar) {
+            statusBar = document.createElement('div');
+            statusBar.className = 'client-portal-status-bar';
+            statusBar.style.cssText = 'background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; margin-bottom: 20px;';
+            form.parentNode.insertBefore(statusBar, form);
+        }
+        const emailPart = user && user.email ? ` <span style="color: #64748b;">(${escapeHTML(user.email)})</span>` : '';
+        const namePart = (user && user.name) || localStorage.getItem('om_user_name') || 'Account';
+        statusBar.innerHTML = `
+            <div class="client-portal-user-info" style="color: #0f172a;">
+                <span class="client-status-indicator"></span>
+                <span>Verified Client: <strong>${escapeHTML(namePart)}</strong>${emailPart}</span>
+            </div>
+            <a href="${isServicePage ? '../../my-requests.html' : './my-requests.html'}" class="client-portal-link" style="color: #07152F;">
+                Open Client Portal &rarr;
+            </a>
+        `;
+    }
+
+    // Immediate pre-fill from stored local data if user is logged in
+    const storedName = localStorage.getItem('om_user_name');
+    if (isUserAuthenticated() && storedName) {
+        if (form.elements.name && !form.elements.name.value) {
+            form.elements.name.value = storedName;
+        }
+        renderStatusBar({ name: storedName, email: '' });
+    }
 
     // Restore draft if present
     let savedDraft = null;
@@ -108,31 +152,29 @@ export function initServiceDetailPageEnquiry() {
     } catch (e) { }
 
     if (savedDraft) {
-        if (!isUserLoggedIn && form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
-        if (!isUserLoggedIn && form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
+        if (!isUserAuthenticated() && form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
+        if (!isUserAuthenticated() && form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
         if (form.elements.phone && savedDraft.phone) form.elements.phone.value = savedDraft.phone;
         if (form.elements.message && savedDraft.message) form.elements.message.value = savedDraft.message;
     }
 
-    // Synchronous click interceptor for unauthenticated visitors
-    if (submitBtn) {
-        submitBtn.addEventListener('click', (e) => {
-            if (!isUserLoggedIn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const name = form.elements.name ? form.elements.name.value.trim() : '';
-                const email = form.elements.email ? form.elements.email.value.trim() : '';
-                const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
-                const message = form.elements.message ? form.elements.message.value.trim() : '';
-                try {
-                    sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
-                } catch (err) { }
-                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
-                window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
-                return false;
+    // Update verified badge once async auth resolves
+    waitForAuth().then(user => {
+        if (user) {
+            if (form.elements.name && (!form.elements.name.value || form.elements.name.value === '')) {
+                form.elements.name.value = user.name || '';
             }
-        });
-    }
+            if (form.elements.email && (!form.elements.email.value || form.elements.email.value === '')) {
+                form.elements.email.value = user.email || '';
+            }
+            renderStatusBar(user);
+        } else if (!isUserAuthenticated()) {
+            const statusBar = box.querySelector('.client-portal-status-bar');
+            if (statusBar) statusBar.remove();
+        }
+    }).catch(err => {
+        console.warn('Background auth check in service detail:', err.message);
+    });
 
     // Form submission handler
     form.addEventListener('submit', async (e) => {
@@ -145,8 +187,31 @@ export function initServiceDetailPageEnquiry() {
         const message = form.elements.message ? form.elements.message.value.trim() : '';
         const honeypot = form.elements.website ? form.elements.website.value : '';
 
-        // If not logged in, preserve entered values and redirect to login
-        if (!isUserLoggedIn) {
+        const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Enquiry &rarr;';
+
+        // 1. Wait for authentication state if necessary
+        if (isAuthLoading()) {
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Verifying session...';
+            }
+            try {
+                await waitForAuth();
+            } catch (authErr) {
+                console.warn('Auth check error while submitting:', authErr);
+            }
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        }
+
+        // 2. Get current authenticated user/session
+        const user = getCachedUser() || (isStoredUserLoggedIn() ? { name: localStorage.getItem('om_user_name') || 'Client', email: '' } : null);
+        const authenticated = isUserAuthenticated() || !!user;
+
+        // 3. If no authenticated user: save draft and redirect to login
+        if (!authenticated) {
             try {
                 sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
             } catch (err) { }
@@ -155,8 +220,8 @@ export function initServiceDetailPageEnquiry() {
             return false;
         }
 
-        // Authenticated client path: submit enquiry to backend which sends company notification email
-        const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Enquiry &rarr;';
+        // 4. If authenticated: DO NOT REDIRECT! Submit enquiry
+        if (errorEl) errorEl.style.display = 'none';
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Sending enquiry...';
@@ -164,8 +229,8 @@ export function initServiceDetailPageEnquiry() {
 
         try {
             await submitEnquiry({
-                name,
-                email,
+                name: name || (user && user.name) || (localStorage.getItem('om_user_name') || 'Client'),
+                email: email || (user && user.email) || '',
                 phone: phone || null,
                 serviceSlug: serviceSlug,
                 message,
@@ -180,16 +245,19 @@ export function initServiceDetailPageEnquiry() {
             if (successEl) successEl.style.display = 'block';
         } catch (err) {
             console.error('Service page enquiry error:', err);
+            // Only redirect if backend explicitly returns 401 unauthorized (session expired)
             if (err.status === 401 || (err.message && (err.message.includes('401') || err.message.includes('Not authenticated')))) {
                 try {
                     localStorage.removeItem('om_logged_in');
+                    localStorage.removeItem('om_auth_token');
+                    sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
                 } catch (e) { }
                 const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
                 window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
                 return;
             }
             if (errorEl) {
-                errorEl.textContent = 'Failed to send your enquiry. Please check your connection or contact us directly.';
+                errorEl.textContent = err.message || 'Failed to send your enquiry. Please check your connection or contact us directly.';
                 errorEl.style.display = 'block';
             }
             if (submitBtn) {
@@ -197,36 +265,6 @@ export function initServiceDetailPageEnquiry() {
                 submitBtn.innerHTML = originalBtnText;
             }
         }
-    });
-
-    // Check server session and update verified status badge
-    getCurrentUser().then(currentUser => {
-        if (currentUser) {
-            isUserLoggedIn = true;
-            if (form.elements.name) form.elements.name.value = currentUser.name || '';
-            if (form.elements.email) form.elements.email.value = currentUser.email || '';
-
-            let statusBar = box.querySelector('.client-portal-status-bar');
-            if (!statusBar) {
-                statusBar = document.createElement('div');
-                statusBar.className = 'client-portal-status-bar';
-                statusBar.style.cssText = 'background: #f8fafc; border: 1px solid #e2e8f0; color: #0f172a; margin-bottom: 20px;';
-                statusBar.innerHTML = `
-                    <div class="client-portal-user-info" style="color: #0f172a;">
-                        <span class="client-status-indicator"></span>
-                        <span>Verified Client: <strong>${escapeHTML(currentUser.name)}</strong> <span style="color: #64748b;">(${escapeHTML(currentUser.email)})</span></span>
-                    </div>
-                    <a href="${isServicePage ? '../../my-requests.html' : './my-requests.html'}" class="client-portal-link" style="color: #07152F;">
-                        Open Client Portal &rarr;
-                    </a>
-                `;
-                form.parentNode.insertBefore(statusBar, form);
-            }
-        } else {
-            isUserLoggedIn = false;
-        }
-    }).catch(() => {
-        isUserLoggedIn = false;
     });
 }
 
@@ -251,8 +289,35 @@ export function initGlobalEnquiryForm() {
     const errorEl = form.querySelector('.global-enquiry-error');
     const submitBtn = form.querySelector('.global-enquiry-submit-btn');
 
-    // Track authentication state synchronously
-    let isUserLoggedIn = isStoredUserLoggedIn();
+    // Helper to render verified client badge
+    function renderGlobalStatusBar(user) {
+        let statusBar = card.querySelector('.client-portal-status-bar');
+        if (!statusBar) {
+            statusBar = document.createElement('div');
+            statusBar.className = 'client-portal-status-bar';
+            form.parentNode.insertBefore(statusBar, form);
+        }
+        const emailPart = user && user.email ? ` <span style="color: rgba(255, 255, 255, 0.65);">(${escapeHTML(user.email)})</span>` : '';
+        const namePart = (user && user.name) || localStorage.getItem('om_user_name') || 'Account';
+        statusBar.innerHTML = `
+            <div class="client-portal-user-info">
+                <span class="client-status-indicator"></span>
+                <span>Verified Client: <strong>${escapeHTML(namePart)}</strong>${emailPart}</span>
+            </div>
+            <a href="./my-requests.html" class="client-portal-link">
+                Open Client Portal &rarr;
+            </a>
+        `;
+    }
+
+    // Immediate pre-fill from stored local data if user is logged in
+    const storedName = localStorage.getItem('om_user_name');
+    if (isUserAuthenticated() && storedName) {
+        if (form.elements.name && !form.elements.name.value) {
+            form.elements.name.value = storedName;
+        }
+        renderGlobalStatusBar({ name: storedName, email: '' });
+    }
 
     // Restore draft if present
     let savedDraft = null;
@@ -262,8 +327,8 @@ export function initGlobalEnquiryForm() {
     } catch (e) { }
 
     if (savedDraft) {
-        if (!isUserLoggedIn && form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
-        if (!isUserLoggedIn && form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
+        if (!isUserAuthenticated() && form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
+        if (!isUserAuthenticated() && form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
         if (form.elements.phone && savedDraft.phone) form.elements.phone.value = savedDraft.phone;
         if (form.elements.service_slug && savedDraft.service_slug) form.elements.service_slug.value = savedDraft.service_slug;
         if (form.elements.location && savedDraft.location) form.elements.location.value = savedDraft.location;
@@ -271,30 +336,23 @@ export function initGlobalEnquiryForm() {
         if (form.elements.message && savedDraft.message) form.elements.message.value = savedDraft.message;
     }
 
-    // Synchronous click interceptor for unauthenticated visitors
-    if (submitBtn) {
-        submitBtn.addEventListener('click', (e) => {
-            if (!isUserLoggedIn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const name = form.elements.name ? form.elements.name.value.trim() : '';
-                const email = form.elements.email ? form.elements.email.value.trim() : '';
-                const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
-                const serviceSlug = form.elements.service_slug ? form.elements.service_slug.value : 'project-planning';
-                const locationVal = form.elements.location ? form.elements.location.value.trim() : '';
-                const areaVal = form.elements.area ? form.elements.area.value.trim() : '';
-                const rawMessage = form.elements.message ? form.elements.message.value.trim() : '';
-                try {
-                    sessionStorage.setItem('om_global_enquiry_draft', JSON.stringify({
-                        name, email, phone, service_slug: serviceSlug, location: locationVal, area: areaVal, message: rawMessage
-                    }));
-                } catch (err) { }
-                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#cta');
-                window.location.href = `./login.html?redirect=${returnUrl}&reason=enquiry_submit`;
-                return false;
+    // Update verified badge once async auth resolves
+    waitForAuth().then(user => {
+        if (user) {
+            if (form.elements.name && (!form.elements.name.value || form.elements.name.value === '')) {
+                form.elements.name.value = user.name || '';
             }
-        });
-    }
+            if (form.elements.email && (!form.elements.email.value || form.elements.email.value === '')) {
+                form.elements.email.value = user.email || '';
+            }
+            renderGlobalStatusBar(user);
+        } else if (!isUserAuthenticated()) {
+            const statusBar = card.querySelector('.client-portal-status-bar');
+            if (statusBar) statusBar.remove();
+        }
+    }).catch(err => {
+        console.warn('Background auth check in global form:', err.message);
+    });
 
     // Form submission handler
     form.addEventListener('submit', async (e) => {
@@ -310,8 +368,31 @@ export function initGlobalEnquiryForm() {
         const rawMessage = form.elements.message ? form.elements.message.value.trim() : '';
         const honeypot = form.elements.website ? form.elements.website.value : '';
 
-        // If not logged in, preserve entered values and redirect to login
-        if (!isUserLoggedIn) {
+        const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Project Enquiry &rarr;';
+
+        // 1. Wait for authentication state if necessary
+        if (isAuthLoading()) {
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Verifying session...';
+            }
+            try {
+                await waitForAuth();
+            } catch (authErr) {
+                console.warn('Auth check error while submitting global form:', authErr);
+            }
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        }
+
+        // 2. Get current authenticated user/session
+        const user = getCachedUser() || (isStoredUserLoggedIn() ? { name: localStorage.getItem('om_user_name') || 'Client', email: '' } : null);
+        const authenticated = isUserAuthenticated() || !!user;
+
+        // 3. If no authenticated user: save draft and redirect to login
+        if (!authenticated) {
             try {
                 sessionStorage.setItem('om_global_enquiry_draft', JSON.stringify({
                     name, email, phone, service_slug: serviceSlug, location: locationVal, area: areaVal, message: rawMessage
@@ -322,7 +403,7 @@ export function initGlobalEnquiryForm() {
             return false;
         }
 
-        // Combine location and area into the project message for comprehensive company context
+        // 4. If authenticated: DO NOT REDIRECT! Submit enquiry
         const metaParts = [];
         if (locationVal) metaParts.push(`Location: ${locationVal}`);
         if (areaVal) metaParts.push(`Approx. Area / Type: ${areaVal}`);
@@ -332,7 +413,7 @@ export function initGlobalEnquiryForm() {
             message = `[${metaParts.join(' | ')}]\n\n${rawMessage}`;
         }
 
-        const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Project Enquiry &rarr;';
+        if (errorEl) errorEl.style.display = 'none';
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Sending enquiry...';
@@ -340,8 +421,8 @@ export function initGlobalEnquiryForm() {
 
         try {
             await submitEnquiry({
-                name,
-                email,
+                name: name || (user && user.name) || (localStorage.getItem('om_user_name') || 'Client'),
+                email: email || (user && user.email) || '',
                 phone: phone || null,
                 serviceSlug: serviceSlug,
                 message: message,
@@ -359,12 +440,13 @@ export function initGlobalEnquiryForm() {
             if (err.status === 401 || (err.message && (err.message.includes('401') || err.message.includes('Not authenticated')))) {
                 try {
                     localStorage.removeItem('om_logged_in');
+                    localStorage.removeItem('om_auth_token');
                 } catch (e) { }
                 window.location.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}&reason=enquiry_submit`;
                 return;
             }
             if (errorEl) {
-                errorEl.textContent = 'Failed to send your enquiry. Please check your network connection or reach us directly at omengineeringconsultants06@gmail.com.';
+                errorEl.textContent = err.message || 'Failed to send your enquiry. Please check your network connection or reach us directly at omengineeringconsultants06@gmail.com.';
                 errorEl.style.display = 'block';
             }
             if (submitBtn) {
@@ -372,35 +454,6 @@ export function initGlobalEnquiryForm() {
                 submitBtn.innerHTML = originalBtnText;
             }
         }
-    });
-
-    // Check server session and update verified status badge
-    getCurrentUser().then(currentUser => {
-        if (currentUser) {
-            isUserLoggedIn = true;
-            if (form.elements.name) form.elements.name.value = currentUser.name || '';
-            if (form.elements.email) form.elements.email.value = currentUser.email || '';
-
-            let statusBar = card.querySelector('.client-portal-status-bar');
-            if (!statusBar) {
-                statusBar = document.createElement('div');
-                statusBar.className = 'client-portal-status-bar';
-                statusBar.innerHTML = `
-                    <div class="client-portal-user-info">
-                        <span class="client-status-indicator"></span>
-                        <span>Verified Client: <strong>${escapeHTML(currentUser.name)}</strong> <span style="color: rgba(255, 255, 255, 0.65);">(${escapeHTML(currentUser.email)})</span></span>
-                    </div>
-                    <a href="./my-requests.html" class="client-portal-link">
-                        Open Client Portal &rarr;
-                    </a>
-                `;
-                form.parentNode.insertBefore(statusBar, form);
-            }
-        } else {
-            isUserLoggedIn = false;
-        }
-    }).catch(() => {
-        isUserLoggedIn = false;
     });
 }
 

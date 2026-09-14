@@ -73,6 +73,8 @@ export async function login({ email, password }) {
     localStorage.setItem("om_logged_in", "true");
     if (data.name) localStorage.setItem("om_user_name", data.name);
     if (data.token) setStoredToken(data.token);
+    _cachedUser = { name: data.name || "", email: email || "" };
+    _authLoading = false;
   } catch (e) {}
   return data;
 }
@@ -107,6 +109,8 @@ export async function verifyOtp(arg1, arg2) {
     localStorage.setItem("om_logged_in", "true");
     if (data.name) localStorage.setItem("om_user_name", data.name);
     if (data.token) setStoredToken(data.token);
+    _cachedUser = { name: data.name || "", email: email || "" };
+    _authLoading = false;
   } catch (e) {}
   return data;
 }
@@ -141,6 +145,9 @@ export async function logout() {
     localStorage.removeItem("om_logged_in");
     localStorage.removeItem("om_user_name");
     setStoredToken(null);
+    _cachedUser = null;
+    _authLoading = false;
+    _authPromise = null;
   } catch (e) {}
   const res = await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
     method: "POST",
@@ -164,6 +171,48 @@ export function isStoredUserLoggedIn() {
   } catch (e) {
     return false;
   }
+}
+
+let _authLoading = true;
+let _cachedUser = null;
+let _authPromise = null;
+
+export function initAuth() {
+  if (!_authPromise) {
+    _authLoading = true;
+    _authPromise = (async () => {
+      try {
+        const user = await getCurrentUser();
+        _cachedUser = user;
+      } catch (err) {
+        if (isStoredUserLoggedIn()) {
+          const name = localStorage.getItem("om_user_name") || "Client";
+          _cachedUser = { name, email: "" };
+        } else {
+          _cachedUser = null;
+        }
+      } finally {
+        _authLoading = false;
+      }
+      return _cachedUser;
+    })();
+  }
+  return _authPromise;
+}
+
+export async function waitForAuth() {
+  if (!_authPromise) {
+    return initAuth();
+  }
+  return _authPromise;
+}
+
+export function isAuthLoading() {
+  return _authLoading;
+}
+
+export function getCachedUser() {
+  return _cachedUser;
 }
 
 /**
@@ -202,6 +251,7 @@ export async function getCurrentUser() {
           localStorage.removeItem("om_logged_in");
           localStorage.removeItem("om_user_name");
           setStoredToken(null);
+          _cachedUser = null;
         } catch (e) {}
         return null;
       }
@@ -211,6 +261,7 @@ export async function getCurrentUser() {
     try {
       localStorage.setItem("om_logged_in", "true");
       if (data && data.name) localStorage.setItem("om_user_name", data.name);
+      _cachedUser = data;
     } catch (e) {}
     return data;
   } catch (err) {
