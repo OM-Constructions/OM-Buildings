@@ -33,22 +33,33 @@ def send_via_smtp(to, subject, html, reply_to=None):
     else:
         recipients = [str(to)]
 
-    try:
-        if settings.SMTP_PORT == 465:
-            with smtplib.SMTP_SSL(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
-                server.login(user, password)
-                server.sendmail(settings.EMAIL_FROM, recipients, msg.as_string())
-        else:
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
-                server.starttls()
-                server.login(user, password)
-                server.sendmail(settings.EMAIL_FROM, recipients, msg.as_string())
+    # Try configured port first with 4s timeout, then try fallback port (465 <-> 587)
+    ports_to_try = [settings.SMTP_PORT]
+    if settings.SMTP_PORT == 465 and 587 not in ports_to_try:
+        ports_to_try.append(587)
+    elif settings.SMTP_PORT == 587 and 465 not in ports_to_try:
+        ports_to_try.append(465)
 
-        print(f"[SMTP SUCCESS] Email successfully delivered to {recipients}")
-        return "smtp_delivered"
-    except Exception as err:
-        print(f"[SMTP ERROR] Failed sending to {recipients}: {err}")
-        raise err
+    last_err = None
+    for port in ports_to_try:
+        try:
+            if port == 465:
+                with smtplib.SMTP_SSL(settings.SMTP_HOST, port, timeout=4) as server:
+                    server.login(user, password)
+                    server.sendmail(settings.EMAIL_FROM, recipients, msg.as_string())
+            else:
+                with smtplib.SMTP(settings.SMTP_HOST, port, timeout=4) as server:
+                    server.starttls()
+                    server.login(user, password)
+                    server.sendmail(settings.EMAIL_FROM, recipients, msg.as_string())
+            print(f"[SMTP SUCCESS] Email successfully delivered to {recipients} via port {port}")
+            return "smtp_delivered"
+        except Exception as err:
+            last_err = err
+            print(f"[SMTP ATTEMPT FAILED] Port {port} error: {err}")
+
+    print(f"[SMTP ERROR] Failed sending to {recipients} on all attempted ports: {last_err}")
+    raise last_err
 
 def send_email(to, subject, html, reply_to=None):
     """Primary email dispatcher using SMTP."""
@@ -113,11 +124,12 @@ def send_otp_email(to_email: str, name: str, otp: str):
     try:
         if settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD:
             send_email(to=to_email, subject=subject, html=html)
+            return True
+        else:
+            return False
     except Exception as err:
         print(f"[EMAIL SERVICE] OTP email dispatch failed: {err}")
-        raise err
-
-    return True
+        return False
 
 # Backward compatibility alias
 def send_contact_email(enquiry):

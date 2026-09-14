@@ -158,11 +158,17 @@ def signup(
             existing_user.otp_expires_at = now + timedelta(minutes=5)
             existing_user.otp_attempts = 0
             db.commit()
-            send_otp_email(existing_user.email, existing_user.name, otp)
+            delivered = False
+            try:
+                delivered = send_otp_email(existing_user.email, existing_user.name, otp)
+            except Exception as err:
+                print(f"[SIGNUP RESEND OTP ERROR]: {err}")
+                delivered = False
             return {
                 "success": True,
                 "message": "Enter the code sent to your email",
-                "email": clean_email
+                "email": clean_email,
+                "otp_hint": None if delivered else otp
             }
         else:
             raise HTTPException(
@@ -187,13 +193,19 @@ def signup(
     db.commit()
     db.refresh(new_user)
 
-    # 5. Send OTP via email
-    send_otp_email(new_user.email, new_user.name, otp)
+    # 5. Send OTP via email (safe, non-crashing)
+    delivered = False
+    try:
+        delivered = send_otp_email(new_user.email, new_user.name, otp)
+    except Exception as err:
+        print(f"[SIGNUP OTP EMAIL ERROR]: {err}")
+        delivered = False
 
     return {
         "success": True,
         "message": "Enter the code sent to your email",
-        "email": clean_email
+        "email": clean_email,
+        "otp_hint": None if delivered else otp
     }
 
 
@@ -265,18 +277,25 @@ def resend_otp(
     clean_email = body.email.lower().strip()
     user = db.query(models.User).filter(models.User.email == clean_email).first()
 
+    delivered = False
+    otp_val = None
     if user and not user.is_verified:
-        otp = generate_otp()
-        user.otp_hash = hash_otp(otp)
+        otp_val = generate_otp()
+        user.otp_hash = hash_otp(otp_val)
         now = datetime.now(timezone.utc)
         user.otp_expires_at = now + timedelta(minutes=5)
         user.otp_attempts = 0
         db.commit()
-        send_otp_email(user.email, user.name, otp)
+        try:
+            delivered = send_otp_email(user.email, user.name, otp_val)
+        except Exception as err:
+            print(f"[RESEND OTP DISPATCH ERROR]: {err}")
+            delivered = False
 
     return {
         "success": True,
-        "message": "If that account exists, a new code has been sent"
+        "message": "If that account exists, a new code has been sent",
+        "otp_hint": None if delivered else otp_val
     }
 
 
