@@ -49,23 +49,47 @@ def root():
 
 @app.get("/api/v1/health")
 def health_check():
-    import os
-    has_resend = bool(settings.RESEND_API_KEY)
-    has_brevo = bool(os.getenv("BREVO_API_KEY"))
-    has_smtp = bool(settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD)
-    active_provider = "resend" if has_resend else ("brevo" if has_brevo else ("smtp" if has_smtp else "none"))
-    return {
-        "status": "ok",
-        "message": "OM Buildings API is running",
-        "email_service": {
-            "active_provider": active_provider,
-            "has_resend_api_key": has_resend,
-            "has_brevo_api_key": has_brevo,
-            "has_smtp_password": has_smtp,
-            "smtp_host": settings.SMTP_HOST,
-            "smtp_port": settings.SMTP_PORT
-        }
+    return {"status": "ok", "message": "OM Buildings API is running"}
+
+@app.get("/api/v1/health/test-smtp")
+def test_smtp_diagnostic():
+    import smtplib
+    import socket
+    results = {
+        "smtp_host": settings.SMTP_HOST,
+        "smtp_user": settings.SMTP_USER or settings.EMAIL_FROM,
+        "password_length": len((settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD or "").replace(" ", ""))
     }
+
+    # 1. DNS check
+    try:
+        ip = socket.gethostbyname(settings.SMTP_HOST)
+        results["dns"] = {"success": True, "ip": ip}
+    except Exception as e:
+        results["dns"] = {"success": False, "error": str(e)}
+
+    # 2. Port 465 check
+    try:
+        with smtplib.SMTP_SSL(settings.SMTP_HOST, 465, timeout=7) as server:
+            password = (settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD or "").replace(" ", "")
+            user = settings.SMTP_USER or settings.EMAIL_FROM
+            server.login(user, password)
+            results["port_465"] = {"success": True, "message": "SSL connection & auth succeeded"}
+    except Exception as e:
+        results["port_465"] = {"success": False, "error_type": type(e).__name__, "error": str(e)}
+
+    # 3. Port 587 check
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, 587, timeout=7) as server:
+            server.starttls()
+            password = (settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD or "").replace(" ", "")
+            user = settings.SMTP_USER or settings.EMAIL_FROM
+            server.login(user, password)
+            results["port_587"] = {"success": True, "message": "STARTTLS connection & auth succeeded"}
+    except Exception as e:
+        results["port_587"] = {"success": False, "error_type": type(e).__name__, "error": str(e)}
+
+    return results
 
 import os
 from fastapi.staticfiles import StaticFiles
