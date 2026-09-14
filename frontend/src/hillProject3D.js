@@ -251,27 +251,6 @@ function initAllProjects() {
             initProject3D('residential-project-container', 'residential-project-fallback', './assets/models/residential-project.glb', { exposure: 1.0 });
         }
     }
-
-    const interiorSection = document.getElementById('interior-projects');
-    if (interiorSection) {
-        let interiorInitialized = false;
-        if (window.IntersectionObserver) {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting && !interiorInitialized) {
-                        interiorInitialized = true;
-                        initProject3D('interior-living-room-container', 'interior-living-room-fallback', './assets/models/interior-living-room.glb', { exposure: 1.2 });
-                        initProject3D('interior-office-container', 'interior-office-fallback', './assets/models/interior-office.glb', { exposure: 1.2 });
-                        observer.disconnect();
-                    }
-                });
-            }, { rootMargin: '400px 0px' });
-            observer.observe(interiorSection);
-        } else {
-            initProject3D('interior-living-room-container', 'interior-living-room-fallback', './assets/models/interior-living-room.glb', { exposure: 1.2 });
-            initProject3D('interior-office-container', 'interior-office-fallback', './assets/models/interior-office.glb', { exposure: 1.2 });
-        }
-    }
 }
 
 if (document.readyState === 'loading') {
