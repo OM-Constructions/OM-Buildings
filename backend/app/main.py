@@ -49,7 +49,23 @@ def root():
 
 @app.get("/api/v1/health")
 def health_check():
-    return {"status": "ok", "message": "OM Buildings API is running"}
+    import os
+    has_resend = bool(settings.RESEND_API_KEY)
+    has_brevo = bool(os.getenv("BREVO_API_KEY"))
+    has_smtp = bool(settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD)
+    active_provider = "resend" if has_resend else ("brevo" if has_brevo else ("smtp" if has_smtp else "none"))
+    return {
+        "status": "ok",
+        "message": "OM Buildings API is running",
+        "email_service": {
+            "active_provider": active_provider,
+            "has_resend_api_key": has_resend,
+            "has_brevo_api_key": has_brevo,
+            "has_smtp_password": has_smtp,
+            "smtp_host": settings.SMTP_HOST,
+            "smtp_port": settings.SMTP_PORT
+        }
+    }
 
 import os
 from fastapi.staticfiles import StaticFiles

@@ -61,8 +61,113 @@ def send_via_smtp(to, subject, html, reply_to=None):
     print(f"[SMTP ERROR] Failed sending to {recipients} on all attempted ports: {last_err}")
     raise last_err
 
+def send_via_resend(to, subject, html, reply_to=None):
+    """Sends email via Resend HTTP REST API over HTTPS port 443 (never blocked by cloud hosts)."""
+    import json
+    import urllib.request
+    import urllib.error
+
+    api_key = (settings.RESEND_API_KEY or "").strip()
+    if not api_key:
+        return None
+
+    url = "https://api.resend.com/emails"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "User-Agent": "OM-Buildings/1.0"
+    }
+
+    # Resend requires either verified domain or onboarding@resend.dev for test accounts
+    from_email = settings.EMAIL_FROM or "omengineeringconsultants06@gmail.com"
+    if "@gmail.com" in from_email.lower():
+        from_email = "OM Constructions <onboarding@resend.dev>"
+    else:
+        from_email = f"OM Constructions <{from_email}>"
+
+    recipients = [to] if isinstance(to, str) else list(to)
+    payload = {
+        "from": from_email,
+        "to": recipients,
+        "subject": subject,
+        "html": html
+    }
+    if reply_to:
+        payload["reply_to"] = reply_to
+
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            res_data = json.loads(response.read().decode("utf-8"))
+            print(f"[RESEND SUCCESS] Email dispatched via Resend API: id={res_data.get('id')}")
+            return "resend_delivered"
+    except urllib.error.HTTPError as he:
+        body = he.read().decode("utf-8") if he.fp else str(he)
+        print(f"[RESEND HTTP ERROR] {he.code}: {body}")
+        raise RuntimeError(f"Resend API error {he.code}: {body}")
+    except Exception as err:
+        print(f"[RESEND ERROR] Failed sending email: {err}")
+        raise err
+
+def send_via_brevo(to, subject, html, reply_to=None):
+    """Sends email via Brevo HTTP REST API over HTTPS port 443 (never blocked by cloud hosts)."""
+    import json
+    import os
+    import urllib.request
+    import urllib.error
+
+    api_key = (os.getenv("BREVO_API_KEY") or "").strip()
+    if not api_key:
+        return None
+
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "api-key": api_key,
+        "Content-Type": "application/json"
+    }
+
+    recipients = [to] if isinstance(to, str) else list(to)
+    payload = {
+        "sender": {
+            "name": "OM Constructions",
+            "email": settings.EMAIL_FROM or "omengineeringconsultants06@gmail.com"
+        },
+        "to": [{"email": r.strip()} for r in recipients if r.strip()],
+        "subject": subject,
+        "htmlContent": html
+    }
+    if reply_to:
+        payload["replyTo"] = {"email": reply_to}
+
+    req = urllib.request.Request(url, data=json.dumps(payload).encode("utf-8"), headers=headers, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            print(f"[BREVO SUCCESS] Email dispatched via Brevo API")
+            return "brevo_delivered"
+    except Exception as err:
+        print(f"[BREVO ERROR] Failed sending email: {err}")
+        raise err
+
 def send_email(to, subject, html, reply_to=None):
-    """Primary email dispatcher using SMTP."""
+    """Primary email dispatcher.
+    Prefers HTTPS REST APIs (Resend, Brevo) to bypass cloud host SMTP restrictions,
+    falling back to standard SMTP."""
+    # 1. Try Resend if configured
+    if settings.RESEND_API_KEY:
+        try:
+            return send_via_resend(to, subject, html, reply_to)
+        except Exception as err:
+            print(f"[EMAIL SERVICE] Resend failed, trying fallback: {err}")
+
+    # 2. Try Brevo if configured
+    import os
+    if os.getenv("BREVO_API_KEY"):
+        try:
+            return send_via_brevo(to, subject, html, reply_to)
+        except Exception as err:
+            print(f"[EMAIL SERVICE] Brevo failed, trying fallback: {err}")
+
+    # 3. Fall back to SMTP
     return send_via_smtp(to, subject, html, reply_to)
 
 def send_company_notification(enquiry):
@@ -122,10 +227,13 @@ def send_otp_email(to_email: str, name: str, otp: str):
     print(f"================================================================\n")
 
     try:
-        if settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD:
+        import os
+        has_provider = bool(settings.RESEND_API_KEY or os.getenv("BREVO_API_KEY") or settings.SMTP_PASSWORD or settings.GMAIL_APP_PASSWORD)
+        if has_provider:
             send_email(to=to_email, subject=subject, html=html)
             return True
         else:
+            print("[EMAIL SERVICE] No email provider configured (set RESEND_API_KEY or SMTP_PASSWORD).")
             return False
     except Exception as err:
         print(f"[EMAIL SERVICE] OTP email dispatch failed: {err}")
