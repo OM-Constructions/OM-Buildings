@@ -167,22 +167,43 @@ export function isStoredUserLoggedIn() {
 }
 
 /**
+ * Fetch helper with strict timeout to prevent infinite hanging
+ */
+export async function fetchWithTimeout(resource, options = {}, timeoutMs = 12000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(resource, {
+      ...options,
+      signal: controller.signal
+    });
+    return response;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
  * Check if the user is logged in
  * @returns {Promise<{ name: string, email: string } | null>}
  */
 export async function getCurrentUser() {
   try {
-    const res = await fetch(`${API_BASE_URL}/api/v1/auth/me`, {
+    const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/auth/me`, {
       method: "GET",
       headers: getAuthHeaders(),
       credentials: "include",
-    });
+    }, 10000);
+    
     if (!res.ok) {
-      try {
-        localStorage.removeItem("om_logged_in");
-        localStorage.removeItem("om_user_name");
-        setStoredToken(null);
-      } catch (e) {}
+      // Only clear storage if explicitly rejected as unauthenticated
+      if (res.status === 401 || res.status === 403) {
+        try {
+          localStorage.removeItem("om_logged_in");
+          localStorage.removeItem("om_user_name");
+          setStoredToken(null);
+        } catch (e) {}
+      }
       return null;
     }
     const data = await res.json();
@@ -192,6 +213,7 @@ export async function getCurrentUser() {
     } catch (e) {}
     return data;
   } catch (err) {
+    console.warn("getCurrentUser check failed or timed out:", err.message);
     return null;
   }
 }
@@ -201,14 +223,15 @@ export async function getCurrentUser() {
  * @returns {Promise<Array<{ id: number, name: string, project_type: string, message: string, status: string, created_at: string }>>}
  */
 export async function getMySubmissions() {
-  const res = await fetch(`${API_BASE_URL}/api/v1/me/submissions`, {
+  const res = await fetchWithTimeout(`${API_BASE_URL}/api/v1/me/submissions`, {
     method: "GET",
     headers: getAuthHeaders(),
     credentials: "include",
-  });
+  }, 12000);
+  
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.detail || "Failed to load submissions");
+    throw new Error(data.detail || `Failed to load submissions (${res.status})`);
   }
   return data;
 }
