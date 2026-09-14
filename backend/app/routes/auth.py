@@ -145,13 +145,30 @@ def signup(
             detail="Password must be at least 8 characters long"
         )
 
-    # 3. Check if email is already registered (account enumeration protection)
+    # 3. Check if email is already registered
     existing_user = db.query(models.User).filter(models.User.email == clean_email).first()
     if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Unable to create account"
-        )
+        if not existing_user.is_verified:
+            # Re-generate fresh OTP and allow unverified user to complete verification
+            otp = generate_otp()
+            now = datetime.now(timezone.utc)
+            existing_user.name = body.name.strip()
+            existing_user.password_hash = hash_password(body.password)
+            existing_user.otp_hash = hash_otp(otp)
+            existing_user.otp_expires_at = now + timedelta(minutes=5)
+            existing_user.otp_attempts = 0
+            db.commit()
+            send_otp_email(existing_user.email, existing_user.name, otp)
+            return {
+                "success": True,
+                "message": "Enter the code sent to your email",
+                "email": clean_email
+            }
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="An account with this email already exists. Please log in."
+            )
 
     # 4. Create new user with is_verified = False and hashed 5-minute OTP
     otp = generate_otp()
