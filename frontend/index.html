@@ -539,39 +539,8 @@
                 <h2 class="section-title">OUR INTERIOR DESIGNS</h2>
                 <p class="section-subtitle">Explore our interior design concepts and spaces.</p>
 
-                <div class="interior-gallery-grid">
-                    <div class="work-card">
-                        <img src="./assets/designs/modern-tv-lounge.png" alt="Modern TV Lounge" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <span class="work-label" style="z-index: 2; pointer-events: none;">MODERN TV LOUNGE</span>
-                    </div>
-                    <div class="work-card">
-                        <img src="./assets/designs/botanical-bedroom.png" alt="Botanical Bedroom" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <span class="work-label" style="z-index: 2; pointer-events: none;">BOTANICAL BEDROOM</span>
-                    </div>
-                    <div class="work-card">
-                        <img src="./assets/designs/modular-kitchen.png" alt="Modular Kitchen" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <span class="work-label" style="z-index: 2; pointer-events: none;">MODULAR KITCHEN</span>
-                    </div>
-                    <div class="work-card">
-                        <img src="./assets/designs/executive-office-01.png" alt="Executive Office" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <span class="work-label" style="z-index: 2; pointer-events: none;">EXECUTIVE OFFICE</span>
-                    </div>
-                    <div class="work-card">
-                        <img src="./assets/designs/modern-reception-area.png" alt="Modern Reception Area" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <span class="work-label" style="z-index: 2; pointer-events: none;">MODERN RECEPTION AREA</span>
-                    </div>
-                    <div class="work-card">
-                        <img src="./assets/designs/modern-balcony.png" alt="Modern Balcony" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <span class="work-label" style="z-index: 2; pointer-events: none;">MODERN BALCONY</span>
-                    </div>
-                    <div class="work-card">
-                        <img src="./assets/designs/ceiling-design.png" alt="Ceiling Design" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <span class="work-label" style="z-index: 2; pointer-events: none;">CEILING DESIGN</span>
-                    </div>
-                    <div class="work-card">
-                        <img src="./assets/designs/pooja-room.png" alt="Pooja Room" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                        <span class="work-label" style="z-index: 2; pointer-events: none;">POOJA ROOM</span>
-                    </div>
+                <div class="interior-gallery-grid" id="homepage-interior-gallery-container">
+                    <!-- Cards will be dynamically injected here -->
                 </div>
 
                 <div style="text-align: center; margin-top: 40px;">
@@ -915,6 +884,14 @@
     <script type="module" src="./src/serviceEnquiry.js?v=31"></script>
     <script type="module" src="./src/serviceContactCards.js?v=9"></script>
     <script type="module" src="./src/hillProject3D.js?v=5"></script>
+    <script src="./src/interiorDesigns.js?v=1"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if(typeof renderInteriorDesigns === 'function') {
+                renderInteriorDesigns('homepage-interior-gallery-container', true);
+            }
+        });
+    </script>
     
     <!-- Safety fallback: Guarantees page visibility if WebGL or external CDN script stalls -->
     <script id="om-splash-safety-fallback">

@@ -35,29 +35,12 @@
             </div>
         </section>
 
+        <script src="./src/interiorDesigns.js?v=1"></script>
         <script>
             document.addEventListener('DOMContentLoaded', () => {
-                const interiorDesigns = [
-                    { src: 'modern-tv-lounge.png', title: 'Modern TV Lounge' },
-                    { src: 'botanical-bedroom.png', title: 'Botanical Bedroom' },
-                    { src: 'modular-kitchen.png', title: 'Modular Kitchen' },
-                    { src: 'executive-office-01.png', title: 'Executive Office' },
-                    { src: 'modern-reception-area.png', title: 'Modern Reception Area' },
-                    { src: 'modern-balcony.png', title: 'Modern Balcony' },
-                    { src: 'ceiling-design.png', title: 'CEILING DESIGN' },
-                    { src: 'pooja-room.png', title: 'POOJA ROOM' }
-                ];
-
-                const galleryGrid = document.getElementById('interior-gallery-container');
-                interiorDesigns.forEach(design => {
-                    const card = document.createElement('div');
-                    card.className = 'gallery-card';
-                    card.innerHTML = `
-                        <img src="./assets/designs/${design.src}" alt="${design.title}">
-                        <div class="gallery-label">${design.title}</div>
-                    `;
-                    galleryGrid.appendChild(card);
-                });
+                if(typeof renderInteriorDesigns === 'function') {
+                    renderInteriorDesigns('interior-gallery-container', false);
+                }
             });
         </script>
     </main>
