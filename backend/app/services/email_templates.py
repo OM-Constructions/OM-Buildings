@@ -5,14 +5,14 @@ def render_email(preheader: str, heading: str, body_html: str) -> str:
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background:#ffffff; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden;">
       <div style="background:#0d1b2a; padding: 24px 32px;">
         <span style="color:#e0a951; font-size:20px; font-weight:700;">OM Constructions</span>
-        <span style="color:#ffffff; font-size:14px; margin-left:8px;">& Structural Engineering Consultants</span>
+        <span style="color:#ffffff; font-size:14px; margin-left:8px;">& Engineering Consultants</span>
       </div>
       <div style="padding: 32px;">
         <h2 style="color:#0d1b2a; margin-top:0; font-size: 22px; border-bottom: 2px solid #e0a951; padding-bottom: 8px;">{heading}</h2>
         {body_html}
       </div>
       <div style="background:#f8fafc; padding:20px 32px; color:#64748b; font-size:12px; border-top: 1px solid #e2e8f0;">
-        <p style="margin:0; font-weight: 600; color: #334155;">OM Constructions & Structural Engineering Consultants</p>
+        <p style="margin:0; font-weight: 600; color: #334155;">OM Constructions & Engineering Consultants</p>
         <p style="margin:4px 0 0;">This is an automated notification — replies go straight to our team.</p>
       </div>
     </div>
@@ -90,7 +90,7 @@ def build_client_acknowledgement_html(enquiry, service_meta: dict) -> tuple[str,
       Dear <strong>{clean_name}</strong>,
     </p>
     <p style="font-size: 15px; color: #334155; line-height: 1.6;">
-      Thank you for reaching out to <strong>OM Constructions & Structural Engineering Consultants</strong>.
+      Thank you for reaching out to <strong>OM Constructions & Engineering Consultants</strong>.
     </p>
     <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-left: 4px solid #10b981; padding: 14px 18px; border-radius: 6px; margin: 18px 0;">
       <p style="margin: 0; font-size: 14px; color: #065f46; font-weight: 600;">
@@ -132,7 +132,7 @@ def build_client_acknowledgement_html(enquiry, service_meta: dict) -> tuple[str,
     </p>
 
     <div style="margin-top: 28px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
-      <p style="margin: 0; font-size: 14px; color: #0d1b2a; font-weight: 700;">OM Constructions & Structural Engineering Consultants</p>
+      <p style="margin: 0; font-size: 14px; color: #0d1b2a; font-weight: 700;">OM Constructions & Engineering Consultants</p>
       <p style="margin: 4px 0 0; font-size: 13px; color: #64748b;">Direct Engineering Consultation & Project Planning</p>
     </div>
     """

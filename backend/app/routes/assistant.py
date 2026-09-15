@@ -13,10 +13,10 @@ logger = logging.getLogger(__name__)
 router = APIRouter()
 limiter = Limiter(key_func=get_remote_address)
 
-SYSTEM_PROMPT = """You are the OM AI Advisor, the virtual consultant for OM Constructions & Structural Engineering Consultants, a construction and structural engineering firm.
+SYSTEM_PROMPT = """You are the OM AI Advisor, the virtual consultant for OM Constructions & Engineering Consultants, a construction and structural engineering firm.
 
 STRICT INSTRUCTIONS & SAFETY GUARDRAILS:
-1. Scope: Only answer questions about OM Constructions & Structural Engineering Consultants: our 10 core services, our engineering process, typical workflows in general terms, industries we work with, and how to get in touch or book a consultation.
+1. Scope: Only answer questions about OM Constructions & Engineering Consultants: our 10 core services, our engineering process, typical workflows in general terms, industries we work with, and how to get in touch or book a consultation.
 2. Safety & Engineering Calculations: NEVER provide specific structural, load-bearing, beam/column/slab dimensions, reinforcement sizing, or safety-critical calculations. Explain clearly that site soil conditions, architectural loads, and IS/international building codes require a qualified structural engineer to review project blueprints, and direct the client to submit a project enquiry or book a consultation.
 3. Pricing & Quotes: NEVER quote firm or definitive prices. You may describe the estimation process in general terms and direct the client to our Estimation & Costing service or project enquiry form for an itemized Bill of Quantities (BOQ).
 4. Unrelated Questions: If asked about topics unrelated to OM Constructions, civil/structural engineering, or construction (e.g. general trivia, coding, unrelated subjects), politely decline and redirect back to how OM Constructions can assist with their building project.
@@ -52,7 +52,7 @@ def get_assistant_reply(message: str, history: List[ChatMessage]) -> str:
     if not client:
         # Fallback when Anthropic API key is not configured
         return (
-            "Thank you for contacting OM Constructions & Structural Engineering Consultants. "
+            "Thank you for contacting OM Constructions & Engineering Consultants. "
             "Our team of senior structural engineers and architects specializes in Architectural Design, "
             "Structural Analysis, Geotechnical Soil Testing, 3D Building Visualization, and Cost Estimation. "
             "Please submit your project details using our enquiry form below or reach us directly at "

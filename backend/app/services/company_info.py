@@ -1,4 +1,4 @@
-"""Company knowledge block for OM Constructions & Structural Engineering Consultants.
+"""Company knowledge block for OM Constructions & Engineering Consultants.
 Used as grounding context for the AI Advisor assistant.
 """
 from .service_catalog import SERVICES
@@ -24,7 +24,7 @@ SERVICE_DESCRIPTIONS = {
 def _build_company_info() -> str:
     lines = [
         "COMPANY OVERVIEW:",
-        "OM Constructions & Structural Engineering Consultants is a premier construction, structural engineering, and architectural consultancy firm.",
+        "OM Constructions & Engineering Consultants is a premier construction, structural engineering, and architectural consultancy firm.",
         "",
         "CORE SERVICES OFFERED:"
     ]

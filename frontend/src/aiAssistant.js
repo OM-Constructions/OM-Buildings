@@ -103,12 +103,12 @@ export function initAIAssistant() {
 }
 
 /**
- * Knowledge Base & Intent Resolution for OM Constructions & Structural Engineering Consultants
+ * Knowledge Base & Intent Resolution for OM Constructions & Engineering Consultants
  */
 const KNOWLEDGE_BASE = {
     services: {
         title: "Comprehensive Construction & Engineering Services",
-        content: `At **OM Constructions & Structural Engineering Consultants**, we provide end-to-end built-environment services from concept to handover:
+        content: `At **OM Constructions & Engineering Consultants**, we provide end-to-end built-environment services from concept to handover:
 
 1. 🏛️ **Architectural Design**: Creative, functional, aesthetic & sustainable building layouts.
 2. 📐 **Architectural 2D Plans**: Technical working drawings, Vaastu compliant layouts & authority approval blueprints.
@@ -236,7 +236,7 @@ Would you like a customized, itemized BOQ estimate for your specific plot and bu
         title: "Get in Touch with OM Constructions",
         content: `We'd love to help you build your project!
 
-- 📍 **Consultation Office**: OM Constructions & Structural Engineering Consultants
+- 📍 **Consultation Office**: OM Constructions & Engineering Consultants
 - 📞 **Direct Contact**: Reach out via phone or email to discuss blueprints & site visits
 - 💬 **Fast Turnaround**: Comprehensive quotation within 24-48 hours
 - 📋 **Services**: Architectural Design, Structural Engineering, Geotechnical Soil Investigation, 3D Elevation, Cost Estimation & Turnkey Execution.
@@ -345,7 +345,7 @@ function setupAIAssistantEvents(atlasAvatarPath) {
         messagesEl.innerHTML = '';
         addBotMessage({
             title: "",
-            content: `Hello! I am Atlas, your Virtual Engineering Consultant for OM Constructions & Structural Engineering Consultants.
+            content: `Hello! I am Atlas, your Virtual Engineering Consultant for OM Constructions & Engineering Consultants.
 
 I can guide you through our **10 core built-environment services**, calculate an **indicative project cost & timeline estimate**, or help you book a **free site consultation**.
 
@@ -471,7 +471,7 @@ Choose a topic below or type any question!`,
         } catch (err) {
             console.error('[ATLAS ASSISTANT ERROR]', err);
             removeTypingIndicator();
-            const fallbackMsg = "I'd be glad to assist with that! At **OM Constructions & Structural Engineering Consultants**, we specialize in Architectural Design, Structural Engineering, Geotechnical Soil Reports, 3D Elevation, and Cost Estimation. Please submit your project details below to consult directly with our engineers.";
+            const fallbackMsg = "I'd be glad to assist with that! At **OM Constructions & Engineering Consultants**, we specialize in Architectural Design, Structural Engineering, Geotechnical Soil Reports, 3D Elevation, and Cost Estimation. Please submit your project details below to consult directly with our engineers.";
             chatHistory.push({ role: 'assistant', content: fallbackMsg });
             addBotMessage({
                 title: "OM Engineering Consultation",
