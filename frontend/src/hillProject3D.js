@@ -234,10 +234,10 @@ function initAllProjects() {
                     if (entry.isIntersecting && !workInitialized) {
                         workInitialized = true;
                         // Lazy initialize models only when the section approaches
-                        initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
-                        initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
-                        initProject3D('industrial-project-container', 'industrial-project-fallback', './assets/models/industrial-project.glb', { exposure: 1.0 });
-                        initProject3D('residential-project-container', 'residential-project-fallback', './assets/models/residential-project.glb', { exposure: 1.0 });
+                        initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/modern-villa.glb', { exposure: 1.0 });
+                        initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/apartment-building.glb', { exposure: 1.0 });
+                        initProject3D('industrial-project-container', 'industrial-project-fallback', './assets/models/independent-house.glb', { exposure: 1.0 });
+                        initProject3D('residential-project-container', 'residential-project-fallback', './assets/models/contemporary-residence.glb', { exposure: 1.0 });
                         observer.disconnect();
                     }
                 });
@@ -245,10 +245,10 @@ function initAllProjects() {
             observer.observe(workSection);
         } else {
             // Fallback for very old browsers
-            initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/hill-project.glb', { exposure: 1.0 });
-            initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/commercial-complex.glb', { exposure: 1.0 });
-            initProject3D('industrial-project-container', 'industrial-project-fallback', './assets/models/industrial-project.glb', { exposure: 1.0 });
-            initProject3D('residential-project-container', 'residential-project-fallback', './assets/models/residential-project.glb', { exposure: 1.0 });
+            initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/modern-villa.glb', { exposure: 1.0 });
+            initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/apartment-building.glb', { exposure: 1.0 });
+            initProject3D('industrial-project-container', 'industrial-project-fallback', './assets/models/independent-house.glb', { exposure: 1.0 });
+            initProject3D('residential-project-container', 'residential-project-fallback', './assets/models/contemporary-residence.glb', { exposure: 1.0 });
         }
     }
 }

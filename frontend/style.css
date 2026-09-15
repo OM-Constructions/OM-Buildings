@@ -3995,7 +3995,7 @@ INTERIOR DESIGNS GALLERY
 */
 .interior-gallery-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 32px;
 }
 

@@ -29,70 +29,37 @@
                 <h1 class="section-title">OUR INTERIOR DESIGNS</h1>
                 <p class="section-subtitle" style="margin-bottom: 60px;">Explore our complete collection of exquisite interior environments.</p>
 
-                <div class="interior-gallery-grid">
-                    <div class="gallery-card">
-                        <img src="./assets/designs/modern-tv-lounge.png" alt="Modern TV Lounge">
-                        <div class="gallery-label">Modern TV Lounge</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/staircase-living-room.png" alt="Staircase Living Room">
-                        <div class="gallery-label">Staircase Living Room</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/executive-living-room.png" alt="Executive Living Room">
-                        <div class="gallery-label">Executive Living Room</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/classic-living-room.png" alt="Classic Living Room">
-                        <div class="gallery-label">Classic Living Room</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/dining-area.png" alt="Dining Area">
-                        <div class="gallery-label">Dining Area</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/modern-living-room-03.png" alt="Modern Living Room">
-                        <div class="gallery-label">Modern Living Room</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/contemporary-dining-room.png" alt="Contemporary Dining Room">
-                        <div class="gallery-label">Contemporary Dining Room</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/modern-living-room-04.png" alt="Modern Living Room Variant">
-                        <div class="gallery-label">Modern Living Room Variant</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/contemporary-bedroom.png" alt="Contemporary Bedroom">
-                        <div class="gallery-label">Contemporary Bedroom</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/executive-office-01.png" alt="Executive Office">
-                        <div class="gallery-label">Executive Office</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/executive-office-02.png" alt="Executive Office Angle">
-                        <div class="gallery-label">Executive Office Angle</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/modern-vanity-room.png" alt="Modern Vanity Room">
-                        <div class="gallery-label">Modern Vanity Room</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/botanical-bedroom.png" alt="Botanical Bedroom">
-                        <div class="gallery-label">Botanical Bedroom</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/modern-tv-unit.png" alt="Modern TV Unit">
-                        <div class="gallery-label">Modern TV Unit</div>
-                    </div>
-                    <div class="gallery-card">
-                        <img src="./assets/designs/modular-kitchen.png" alt="Modular Kitchen">
-                        <div class="gallery-label">Modular Kitchen</div>
-                    </div>
+                <div class="interior-gallery-grid" id="interior-gallery-container">
+                    <!-- Cards will be dynamically injected here -->
                 </div>
             </div>
         </section>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const interiorDesigns = [
+                    { src: 'modern-tv-lounge.png', title: 'Modern TV Lounge' },
+                    { src: 'botanical-bedroom.png', title: 'Botanical Bedroom' },
+                    { src: 'modular-kitchen.png', title: 'Modular Kitchen' },
+                    { src: 'executive-office-01.png', title: 'Executive Office' },
+                    { src: 'modern-reception-area.png', title: 'Modern Reception Area' },
+                    { src: 'modern-balcony.png', title: 'Modern Balcony' },
+                    { src: 'ceiling-design.png', title: 'CEILING DESIGN' },
+                    { src: 'pooja-room.png', title: 'POOJA ROOM' }
+                ];
+
+                const galleryGrid = document.getElementById('interior-gallery-container');
+                interiorDesigns.forEach(design => {
+                    const card = document.createElement('div');
+                    card.className = 'gallery-card';
+                    card.innerHTML = `
+                        <img src="./assets/designs/${design.src}" alt="${design.title}">
+                        <div class="gallery-label">${design.title}</div>
+                    `;
+                    galleryGrid.appendChild(card);
+                });
+            });
+        </script>
     </main>
 
     <!-- FOOTER -->
