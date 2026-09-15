@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+const loader = new GLTFLoader();
+loader.load('./assets/models/independent-house.glb', (gltf) => {
+    console.log("independent-house.glb original bounding box size:", new THREE.Box3().setFromObject(gltf.scene).getSize(new THREE.Vector3()));
+    const cloned = gltf.scene.clone();
+    console.log("independent-house.glb cloned bounding box size:", new THREE.Box3().setFromObject(cloned).getSize(new THREE.Vector3()));
+});
+</script>
+<script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body></body>
+</html>
