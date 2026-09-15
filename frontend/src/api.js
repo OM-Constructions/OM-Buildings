@@ -4,7 +4,7 @@ export const API_BASE_URL =
     ? (window.location.port === "8000" ? "" : "http://localhost:8000")
     : "https://om-buildings-rust.vercel.app");
 
-export async function submitEnquiry({ name, email, phone, serviceSlug, projectType, message, honeypot }) {
+export async function submitEnquiry({ name, email, phone, location, serviceSlug, projectType, message, honeypot }) {
   const slug = serviceSlug || projectType;
   const headers = { "Content-Type": "application/json" };
   try {
@@ -19,6 +19,7 @@ export async function submitEnquiry({ name, email, phone, serviceSlug, projectTy
       name,
       email,
       phone: phone || null,
+      location: location || null,
       service_slug: slug,
       message,
       website: honeypot || "",

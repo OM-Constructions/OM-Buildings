@@ -187,6 +187,14 @@ export function initServiceDetailPageEnquiry() {
         const message = form.elements.message ? form.elements.message.value.trim() : '';
         const honeypot = form.elements.website ? form.elements.website.value : '';
 
+        if (!phone) {
+            if (errorEl) {
+                errorEl.textContent = 'Phone / WhatsApp is required.';
+                errorEl.style.display = 'block';
+            }
+            return;
+        }
+
         const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Enquiry &rarr;';
 
         // 1. Wait for authentication state if necessary
@@ -233,6 +241,7 @@ export function initServiceDetailPageEnquiry() {
                 email: email || (user && user.email) || '',
                 phone: phone || null,
                 serviceSlug: serviceSlug,
+                location: "Service Specific Request", // Fallback for service pages without a location field
                 message,
                 honeypot: honeypot || ''
             });
@@ -368,6 +377,22 @@ export function initGlobalEnquiryForm() {
         const rawMessage = form.elements.message ? form.elements.message.value.trim() : '';
         const honeypot = form.elements.website ? form.elements.website.value : '';
 
+        if (!phone) {
+            if (errorEl) {
+                errorEl.textContent = 'Phone / WhatsApp is required.';
+                errorEl.style.display = 'block';
+            }
+            return;
+        }
+
+        if (!locationVal) {
+            if (errorEl) {
+                errorEl.textContent = 'Project Location is required.';
+                errorEl.style.display = 'block';
+            }
+            return;
+        }
+
         const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Project Enquiry &rarr;';
 
         // 1. Wait for authentication state if necessary
@@ -425,6 +450,7 @@ export function initGlobalEnquiryForm() {
                 email: email || (user && user.email) || '',
                 phone: phone || null,
                 serviceSlug: serviceSlug,
+                location: locationVal,
                 message: message,
                 honeypot: honeypot || ''
             });

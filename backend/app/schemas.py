@@ -6,7 +6,8 @@ from pydantic import BaseModel, EmailStr, Field
 class EnquiryCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     email: EmailStr
-    phone: Optional[str] = None
+    phone: str = Field(..., min_length=1)
+    location: str = Field(..., min_length=1)
     service_slug: Optional[str] = None
     project_type: Optional[str] = None  # Backward compatibility
     subject: Optional[str] = None       # Backward compatibility
