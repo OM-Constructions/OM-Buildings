@@ -1506,36 +1506,34 @@ GLOBAL PROJECT ENQUIRY CARD (#cta)
     width: 100%;
     max-width: 820px;
     margin: 36px auto 0;
-    background: rgba(7, 21, 47, 0.85);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    background: #ffffff;
     border: 1px solid rgba(201, 151, 34, 0.35);
     border-top: 4px solid var(--gold-accent);
     border-radius: 12px;
     padding: 38px 36px;
     text-align: left;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
     font-family: var(--font-body);
     box-sizing: border-box;
 }
 
 .global-enquiry-header {
     margin-bottom: 24px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid rgba(7, 21, 47, 0.1);
     padding-bottom: 18px;
 }
 
 .global-enquiry-title {
     font-family: var(--font-heading);
     font-size: 1.5rem;
-    color: #ffffff;
+    color: var(--navy-primary);
     margin: 6px 0 6px;
     font-weight: 700;
 }
 
 .global-enquiry-subtitle {
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(7, 21, 47, 0.7);
     margin: 0;
     line-height: 1.5;
 }
@@ -1570,7 +1568,7 @@ GLOBAL PROJECT ENQUIRY CARD (#cta)
 .global-enquiry-field label {
     font-size: 0.82rem;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.9);
+    color: var(--navy-primary);
     letter-spacing: 0.3px;
 }
 
@@ -1581,10 +1579,10 @@ GLOBAL PROJECT ENQUIRY CARD (#cta)
     padding: 11px 14px;
     font-size: 0.9rem;
     font-family: var(--font-body);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(7, 21, 47, 0.15);
     border-radius: 6px;
-    background: rgba(255, 255, 255, 0.07);
-    color: #ffffff;
+    background: #f5f6f8;
+    color: var(--navy-primary);
     box-sizing: border-box;
     outline: none;
     transition: all 0.25s ease;
@@ -1592,7 +1590,7 @@ GLOBAL PROJECT ENQUIRY CARD (#cta)
 
 .global-enquiry-input::placeholder,
 .global-enquiry-textarea::placeholder {
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(7, 21, 47, 0.45);
 }
 
 .global-enquiry-input:focus,
@@ -1600,7 +1598,7 @@ GLOBAL PROJECT ENQUIRY CARD (#cta)
 .global-enquiry-textarea:focus {
     border-color: var(--gold-accent);
     box-shadow: 0 0 0 3px rgba(201, 151, 34, 0.25);
-    background: rgba(255, 255, 255, 0.12);
+    background: #ffffff;
 }
 
 .global-enquiry-select {
@@ -1608,8 +1606,8 @@ GLOBAL PROJECT ENQUIRY CARD (#cta)
 }
 
 .global-enquiry-select option {
-    background: #07152f;
-    color: #ffffff;
+    background: #ffffff;
+    color: var(--navy-primary);
 }
 
 .global-enquiry-textarea {
