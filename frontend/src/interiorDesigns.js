@@ -27,7 +27,9 @@ function renderInteriorDesigns(containerId, isHomepage = false) {
     // Clear the container in case of hardcoded fallbacks
     container.innerHTML = '';
 
-    interiorDesignsList.forEach(design => {
+    const designsToRender = isHomepage ? interiorDesignsList.slice(0, 8) : interiorDesignsList;
+
+    designsToRender.forEach(design => {
         const card = document.createElement('div');
         if (isHomepage) {
             card.className = 'work-card';
