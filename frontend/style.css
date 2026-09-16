@@ -229,6 +229,21 @@ NAVBAR
     100% { left: 150%; }
 }
 
+.brand-logo-mobile {
+    display: none;
+    height: 28px;
+    width: auto;
+    margin-right: 8px;
+}
+
+.brand-mobile-text {
+    display: none;
+    font-weight: 500;
+    color: var(--navy-primary);
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+}
+
 .nav-menu {
     display: flex;
     flex: 1;
@@ -340,8 +355,19 @@ NAVBAR
 }
 
 @media (max-width: 1024px) {
-    .nav-brand .brand-long {
+    .nav-brand {
+        display: flex;
+        align-items: center;
+    }
+
+    .nav-brand .brand-long,
+    .nav-brand .brand-om {
         display: none;
+    }
+
+    .nav-brand .brand-logo-mobile,
+    .nav-brand .brand-mobile-text {
+        display: inline-block;
     }
 
     .nav-links,
