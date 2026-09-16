@@ -22,37 +22,61 @@ function getSharedEnvironment(renderer) {
     return sharedEnvironment;
 }
 
-function preloadModel(modelPath) {
+// Device Profiling
+const deviceProfile = {
+    isMobile: /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768,
+    isLowEnd: (navigator.hardwareConcurrency || 4) <= 4,
+    prefersReducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+    get pixelRatio() {
+        if (this.isMobile) {
+            return this.isLowEnd ? 1.0 : Math.min(window.devicePixelRatio || 1, 1.5);
+        }
+        return Math.min(window.devicePixelRatio || 1, 2.0);
+    },
+    get enableShadows() {
+        return !this.isMobile;
+    }
+};
+
+// Sequential Loading Queue
+const loadQueue = [];
+let isQueueProcessing = false;
+
+function processLoadQueue() {
+    if (isQueueProcessing || loadQueue.length === 0) return;
+    
+    isQueueProcessing = true;
+    const { modelPath, resolve, reject } = loadQueue.shift();
+    
+    console.log(`[3D] START QUEUED ${modelPath}`);
+    sharedGLTFLoader.load(
+        modelPath,
+        (gltf) => {
+            console.log(`[3D] PARSED ${modelPath}`);
+            resolve(gltf);
+            isQueueProcessing = false;
+            // Delay next load slightly to allow main thread to breathe
+            setTimeout(processLoadQueue, 100);
+        },
+        undefined,
+        (error) => {
+            console.error(`[3D] FAILED ${modelPath}`, error);
+            reject(error);
+            isQueueProcessing = false;
+            setTimeout(processLoadQueue, 100);
+        }
+    );
+}
+
+function enqueueModelLoad(modelPath) {
     if (!modelCache.has(modelPath)) {
-        console.log(`[3D] START ${modelPath}`);
         const loadPromise = new Promise((resolve, reject) => {
-            sharedGLTFLoader.load(
-                modelPath,
-                (gltf) => {
-                    console.log(`[3D] PARSED ${modelPath}`);
-                    resolve(gltf);
-                },
-                undefined,
-                (error) => {
-                    console.error(`[3D] FAILED ${modelPath}`, error);
-                    reject(error);
-                }
-            );
+            loadQueue.push({ modelPath, resolve, reject });
+            processLoadQueue();
         });
         modelCache.set(modelPath, loadPromise);
     }
     return modelCache.get(modelPath);
-}
-
-// Background Staggered Loading
-async function preloadGLBModelsStaggered() {
-    // 1. Priority load for the smallest/first model
-    await preloadModel('./assets/models/modern-villa.glb').catch(()=>console.log("Modern villa error"));
-
-    // 2. Load the remaining large models sequentially to avoid blocking network and memory
-    await preloadModel('./assets/models/apartment-building.glb').catch(()=>console.log("Apartment error"));
-    await preloadModel('./assets/models/independent-house.glb').catch(()=>console.log("House error"));
-    await preloadModel('./assets/models/contemporary-residence.glb').catch(()=>console.log("Residence error"));
 }
 
 function initProject3D(containerId, fallbackId, modelPath, options = {}) {
@@ -63,6 +87,30 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
     let scene, camera, renderer, controls;
     let initialized = false;
     let isVisible = false;
+    let animationFrameId = null;
+
+    function startRenderLoop() {
+        if (!initialized || animationFrameId !== null) return;
+        if (!isVisible || document.visibilityState === 'hidden') return;
+        
+        function animate() {
+            animationFrameId = requestAnimationFrame(animate);
+            if (!isVisible || document.visibilityState === 'hidden') {
+                stopRenderLoop();
+                return;
+            }
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        animate();
+    }
+
+    function stopRenderLoop() {
+        if (animationFrameId !== null) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+    }
 
     function setupWebGL() {
         if (initialized) return;
@@ -70,6 +118,19 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
         const height = container.clientHeight;
 
         if (width === 0 || height === 0) return;
+        
+        // Detect WebGL Support
+        try {
+            const canvas = document.createElement('canvas');
+            if (!window.WebGLRenderingContext || (!canvas.getContext('webgl') && !canvas.getContext('experimental-webgl'))) {
+                console.warn('[3D] WebGL not supported, falling back to static preview.');
+                return; // Fallback remains visible
+            }
+        } catch (e) {
+            console.warn('[3D] WebGL context creation failed, falling back to static preview.', e);
+            return;
+        }
+
         initialized = true;
 
         scene = new THREE.Scene();
@@ -77,11 +138,17 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
 
         camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
 
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer = new THREE.WebGLRenderer({ antialias: !deviceProfile.isMobile, alpha: false });
         renderer.setSize(width, height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.setPixelRatio(deviceProfile.pixelRatio);
+        
+        if (deviceProfile.enableShadows) {
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        } else {
+            renderer.shadowMap.enabled = false;
+        }
+        
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = options.exposure || 1.2;
@@ -94,12 +161,24 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
         controls.enableDamping = true;
         controls.dampingFactor = 0.05;
         controls.enablePan = false;
-        controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.5;
+        
+        if (deviceProfile.prefersReducedMotion || deviceProfile.isLowEnd) {
+            controls.autoRotate = false;
+        } else {
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+        }
 
         container.style.cursor = 'grab';
         controls.addEventListener('start', () => container.style.cursor = 'grabbing');
         controls.addEventListener('end', () => container.style.cursor = 'grab');
+        
+        // When user interacts, we want to render immediately in case it was static
+        controls.addEventListener('change', () => {
+            if (initialized && isVisible && animationFrameId === null) {
+                renderer.render(scene, camera);
+            }
+        });
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
         scene.add(ambientLight);
@@ -110,23 +189,26 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
 
         const frontKey = new THREE.DirectionalLight(0xfff5e6, 3.5);
         frontKey.position.set(20, 40, 20);
-        frontKey.castShadow = true;
-        frontKey.shadow.mapSize.width = 1024;
-        frontKey.shadow.mapSize.height = 1024;
-        frontKey.shadow.camera.near = 0.1;
-        frontKey.shadow.camera.far = 100;
-        frontKey.shadow.camera.left = -20;
-        frontKey.shadow.camera.right = 20;
-        frontKey.shadow.camera.top = 20;
-        frontKey.shadow.camera.bottom = -20;
-        frontKey.shadow.bias = -0.002;
+        if (deviceProfile.enableShadows) {
+            frontKey.castShadow = true;
+            frontKey.shadow.mapSize.width = 1024;
+            frontKey.shadow.mapSize.height = 1024;
+            frontKey.shadow.camera.near = 0.1;
+            frontKey.shadow.camera.far = 100;
+            const d = 20;
+            frontKey.shadow.camera.left = -d;
+            frontKey.shadow.camera.right = d;
+            frontKey.shadow.camera.top = d;
+            frontKey.shadow.camera.bottom = -d;
+            frontKey.shadow.bias = -0.002;
+        }
         scene.add(frontKey);
 
         const backKey = new THREE.DirectionalLight(0xffffff, 3.5);
         backKey.position.set(-20, 40, -20);
         scene.add(backKey);
 
-        const loadPromise = preloadModel(modelPath);
+        const loadPromise = enqueueModelLoad(modelPath);
         
         loadPromise.then((gltf) => {
             if (fallback) fallback.style.display = 'none';
@@ -135,8 +217,10 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
 
             model.traverse((node) => {
                 if (node.isMesh) {
-                    node.castShadow = true;
-                    node.receiveShadow = true;
+                    if (deviceProfile.enableShadows) {
+                        node.castShadow = true;
+                        node.receiveShadow = true;
+                    }
                     if (node.material) {
                         const materials = Array.isArray(node.material) ? node.material : [node.material];
                         materials.forEach(mat => {
@@ -175,19 +259,21 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
             controls.maxDistance = targetSize * 3;
             
             console.log(`[3D] ADDED TO SCENE ${modelPath}`);
+            startRenderLoop();
 
         }).catch((error) => {
             console.error(`[3D] ERROR ${modelPath} `, error);
+            // Fallback naturally remains visible, so the user doesn't see a broken white box
         });
-
-        animate();
-    }
-
-    function animate() {
-        requestAnimationFrame(animate);
-        if (!isVisible || !initialized) return; 
-        controls.update();
-        renderer.render(scene, camera);
+        
+        // Listen to visibility changes on the document (e.g. changing tabs)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && isVisible) {
+                startRenderLoop();
+            } else {
+                stopRenderLoop();
+            }
+        });
     }
 
     function onWindowResize() {
@@ -198,6 +284,10 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
         camera.aspect = newWidth / newHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(newWidth, newHeight);
+        
+        if (isVisible && animationFrameId === null) {
+            renderer.render(scene, camera);
+        }
     }
 
     window.addEventListener('resize', onWindowResize);
@@ -211,8 +301,14 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
         const visObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 isVisible = entry.isIntersecting;
-                if (isVisible && !initialized) {
-                    setupWebGL();
+                if (isVisible) {
+                    if (!initialized) {
+                        setupWebGL();
+                    } else {
+                        startRenderLoop();
+                    }
+                } else {
+                    stopRenderLoop();
                 }
             });
         }, { rootMargin: '200px 0px' });
@@ -224,9 +320,6 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
 }
 
 function initAllProjects() {
-    // Fire background preloading strategy
-    preloadGLBModelsStaggered();
-
     initProject3D('hill-project-container', 'hill-project-fallback', './assets/models/modern-villa.glb', { exposure: 1.0 });
     initProject3D('commercial-complex-container', 'commercial-complex-fallback', './assets/models/apartment-building.glb', { exposure: 1.0 });
     initProject3D('industrial-project-container', 'industrial-project-fallback', './assets/models/independent-house.glb', { exposure: 1.0 });

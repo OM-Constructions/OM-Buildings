@@ -27,7 +27,7 @@ function renderInteriorDesigns(containerId, isHomepage = false) {
 
     const designsToRender = isHomepage ? interiorDesignsList.slice(0, 8) : interiorDesignsList;
 
-    designsToRender.forEach(design => {
+    designsToRender.forEach((design, index) => {
         const card = document.createElement('div');
         card.className = 'gallery-card';
         // Set aspect-ratio on the card to prevent layout shift
@@ -37,8 +37,13 @@ function renderInteriorDesigns(containerId, isHomepage = false) {
         // Add tabIndex so it's accessible via keyboard
         card.tabIndex = 0;
         
+        // Eager load first 4 images to fix LCP/Above-the-fold delay
+        const isAboveFold = index < 4;
+        const loadingAttr = isAboveFold ? 'eager' : 'lazy';
+        const priorityAttr = isAboveFold ? 'fetchpriority="high"' : '';
+        
         card.innerHTML = `
-            <img src="./assets/designs/${design.src}" alt="${design.title}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;">
+            <img src="./assets/designs/${design.src}" alt="${design.title}" loading="${loadingAttr}" ${priorityAttr} style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease;">
             <div class="gallery-label">${design.title}</div>
         `;
         container.appendChild(card);
