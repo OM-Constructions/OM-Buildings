@@ -1248,25 +1248,16 @@ SELECTED WORK
     width: 100%;
     height: 100%;
     background-color: var(--navy-primary);
-    background-image:
-        linear-gradient(rgba(201, 151, 34, 0.1) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(201, 151, 34, 0.1) 1px, transparent 1px);
-    background-size: 30px 30px;
-    background-position: center center;
     z-index: 0;
 }
 
-.work-card-fallback::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 60px;
-    height: 60px;
-    border: 1px solid var(--gold-accent);
-    border-radius: 50%;
-    opacity: 0.3;
+.work-card-fallback img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
 }
 
 .work-label {

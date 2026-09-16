@@ -84,6 +84,11 @@ function initProject3D(containerId, fallbackId, modelPath, options = {}) {
     const fallback = document.getElementById(fallbackId);
     if (!container) return;
 
+    if (deviceProfile.isMobile) {
+        if (fallback) fallback.style.display = 'block';
+        return;
+    }
+
     let scene, camera, renderer, controls;
     let initialized = false;
     let isVisible = false;
