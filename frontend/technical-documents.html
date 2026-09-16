@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OM Constructions</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css?v=11">
+
+    <link rel="preload" href="./Ring.png" as="image" crossorigin="anonymous">
+    <link rel="preload" href="./Bars.png" as="image" crossorigin="anonymous">
+    <link rel="preload" href="./M.png" as="image" crossorigin="anonymous">
+
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+                "gsap": "https://unpkg.com/gsap@3.12.2/index.js",
+                "gsap/ScrollTrigger": "https://unpkg.com/gsap@3.12.2/ScrollTrigger.js"
+            }
+        }
+    </script>
+</head>
+
+<body>
+
+    <!-- NAV BAR -->
+    <nav id="navbar">
+        <div class="container nav-container">
+            <a href="#" class="nav-brand">
+                <img src="./assets/logo-static.png" alt="OM Logo" class="brand-logo-mobile">
+                <span class="brand-om">OM</span><span class="brand-long">Constructions</span>
+                <span class="brand-mobile-text">Constructions</span>
+            </a>
+
+            <button class="mobile-menu-toggle" id="mobile-menu-btn" aria-label="Toggle menu">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12h18M3 6h18M3 18h18" />
+                </svg>
+            </button>
+
+            <div class="nav-menu" id="nav-menu">
+                <div class="mobile-menu-header">
+                    <a href="#" class="nav-brand">
+                        <img src="./assets/logo-static.png" alt="OM Logo" class="brand-logo-mobile">
+                        <span class="brand-om">OM</span><span class="brand-long">Constructions</span>
+                        <span class="brand-mobile-text">Constructions</span>
+                    </a>
+                    <button class="mobile-menu-close" id="mobile-menu-close" aria-label="Close menu">&times;</button>
+                </div>
+                <div class="nav-links">
+                    <a href="./index.html#hero" class="nav-link-item">Home</a>
+                    <a href="./index.html#services" class="nav-link-item">Services</a>
+                    <a href="./index.html#capabilities" class="nav-link-item">Capabilities</a>
+                    <a href="./index.html#industries" class="nav-link-item">Industries</a>
+                    <a href="./index.html#about" class="nav-link-item">About</a>
+                    <a href="./technical-documents.html" class="nav-link-item">Documents</a>
+                    <a href="./index.html#cta" class="nav-link-item">Contact</a>
+                </div>
+                <div class="nav-actions">
+                    <span id="nav-auth-container" class="nav-auth-group">
+                        <a href="./login.html" class="nav-auth-link nav-auth-login">Log In</a>
+                        <a href="./signup.html" class="nav-auth-link nav-auth-signup">Sign Up</a>
+                    </span>
+                    <a href="./index.html#cta" class="btn-primary">Let's Talk</a>
+                    <script type="module">
+                        import { getCurrentUser, logout, isStoredUserLoggedIn } from "./src/auth.js";
+                        const container = document.getElementById("nav-auth-container");
+                        if (container) {
+                            function renderLoggedInNav() {
+                                container.innerHTML = `
+                                    <a href="./my-requests.html" class="nav-auth-link nav-auth-login" style="color: var(--gold-accent); font-weight: 600;">My Requests</a>
+                                    <a href="#" id="nav-logout-link" class="nav-auth-link nav-auth-signup">Log Out</a>
+                                `;
+                                document.getElementById("nav-logout-link")?.addEventListener("click", async (e) => {
+                                    e.preventDefault();
+                                    await logout().catch(() => { });
+                                    window.location.reload();
+                                });
+                            }
+
+                            if (isStoredUserLoggedIn()) {
+                                renderLoggedInNav();
+                            }
+
+                            getCurrentUser().then(user => {
+                                if (user) {
+                                    renderLoggedInNav();
+                                } else if (!isStoredUserLoggedIn()) {
+                                    container.innerHTML = `
+                                        <a href="./login.html" class="nav-auth-link nav-auth-login">Log In</a>
+                                        <a href="./signup.html" class="nav-auth-link nav-auth-signup">Sign Up</a>
+                                    `;
+                                }
+                            }).catch(() => {});
+                        }
+                    </script>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- TECHNICAL DOCUMENTS SECTION -->
+    <section id="documents-hero" style="padding-top: 120px; padding-bottom: 40px; background-color: var(--om-navy, #0B192C); color: white; text-align: center;">
+        <div class="container">
+            <h1 style="font-family: 'Exo 2', sans-serif; font-size: 2.5rem; font-weight: 800; color: var(--gold-accent, #D4AF37);">Technical Documents & Drawings</h1>
+            <p style="margin-top: 1rem; max-width: 600px; margin-left: auto; margin-right: auto; color: #ccc;">Browse the official project documentation and specifications.</p>
+        </div>
+    </section>
+
+    <section id="documents-gallery" style="padding: 60px 0; background-color: #f8f9fa;">
+        <div class="container">
+            <!-- Filters -->
+            <div class="docs-category-filters" style="margin-bottom: 40px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
+                <select id="doc-category-select" style="padding: 10px 15px; border-radius: 4px; border: 1px solid #ccc; font-family: 'Inter', sans-serif; background-color: white; outline: none; cursor: pointer;">
+                    <option value="all">All Categories</option>
+                    <option value="Architectural / Floor Plans">Architectural / Floor Plans</option>
+                    <option value="Architectural / Technical Specifications">Architectural / Technical Specifications</option>
+                    <option value="Structural">Structural</option>
+                    <option value="Structural / Foundation">Structural / Foundation</option>
+                    <option value="Geotechnical / Engineering Reports">Geotechnical / Engineering Reports</option>
+                </select>
+            </div>
+
+            <!-- Documents Grid -->
+            <div id="docs-grid" class="docs-grid">
+                <!-- Cards injected by JS -->
+            </div>
+        </div>
+    </section>
+
+    <script src="./src/documents.js"></script>
+
+>
