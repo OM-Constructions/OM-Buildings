@@ -27,3 +27,5 @@ Thumbs.db
 *.swp
 *.swo
 
+# Large Assets
+frontend/assets/models/original_backup/
