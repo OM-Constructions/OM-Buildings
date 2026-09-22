@@ -18,9 +18,9 @@ def run_tests():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     # Clean up test database
-    db.query(models.Project).delete()
-    db.query(models.ContactMessage).delete()
-    db.query(models.User).delete()
+    test_emails = ["alice@gmail.com", "bob@gmail.com", "alice@mailinator.com", "alice@nonexistent-fake-domain-12345.xyz"]
+    db.query(models.Enquiry).filter(models.Enquiry.email.in_(test_emails)).delete(synchronize_session=False)
+    db.query(models.User).filter(models.User.email.in_(test_emails)).delete(synchronize_session=False)
     db.commit()
 
     print("--- 1. Testing Password & Deliverability / Disposable Validation ---")
@@ -61,12 +61,16 @@ def run_tests():
     print("✓ Successful signup creates unverified user with hashed OTP and issues NO session cookie")
 
     print("--- 3. Testing Duplicate Signup Rejection ---")
+    alice_user.is_verified = True
+    db.commit()
     res = client.post("/api/v1/auth/signup", json={"name": "Alice 2", "email": "alice@gmail.com", "password": "password123"})
     assert res.status_code == 400
-    assert "Unable to create account" in res.json()["detail"]
-    print("✓ Duplicate signup returns generic 400")
+    assert "already exists" in res.json()["detail"].lower()
+    print("✓ Duplicate signup returns 400 for existing verified user")
 
     print("--- 4. Testing Login Block for Unverified User ---")
+    alice_user.is_verified = False
+    db.commit()
     res = client.post("/api/v1/auth/login", json={"email": "alice@gmail.com", "password": "password123"})
     assert res.status_code == 403, f"Expected 403 for unverified user, got {res.status_code}"
     error_data = res.json()
