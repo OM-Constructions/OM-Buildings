@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import models, schemas
-from app.routes.auth import get_current_user
+from app.routes.auth import get_optional_current_user
 from app.services.service_catalog import resolve_service
 from app.services.email_service import send_company_notification, send_client_acknowledgement
 
@@ -16,12 +16,12 @@ router = APIRouter()
 def submit_enquiry(
     request: Request,
     message: schemas.EnquiryCreate,
-    current_user: models.User = Depends(get_current_user),
+    current_user: Optional[models.User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
-    """Submit an enquiry with authenticated customer requirement:
+    """Submit an enquiry:
     1. Honeypot check (silent 200 if tripped, no save, no send).
-    2. Save to 'enquiries' table immediately, bound to current_user.id.
+    2. Save to 'enquiries' table immediately (bound to user_id if logged in, otherwise guest).
     3. Send company notification to EMAIL_TO with reply_to=client's email.
     4. Send client acknowledgement to client's email with reply_to=EMAIL_TO.
     5. Always return success if saved.
@@ -35,9 +35,9 @@ def submit_enquiry(
             "message": "Enquiry received successfully"
         }
 
-    user_id = current_user.id
-    client_name = message.name.strip() if message.name and message.name.strip() else current_user.name
-    client_email = current_user.email.lower().strip() if current_user.email else message.email.lower().strip()
+    user_id = current_user.id if current_user else None
+    client_name = message.name.strip() if message.name and message.name.strip() else (current_user.name if current_user else "Valued Client")
+    client_email = message.email.lower().strip() if message.email else (current_user.email.lower().strip() if current_user else "")
     raw_service = message.service_slug or message.project_type or message.subject or "project-planning"
     canonical_slug, _ = resolve_service(raw_service)
 

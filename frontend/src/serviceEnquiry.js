@@ -93,48 +93,9 @@ export function initServiceDetailPageEnquiry() {
     const successEl = box.querySelector('.service-enquiry-success');
     const errorEl = box.querySelector('.service-enquiry-error');
     const submitBtn = box.querySelector('.service-enquiry-submit-btn');
-
     const isServicePage = typeof window !== 'undefined' && window.location.pathname.includes('/services/');
-    const loginPath = isServicePage ? '../../login.html' : './login.html';
 
-    // Track authentication state synchronously
-    let isUserLoggedIn = isStoredUserLoggedIn();
-
-    // Restore draft if present
-    let savedDraft = null;
-    try {
-        const rawDraft = sessionStorage.getItem('om_service_detail_enquiry_' + serviceSlug);
-        if (rawDraft) savedDraft = JSON.parse(rawDraft);
-    } catch (e) { }
-
-    if (savedDraft) {
-        if (!isUserLoggedIn && form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
-        if (!isUserLoggedIn && form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
-        if (form.elements.phone && savedDraft.phone) form.elements.phone.value = savedDraft.phone;
-        if (form.elements.message && savedDraft.message) form.elements.message.value = savedDraft.message;
-    }
-
-    // Synchronous click interceptor for unauthenticated visitors
-    if (submitBtn) {
-        submitBtn.addEventListener('click', (e) => {
-            if (!isUserLoggedIn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const name = form.elements.name ? form.elements.name.value.trim() : '';
-                const email = form.elements.email ? form.elements.email.value.trim() : '';
-                const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
-                const message = form.elements.message ? form.elements.message.value.trim() : '';
-                try {
-                    sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
-                } catch (err) { }
-                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
-                window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
-                return false;
-            }
-        });
-    }
-
-    // Form submission handler
+    // Form submission handler (direct submission without mandatory login)
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -143,24 +104,22 @@ export function initServiceDetailPageEnquiry() {
         const email = form.elements.email ? form.elements.email.value.trim() : '';
         const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
         const message = form.elements.message ? form.elements.message.value.trim() : '';
-        const honeypot = form.elements.website ? form.elements.website.value : '';
+        const honeypot = form.elements.website ? form.elements.website.value : (form.elements.honeypot ? form.elements.honeypot.value : '');
 
-        // If not logged in, preserve entered values and redirect to login
-        if (!isUserLoggedIn) {
-            try {
-                sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
-            } catch (err) { }
-            const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
-            window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
-            return false;
+        if (!name || !email || !message) {
+            if (errorEl) {
+                errorEl.textContent = 'Please fill in all required fields (Name, Email, Message).';
+                errorEl.style.display = 'block';
+            }
+            return;
         }
 
-        // Authenticated client path: submit enquiry to backend which sends company notification email
         const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Enquiry &rarr;';
         if (submitBtn) {
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Sending enquiry...';
         }
+        if (errorEl) errorEl.style.display = 'none';
 
         try {
             await submitEnquiry({
@@ -172,24 +131,13 @@ export function initServiceDetailPageEnquiry() {
                 honeypot: honeypot || ''
             });
 
-            try {
-                sessionStorage.removeItem('om_service_detail_enquiry_' + serviceSlug);
-            } catch (err) { }
-
+            form.reset();
             form.style.display = 'none';
             if (successEl) successEl.style.display = 'block';
         } catch (err) {
             console.error('Service page enquiry error:', err);
-            if (err.status === 401 || (err.message && (err.message.includes('401') || err.message.includes('Not authenticated')))) {
-                try {
-                    localStorage.removeItem('om_logged_in');
-                } catch (e) { }
-                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
-                window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
-                return;
-            }
             if (errorEl) {
-                errorEl.textContent = 'Failed to send your enquiry. Please check your connection or contact us directly.';
+                errorEl.textContent = err.message || 'Failed to send your enquiry. Please check your connection or contact us directly.';
                 errorEl.style.display = 'block';
             }
             if (submitBtn) {
@@ -199,12 +147,11 @@ export function initServiceDetailPageEnquiry() {
         }
     });
 
-    // Check server session and update verified status badge
+    // If user is already logged in, optionally pre-fill information and show portal banner
     getCurrentUser().then(currentUser => {
         if (currentUser) {
-            isUserLoggedIn = true;
-            if (form.elements.name) form.elements.name.value = currentUser.name || '';
-            if (form.elements.email) form.elements.email.value = currentUser.email || '';
+            if (form.elements.name && !form.elements.name.value) form.elements.name.value = currentUser.name || '';
+            if (form.elements.email && !form.elements.email.value) form.elements.email.value = currentUser.email || '';
 
             let statusBar = box.querySelector('.client-portal-status-bar');
             if (!statusBar) {
@@ -214,20 +161,16 @@ export function initServiceDetailPageEnquiry() {
                 statusBar.innerHTML = `
                     <div class="client-portal-user-info" style="color: #0f172a;">
                         <span class="client-status-indicator"></span>
-                        <span>Verified Client: <strong>${escapeHTML(currentUser.name)}</strong> <span style="color: #64748b;">(${escapeHTML(currentUser.email)})</span></span>
+                        <span>Logged in as: <strong>${escapeHTML(currentUser.name)}</strong> <span style="color: #64748b;">(${escapeHTML(currentUser.email)})</span></span>
                     </div>
                     <a href="${isServicePage ? '../../my-requests.html' : './my-requests.html'}" class="client-portal-link" style="color: #07152F;">
-                        Open Client Portal &rarr;
+                        My Requests &rarr;
                     </a>
                 `;
                 form.parentNode.insertBefore(statusBar, form);
             }
-        } else {
-            isUserLoggedIn = false;
         }
-    }).catch(() => {
-        isUserLoggedIn = false;
-    });
+    }).catch(() => {});
 }
 
 /**
@@ -251,52 +194,7 @@ export function initGlobalEnquiryForm() {
     const errorEl = form.querySelector('.global-enquiry-error');
     const submitBtn = form.querySelector('.global-enquiry-submit-btn');
 
-    // Track authentication state synchronously
-    let isUserLoggedIn = isStoredUserLoggedIn();
-
-    // Restore draft if present
-    let savedDraft = null;
-    try {
-        const rawDraft = sessionStorage.getItem('om_global_enquiry_draft');
-        if (rawDraft) savedDraft = JSON.parse(rawDraft);
-    } catch (e) { }
-
-    if (savedDraft) {
-        if (!isUserLoggedIn && form.elements.name && savedDraft.name) form.elements.name.value = savedDraft.name;
-        if (!isUserLoggedIn && form.elements.email && savedDraft.email) form.elements.email.value = savedDraft.email;
-        if (form.elements.phone && savedDraft.phone) form.elements.phone.value = savedDraft.phone;
-        if (form.elements.service_slug && savedDraft.service_slug) form.elements.service_slug.value = savedDraft.service_slug;
-        if (form.elements.location && savedDraft.location) form.elements.location.value = savedDraft.location;
-        if (form.elements.area && savedDraft.area) form.elements.area.value = savedDraft.area;
-        if (form.elements.message && savedDraft.message) form.elements.message.value = savedDraft.message;
-    }
-
-    // Synchronous click interceptor for unauthenticated visitors
-    if (submitBtn) {
-        submitBtn.addEventListener('click', (e) => {
-            if (!isUserLoggedIn) {
-                e.preventDefault();
-                e.stopPropagation();
-                const name = form.elements.name ? form.elements.name.value.trim() : '';
-                const email = form.elements.email ? form.elements.email.value.trim() : '';
-                const phone = form.elements.phone ? form.elements.phone.value.trim() : '';
-                const serviceSlug = form.elements.service_slug ? form.elements.service_slug.value : 'project-planning';
-                const locationVal = form.elements.location ? form.elements.location.value.trim() : '';
-                const areaVal = form.elements.area ? form.elements.area.value.trim() : '';
-                const rawMessage = form.elements.message ? form.elements.message.value.trim() : '';
-                try {
-                    sessionStorage.setItem('om_global_enquiry_draft', JSON.stringify({
-                        name, email, phone, service_slug: serviceSlug, location: locationVal, area: areaVal, message: rawMessage
-                    }));
-                } catch (err) { }
-                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#cta');
-                window.location.href = `./login.html?redirect=${returnUrl}&reason=enquiry_submit`;
-                return false;
-            }
-        });
-    }
-
-    // Form submission handler
+    // Form submission handler (direct submission without mandatory login)
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -308,18 +206,14 @@ export function initGlobalEnquiryForm() {
         const locationVal = form.elements.location ? form.elements.location.value.trim() : '';
         const areaVal = form.elements.area ? form.elements.area.value.trim() : '';
         const rawMessage = form.elements.message ? form.elements.message.value.trim() : '';
-        const honeypot = form.elements.website ? form.elements.website.value : '';
+        const honeypot = form.elements.website ? form.elements.website.value : (form.elements.honeypot ? form.elements.honeypot.value : '');
 
-        // If not logged in, preserve entered values and redirect to login
-        if (!isUserLoggedIn) {
-            try {
-                sessionStorage.setItem('om_global_enquiry_draft', JSON.stringify({
-                    name, email, phone, service_slug: serviceSlug, location: locationVal, area: areaVal, message: rawMessage
-                }));
-            } catch (e) { }
-            const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#cta');
-            window.location.href = `./login.html?redirect=${returnUrl}&reason=enquiry_submit`;
-            return false;
+        if (!name || !email || !rawMessage) {
+            if (errorEl) {
+                errorEl.textContent = 'Please fill in all required fields (Name, Email, Requirements).';
+                errorEl.style.display = 'block';
+            }
+            return;
         }
 
         // Combine location and area into the project message for comprehensive company context
@@ -337,6 +231,7 @@ export function initGlobalEnquiryForm() {
             submitBtn.disabled = true;
             submitBtn.innerHTML = 'Sending enquiry...';
         }
+        if (errorEl) errorEl.style.display = 'none';
 
         try {
             await submitEnquiry({
@@ -348,23 +243,13 @@ export function initGlobalEnquiryForm() {
                 honeypot: honeypot || ''
             });
 
-            try {
-                sessionStorage.removeItem('om_global_enquiry_draft');
-            } catch (e) { }
-
+            form.reset();
             form.style.display = 'none';
             if (successEl) successEl.style.display = 'block';
         } catch (err) {
             console.error('Global enquiry submission error:', err);
-            if (err.status === 401 || (err.message && (err.message.includes('401') || err.message.includes('Not authenticated')))) {
-                try {
-                    localStorage.removeItem('om_logged_in');
-                } catch (e) { }
-                window.location.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}&reason=enquiry_submit`;
-                return;
-            }
             if (errorEl) {
-                errorEl.textContent = 'Failed to send your enquiry. Please check your network connection or reach us directly at omengineeringconsultants06@gmail.com.';
+                errorEl.textContent = err.message || 'Failed to send your enquiry. Please check your network connection or reach us directly at omengineeringconsultants06@gmail.com.';
                 errorEl.style.display = 'block';
             }
             if (submitBtn) {
@@ -374,12 +259,11 @@ export function initGlobalEnquiryForm() {
         }
     });
 
-    // Check server session and update verified status badge
+    // If user is already logged in, pre-fill form fields and show portal status bar
     getCurrentUser().then(currentUser => {
         if (currentUser) {
-            isUserLoggedIn = true;
-            if (form.elements.name) form.elements.name.value = currentUser.name || '';
-            if (form.elements.email) form.elements.email.value = currentUser.email || '';
+            if (form.elements.name && !form.elements.name.value) form.elements.name.value = currentUser.name || '';
+            if (form.elements.email && !form.elements.email.value) form.elements.email.value = currentUser.email || '';
 
             let statusBar = card.querySelector('.client-portal-status-bar');
             if (!statusBar) {
@@ -388,20 +272,16 @@ export function initGlobalEnquiryForm() {
                 statusBar.innerHTML = `
                     <div class="client-portal-user-info">
                         <span class="client-status-indicator"></span>
-                        <span>Verified Client: <strong>${escapeHTML(currentUser.name)}</strong> <span style="color: rgba(255, 255, 255, 0.65);">(${escapeHTML(currentUser.email)})</span></span>
+                        <span>Logged in as: <strong>${escapeHTML(currentUser.name)}</strong> <span style="color: rgba(255, 255, 255, 0.65);">(${escapeHTML(currentUser.email)})</span></span>
                     </div>
                     <a href="./my-requests.html" class="client-portal-link">
-                        Open Client Portal &rarr;
+                        My Requests &rarr;
                     </a>
                 `;
                 form.parentNode.insertBefore(statusBar, form);
             }
-        } else {
-            isUserLoggedIn = false;
         }
-    }).catch(() => {
-        isUserLoggedIn = false;
-    });
+    }).catch(() => {});
 }
 
 function escapeHTML(str) {
