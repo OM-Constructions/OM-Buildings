@@ -18,6 +18,7 @@ def run_tests():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     # Clean up test database
+    db.query(models.Project).delete()
     db.query(models.ContactMessage).delete()
     db.query(models.User).delete()
     db.commit()
