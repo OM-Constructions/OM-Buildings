@@ -1,4 +1,4 @@
-export const API_BASE_URL = 
+export const API_BASE_URL =
   (typeof window !== "undefined" && window.API_BASE_URL) ||
   (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
     ? (window.location.port === "8000" ? "" : "http://localhost:8000")
@@ -19,7 +19,7 @@ export function setStoredToken(token) {
     } else {
       localStorage.removeItem("om_auth_token");
     }
-  } catch (e) {}
+  } catch (e) { }
 }
 
 export function getAuthHeaders(extraHeaders = {}) {
@@ -73,7 +73,7 @@ export async function login({ email, password }) {
     localStorage.setItem("om_logged_in", "true");
     if (data.name) localStorage.setItem("om_user_name", data.name);
     if (data.token) setStoredToken(data.token);
-  } catch (e) {}
+  } catch (e) { }
   return data;
 }
 
@@ -107,7 +107,7 @@ export async function verifyOtp(arg1, arg2) {
     localStorage.setItem("om_logged_in", "true");
     if (data.name) localStorage.setItem("om_user_name", data.name);
     if (data.token) setStoredToken(data.token);
-  } catch (e) {}
+  } catch (e) { }
   return data;
 }
 
@@ -141,7 +141,7 @@ export async function logout() {
     localStorage.removeItem("om_logged_in");
     localStorage.removeItem("om_user_name");
     setStoredToken(null);
-  } catch (e) {}
+  } catch (e) { }
   const res = await fetch(`${API_BASE_URL}/api/v1/auth/logout`, {
     method: "POST",
     headers,
@@ -194,7 +194,7 @@ export async function getCurrentUser() {
       headers: getAuthHeaders(),
       credentials: "include",
     }, 20000);
-    
+
     if (!res.ok) {
       // Only clear storage if explicitly rejected as unauthenticated
       if (res.status === 401 || res.status === 403) {
@@ -202,7 +202,7 @@ export async function getCurrentUser() {
           localStorage.removeItem("om_logged_in");
           localStorage.removeItem("om_user_name");
           setStoredToken(null);
-        } catch (e) {}
+        } catch (e) { }
         return null;
       }
       throw new Error(`Server returned HTTP ${res.status}`);
@@ -211,7 +211,7 @@ export async function getCurrentUser() {
     try {
       localStorage.setItem("om_logged_in", "true");
       if (data && data.name) localStorage.setItem("om_user_name", data.name);
-    } catch (e) {}
+    } catch (e) { }
     return data;
   } catch (err) {
     console.warn("getCurrentUser check encountered network or server error:", err.message);
@@ -231,7 +231,7 @@ export async function getMySubmissions() {
     headers: getAuthHeaders(),
     credentials: "include",
   }, 20000);
-  
+
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data.detail || `Failed to load submissions (${res.status})`);
