@@ -2,7 +2,7 @@ export const API_BASE_URL =
   (typeof window !== "undefined" && window.API_BASE_URL) ||
   (typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")
     ? (window.location.port === "8000" ? "" : "http://localhost:8000")
-    : "https://om-buildings.onrender.com");
+    : "https://om-buildings-rust.vercel.app");
 
 export function getStoredToken() {
   try {
