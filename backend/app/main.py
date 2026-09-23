@@ -22,11 +22,11 @@ def rate_limit_handler(request, exc):
 
 app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
-# Configure CORS: with allow_credentials=True, allow localhost, Vercel deployments, and custom production domains
+# Configure CORS: with allow_credentials=True, allow all HTTP/HTTPS origins
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:[0-9]+)?$|^https://.*\.vercel\.app$|^https?://([a-zA-Z0-9-]+\.)*omconstructionsenggconsultants\.in(:[0-9]+)?$",
+    allow_origin_regex=r"^https?://.*$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
