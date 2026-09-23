@@ -177,9 +177,12 @@ export function initServiceDetailPageEnquiry() {
     });
 
     // Form submission handler
+    let isSubmitting = false;
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (isSubmitting) return;
 
         const name = form.elements.name ? form.elements.name.value.trim() : '';
         const email = form.elements.email ? form.elements.email.value.trim() : '';
@@ -195,40 +198,10 @@ export function initServiceDetailPageEnquiry() {
             return;
         }
 
+        isSubmitting = true;
         const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Enquiry &rarr;';
-
-        // 1. Wait for authentication state if necessary
-        if (isAuthLoading()) {
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Verifying session...';
-            }
-            try {
-                await waitForAuth();
-            } catch (authErr) {
-                console.warn('Auth check error while submitting:', authErr);
-            }
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
-            }
-        }
-
-        // 2. Get current authenticated user/session
         const user = getCachedUser() || (isStoredUserLoggedIn() ? { name: localStorage.getItem('om_user_name') || 'Client', email: '' } : null);
-        const authenticated = isUserAuthenticated() || !!user;
 
-        // 3. If no authenticated user: save draft and redirect to login
-        if (!authenticated) {
-            try {
-                sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
-            } catch (err) { }
-            const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
-            window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
-            return false;
-        }
-
-        // 4. If authenticated: DO NOT REDIRECT! Submit enquiry
         if (errorEl) errorEl.style.display = 'none';
         if (submitBtn) {
             submitBtn.disabled = true;
@@ -237,7 +210,7 @@ export function initServiceDetailPageEnquiry() {
 
         try {
             await submitEnquiry({
-                name: name || (user && user.name) || (localStorage.getItem('om_user_name') || 'Client'),
+                name: name || (user && user.name) || 'Client',
                 email: email || (user && user.email) || '',
                 phone: phone || null,
                 serviceSlug: serviceSlug,
@@ -254,17 +227,6 @@ export function initServiceDetailPageEnquiry() {
             if (successEl) successEl.style.display = 'block';
         } catch (err) {
             console.error('Service page enquiry error:', err);
-            // Only redirect if backend explicitly returns 401 unauthorized (session expired)
-            if (err.status === 401 || (err.message && (err.message.includes('401') || err.message.includes('Not authenticated')))) {
-                try {
-                    localStorage.removeItem('om_logged_in');
-                    localStorage.removeItem('om_auth_token');
-                    sessionStorage.setItem('om_service_detail_enquiry_' + serviceSlug, JSON.stringify({ name, email, phone, message }));
-                } catch (e) { }
-                const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#service-detail-enquiry-box');
-                window.location.href = `${loginPath}?redirect=${returnUrl}&reason=enquiry_submit`;
-                return;
-            }
             if (errorEl) {
                 errorEl.textContent = err.message || 'Failed to send your enquiry. Please check your connection or contact us directly.';
                 errorEl.style.display = 'block';
@@ -273,6 +235,8 @@ export function initServiceDetailPageEnquiry() {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnText;
             }
+        } finally {
+            isSubmitting = false;
         }
     });
 }
@@ -283,6 +247,9 @@ export function initServiceDetailPageEnquiry() {
 export function initGlobalEnquiryForm() {
     const card = document.getElementById('global-enquiry-box');
     if (!card) return;
+
+    if (card.dataset.enquiryBound === 'true') return;
+    card.dataset.enquiryBound = 'true';
 
     const authGate = card.querySelector('#global-enquiry-auth-gate');
     if (authGate) authGate.style.display = 'none';
@@ -364,9 +331,12 @@ export function initGlobalEnquiryForm() {
     });
 
     // Form submission handler
+    let isSubmitting = false;
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (isSubmitting) return;
 
         const name = form.elements.name ? form.elements.name.value.trim() : '';
         const email = form.elements.email ? form.elements.email.value.trim() : '';
@@ -393,42 +363,10 @@ export function initGlobalEnquiryForm() {
             return;
         }
 
+        isSubmitting = true;
         const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Send Project Enquiry &rarr;';
-
-        // 1. Wait for authentication state if necessary
-        if (isAuthLoading()) {
-            if (submitBtn) {
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Verifying session...';
-            }
-            try {
-                await waitForAuth();
-            } catch (authErr) {
-                console.warn('Auth check error while submitting global form:', authErr);
-            }
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
-            }
-        }
-
-        // 2. Get current authenticated user/session
         const user = getCachedUser() || (isStoredUserLoggedIn() ? { name: localStorage.getItem('om_user_name') || 'Client', email: '' } : null);
-        const authenticated = isUserAuthenticated() || !!user;
 
-        // 3. If no authenticated user: save draft and redirect to login
-        if (!authenticated) {
-            try {
-                sessionStorage.setItem('om_global_enquiry_draft', JSON.stringify({
-                    name, email, phone, service_slug: serviceSlug, location: locationVal, area: areaVal, message: rawMessage
-                }));
-            } catch (e) { }
-            const returnUrl = encodeURIComponent(window.location.pathname + (window.location.search || '') + '#cta');
-            window.location.href = `./login.html?redirect=${returnUrl}&reason=enquiry_submit`;
-            return false;
-        }
-
-        // 4. If authenticated: DO NOT REDIRECT! Submit enquiry
         const metaParts = [];
         if (locationVal) metaParts.push(`Location: ${locationVal}`);
         if (areaVal) metaParts.push(`Approx. Area / Type: ${areaVal}`);
@@ -446,7 +384,7 @@ export function initGlobalEnquiryForm() {
 
         try {
             await submitEnquiry({
-                name: name || (user && user.name) || (localStorage.getItem('om_user_name') || 'Client'),
+                name: name || (user && user.name) || 'Client',
                 email: email || (user && user.email) || '',
                 phone: phone || null,
                 serviceSlug: serviceSlug,
@@ -463,14 +401,6 @@ export function initGlobalEnquiryForm() {
             if (successEl) successEl.style.display = 'block';
         } catch (err) {
             console.error('Global enquiry submission error:', err);
-            if (err.status === 401 || (err.message && (err.message.includes('401') || err.message.includes('Not authenticated')))) {
-                try {
-                    localStorage.removeItem('om_logged_in');
-                    localStorage.removeItem('om_auth_token');
-                } catch (e) { }
-                window.location.href = `./login.html?redirect=${encodeURIComponent(window.location.pathname + '#cta')}&reason=enquiry_submit`;
-                return;
-            }
             if (errorEl) {
                 errorEl.textContent = err.message || 'Failed to send your enquiry. Please check your network connection or reach us directly at omengineeringconsultants06@gmail.com.';
                 errorEl.style.display = 'block';
@@ -479,6 +409,8 @@ export function initGlobalEnquiryForm() {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnText;
             }
+        } finally {
+            isSubmitting = false;
         }
     });
 }

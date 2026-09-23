@@ -49,6 +49,7 @@ async function init() {
 
         initNavbarScroll();
         initMobileNav();
+        initPerformanceBenchmark();
         return;
     }
 
@@ -59,6 +60,7 @@ async function init() {
         initNavbarScroll();
         initMobileNav();
         initServicesHover();
+        initPerformanceBenchmark();
     } catch (e) {
         console.warn('Component initialization warning:', e);
     }
@@ -232,6 +234,69 @@ function initMobileNav() {
     links.forEach(link => {
         link.addEventListener('click', closeMenu);
     });
+}
+
+function initPerformanceBenchmark() {
+    const section = document.getElementById('performance-benchmark');
+    if (!section) return;
+
+    if (section.dataset.animInitialized === 'true') return;
+    section.dataset.animInitialized = 'true';
+
+    const counters = section.querySelectorAll('.stat-count');
+    if (!counters.length) return;
+
+    let hasAnimated = false;
+
+    function startCounting() {
+        if (hasAnimated) return;
+        hasAnimated = true;
+
+        counters.forEach(counter => {
+            const target = parseFloat(counter.getAttribute('data-target') || '0');
+            const decimals = parseInt(counter.getAttribute('data-decimals') || '0', 10);
+            const duration = 1800; // ms
+            const startTime = performance.now();
+
+            function updateCount(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Smooth easeOutCubic curve
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const currentVal = easeProgress * target;
+
+                counter.textContent = decimals > 0 
+                    ? currentVal.toFixed(decimals) 
+                    : Math.floor(currentVal).toString();
+
+                if (progress < 1) {
+                    requestAnimationFrame(updateCount);
+                } else {
+                    counter.textContent = decimals > 0 
+                        ? target.toFixed(decimals) 
+                        : target.toString();
+                }
+            }
+
+            requestAnimationFrame(updateCount);
+        });
+    }
+
+    if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries, obs) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    startCounting();
+                    obs.unobserve(entry.target); // Runs strictly once
+                }
+            });
+        }, { threshold: 0.2 });
+
+        observer.observe(section);
+    } else {
+        startCounting();
+    }
 }
 
 function onWindowResize() {

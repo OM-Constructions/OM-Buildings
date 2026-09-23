@@ -2,13 +2,13 @@ import pytest
 import uuid
 from fastapi.testclient import TestClient
 from app.main import app
-from app.routes.auth import get_current_user
+from app.routes.auth import get_optional_current_user
 from app import models
 
 # Mock auth
-def mock_get_current_user():
+def mock_get_optional_current_user():
     return models.User(id=uuid.uuid4(), name="Mock", email="mock@example.com")
-app.dependency_overrides[get_current_user] = mock_get_current_user
+app.dependency_overrides[get_optional_current_user] = mock_get_optional_current_user
 
 client = TestClient(app)
 

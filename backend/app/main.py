@@ -54,7 +54,7 @@ def health_check():
     db_status = "ok"
     db_error = None
     try:
-        from app.database import engine
+        from app.database import engine, is_sqlite
         from sqlalchemy import text
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
