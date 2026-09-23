@@ -45,6 +45,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = [
         "https://om-buildings.vercel.app",
         "https://om-buildings-rust.vercel.app",
+        "https://om-buildings-ygyi.vercel.app",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
         "http://localhost:8080",
