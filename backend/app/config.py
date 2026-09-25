@@ -43,12 +43,7 @@ class Settings(BaseSettings):
     ASSISTANT_MODEL: str = os.getenv("ASSISTANT_MODEL", "claude-haiku-4-5-20251001")
     
     CORS_ORIGINS: List[str] = [
-        "https://omconstructionsenggconsultants.in",
-        "https://www.omconstructionsenggconsultants.in",
-        "http://omconstructionsenggconsultants.in",
-        "http://www.omconstructionsenggconsultants.in",
         "https://om-buildings.vercel.app",
-        "https://om-buildings-rust.vercel.app",
         "https://om-buildings-ygyi.vercel.app",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
